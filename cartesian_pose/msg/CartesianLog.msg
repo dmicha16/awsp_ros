@@ -1,0 +1,1 @@
+bool ready_to_log
