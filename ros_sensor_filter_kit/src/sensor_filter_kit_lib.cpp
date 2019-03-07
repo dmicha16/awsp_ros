@@ -91,11 +91,6 @@ void FilterKit::sma_(std::vector<float> current_window)
   features_.push_back(temp_window_value);
 }
 
-/*
-
-
-*/
-
 void FilterKit::ema_(std::vector<float> current_window)
 {
 

@@ -13,6 +13,7 @@
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 #include <chrono>
+#include <math.h>
 
 // **************************************** ChipMPU6050 *****************************************
 
@@ -99,26 +100,29 @@
 #define BMP085_CHIP                 2
 
 #define PI                          3.141592
-#define STANDARD_GRAVITIY           9.80665
+#define STANDARD_GRAVITY           9.80665
 
 typedef unsigned long ulong_t;
 typedef unsigned long long uulong_t;
 
 struct ChipMPU6050
 {
-  float accel_x;
-  float accel_y;
-  float accel_z;
+    float accel_x;
+    float accel_y;
+    float accel_z;
 
-  float si_accel_x;
-  float si_accel_y;
-  float si_accel_z;
+    float si_accel_x;
+    float si_accel_y;
+    float si_accel_z;
 
-  float gyro_x;
-  float gyro_y;
-  float gyro_z;
+    float inclination_x;
+    float inclination_y;
 
-  float temp;
+    float gyro_x;
+    float gyro_y;
+    float gyro_z;
+
+    float temp;
 };
 
 struct ChipHMC5883L
@@ -179,6 +183,7 @@ class Gy88Interface
     void read_HMC5883L_compass_();
 
     void calculate_si_accel_();
+    void estimate_inclination_();
 
     float calculate_compass_angle_();
     int convert_bytes_to_short_(short msb, short lsb);

@@ -62,6 +62,9 @@ int main(int argc, char **argv)
         gy_88_data.si_accel_y = chip_mpu6050.si_accel_y;
         gy_88_data.si_accel_z = chip_mpu6050.si_accel_z;
 
+        gy_88_data.inclination_x = chip_mpu6050.inclination_x;
+        gy_88_data.inclination_y = chip_mpu6050.inclination_y;
+
         gy_88_data.gyro_x = chip_mpu6050.gyro_x;
         gy_88_data.gyro_y = chip_mpu6050.gyro_y;
         gy_88_data.gyro_z = chip_mpu6050.gyro_z;

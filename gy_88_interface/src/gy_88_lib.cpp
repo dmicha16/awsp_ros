@@ -92,7 +92,6 @@ ChipHMC5883L Gy88Interface::get_HMC5883L_data()
 
 bool Gy88Interface::read_bus(const int select_chip)
 {
-
     set_millis_since_epoch_();
 
     switch (select_chip)
@@ -167,7 +166,6 @@ bool Gy88Interface::set_HMC5883L_scale_range_(int range)
 
 void Gy88Interface::read_MPU6059_accel_()
 {
-
     uulong_t start_time = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::system_clock::now().time_since_epoch()).count();
     short msb = wiringPiI2CReadReg8(MPU6050_fd_, MPU6050_RA_ACCEL_XOUT_H);
@@ -180,7 +178,6 @@ void Gy88Interface::read_MPU6059_accel_()
 
     // std::cout << "Reading time: " << end_time - start_time << std::endl;
 
-
     msb = wiringPiI2CReadReg8(MPU6050_fd_, MPU6050_RA_ACCEL_YOUT_H);
     lsb = wiringPiI2CReadReg8(MPU6050_fd_, MPU6050_RA_ACCEL_YOUT_L);
 
@@ -192,6 +189,7 @@ void Gy88Interface::read_MPU6059_accel_()
     chip_mpu6050_.accel_z = convert_bytes_to_short_(msb, lsb) / accel_scale_range_;
 
     calculate_si_accel_();
+    estimate_inclination_();
 }
 
 void Gy88Interface::read_MPU6059_gyro_()
@@ -234,9 +232,15 @@ void Gy88Interface::read_HMC5883L_compass_()
 
 void Gy88Interface::calculate_si_accel_()
 {
-    chip_mpu6050_.si_accel_x = chip_mpu6050_.accel_x * STANDARD_GRAVITIY;
-    chip_mpu6050_.si_accel_y = chip_mpu6050_.accel_y * STANDARD_GRAVITIY;
-    chip_mpu6050_.si_accel_z = chip_mpu6050_.accel_z * STANDARD_GRAVITIY;
+    chip_mpu6050_.si_accel_x = chip_mpu6050_.accel_x * STANDARD_GRAVITY;
+    chip_mpu6050_.si_accel_y = chip_mpu6050_.accel_y * STANDARD_GRAVITY;
+    chip_mpu6050_.si_accel_z = chip_mpu6050_.accel_z * STANDARD_GRAVITY;
+}
+
+void Gy88Interface::estimate_inclination_()
+{
+    chip_mpu6050_.inclination_x = asin(chip_mpu6050_.accel_x/STANDARD_GRAVITY);
+    chip_mpu6050_.inclination_y = asin(chip_mpu6050_.accel_y/STANDARD_GRAVITY);
 }
 
 float Gy88Interface::calculate_compass_angle_()
