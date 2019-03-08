@@ -1,0 +1,9 @@
+float32 filtered_accel_x
+float32 filtered_accel_y
+float32 filtered_accel_z
+
+float32 filtered_gyro_x
+float32 filtered_gyro_y
+float32 filtered_gyro_z
+
+uint64 timestamp
