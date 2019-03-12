@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string.h>
 #include <thread>
+#include <errno.h>
 #include "gnss_l86_interface/gnss_l86_lib.h"
 
 // ******************************** CONSTRUCTORS-DESTRUCTORS *******************************
@@ -44,6 +45,17 @@ unsigned long long GnssInterface::get_unix_millis_()
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
+int GnssInterface::parse_acknolegment_response_(std::string response, int sent_command)
+{
+    if (strncmp(response.c_str(), PMTK_ACK_START_.c_str(), PMTK_ACK_START_.size()) == 0)
+    {
+        std::vector<std::string> content = break_string_(response, ',');
+        if (std::stoi(content[1]) != sent_command) return -1;
+        else return std::stoi(content[2]);
+    }
+    else return -2;
+}
+
 float GnssInterface::parse_to_degrees_(std::string str)
 {
     std::vector<std::string> content = break_string_(str, '.');
@@ -65,7 +77,15 @@ float GnssInterface::parse_to_degrees_(std::string str)
 bool GnssInterface::parse_raw_line_(std::string line)
 {
     if (strncmp(line.c_str(), POSITION_START_.c_str(), POSITION_START_.size()) == 0)
+    {
+        position_line_found_ = true;
         return populate_position_(line);
+    }
+    else if (strncmp(line.c_str(), TRACK_START_.c_str(), TRACK_START_.size()) == 0)
+    {
+        track_line_found_ = true;
+        return populate_track_(line);
+    }
     else
         return false;
 }
@@ -102,6 +122,38 @@ bool GnssInterface::populate_position_(std::string position_line)
     }
 }
 
+bool GnssInterface::populate_track_(std::string track_line)
+{
+    std::vector<std::string> content = break_string_(track_line, ',');
+
+    if (content.size() >= 8)
+    {
+        position_.true_course = std::stof(content[1]);
+        position_.speed = std::stof(content[6]);
+        return true;
+    }
+    else
+    {
+        position_.fix = 0;
+        return false;
+    }
+}
+
+std::string GnssInterface::read_raw_line_()
+{
+    char received;
+    std::string line;
+    while (serialDataAvail(port_))
+    {
+        received = serialGetchar(port_);
+        if (received != '\n')
+            line += received;
+        else break;
+    }
+
+    return line;
+}
+
 void GnssInterface::send_command_(std::string command)
 {
     for (int i = 0; i < command.size(); ++i) serialPutchar(port_, command[i]);
@@ -130,9 +182,9 @@ long GnssInterface::open_connection(const char* serial_port)
     {
         if (open_connection(serial_port, baudrates_[i]))
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             serialFlush(port_);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1100));
             std::vector<std::string> lines = read_raw_lines();
 
             if (lines.size() > 2)
@@ -166,8 +218,16 @@ int GnssInterface::read_lines()
     std::vector<std::string> raw_lines = read_raw_lines();
     int num_lines = 0;
 
-    for (int i = 0; i < int(raw_lines.size()); i++)
+    for (int i = int(raw_lines.size()) - 1; i >= 0; i--)
+    {
         if (parse_raw_line_(raw_lines[i])) num_lines++;
+        if (position_line_found_ && track_line_found_)
+        {
+            position_line_found_ = false;
+            track_line_found_ = false;
+            break;
+        }
+    }
 
     return num_lines;
 }
@@ -197,5 +257,25 @@ bool GnssInterface::set_baud_rate(long baudrate)
     else if (baudrate == 115200) send_command_(PMTK_SET_BAUD_115200_);
     else return false;
     
+    return true;
+}
+
+bool GnssInterface::set_fr_mode(int mode)
+{
+    if (mode == NORMAL_MODE) send_command_(PMTK_FR_MODE_NORMAL_);
+    else if (mode == FITNESS_MODE) send_command_(PMTK_FR_FITNESS_NORMAL_);
+    else return false;
+
+    return true;
+}
+
+bool GnssInterface::set_update_rate(int update_rate)
+{
+    if (update_rate == 1) send_command_(PMTK_SET_NMEA_UPDATE_1HZ_);
+    else if (update_rate == 2) send_command_(PMTK_SET_NMEA_UPDATE_2HZ_);
+    else if (update_rate == 5) send_command_(PMTK_SET_NMEA_UPDATE_5HZ_);
+    else if (update_rate == 10) send_command_(PMTK_SET_NMEA_UPDATE_10HZ_);
+    else return false;
+
     return true;
 }

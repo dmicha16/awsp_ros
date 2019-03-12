@@ -1,7 +1,7 @@
 #include "gy_88_interface/gy_88_lib.h"
 #include "ros/ros.h"
 #include <iostream>
-#include "gy_88_interface/Gy88Data.h"
+#include "awsp_msgs/Gy88Data.h"
 #include <fstream>
 #include <string.h>
 

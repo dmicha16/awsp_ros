@@ -9,7 +9,7 @@ PropellerTest::PropellerTest(ros::NodeHandle n, int left_pin, int right_pin)
 {
   log_instruction_.instruction = 0;
   cartesian_log_sub_ = n.subscribe("cartesian_log", 1000, &PropellerTest::ready_to_log_callback_, this);
-  start_log_ = n.advertise<catamaran_controller::LogInstruction>("log_instruction", 1000);
+  start_log_ = n.advertise<awsp_msgs::LogInstruction>("log_instruction", 1000);
   first_menu_();
 }
 

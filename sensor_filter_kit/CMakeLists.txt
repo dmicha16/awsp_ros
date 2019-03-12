@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(awsp_sensor_filter_kit)
+project(sensor_filter_kit)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -9,6 +9,7 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  awsp_msgs
   gy_88_interface
   std_msgs
   message_generation
@@ -106,7 +107,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES sensor_filter_kit_lib
-  CATKIN_DEPENDS roscpp std_msgs message_runtime
+  CATKIN_DEPENDS roscpp std_msgs message_runtime awsp_msgs
   #  DEPENDS system_lib
 )
 

@@ -5,3 +5,5 @@ int64 number_of_satelites
 float64 horizontal_precision
 float64 altitude
 uint64 timestamp
+float64 speed
+float64 true_course

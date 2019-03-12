@@ -1,6 +1,6 @@
  #include "sensor_filter_kit/sensor_filter_kit_lib.h"
  #include "gy_88_interface/gy_88_lib.h"
- #include "gy_88_interface/Gy88Data.h"
+ #include "awsp_msgs/Gy88Data.h"
  #include "ros/ros.h"
  #include "iostream"
 
@@ -36,7 +36,7 @@ struct imu_data
 
 imu_data imu_data;
 
-void imu_data_callback(const gy_88_interface::Gy88Data::ConstPtr& imu_msg)
+void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
 {
   imu_data.accel_x = imu_msg->accel_x;
   imu_data.accel_y = imu_msg->accel_y;
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
   
   ros::init(argc, argv, "sensor_filter_kit_node");
   ros::NodeHandle n;
-  ros::Subscriber imu_sub = n.subscribe("gy88_data", 1000, imu_data_callback);
+  ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
   ros::Rate loop_rate(recording_freq);
 
   std::vector<double> features;

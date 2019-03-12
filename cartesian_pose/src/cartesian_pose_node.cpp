@@ -10,8 +10,8 @@
 #include "gnss_l86_interface/gnss_l86_lib.h"
 #include "gnss_l86_interface/GnssData.h"
 #include "gy_88_interface/gy_88_lib.h"
-#include "gy_88_interface/Gy88Data.h"
-#include "catamaran_controller/LogInstruction.h"
+#include "awsp_msgs/Gy88Data.h"
+#include "awsp_msgs/LogInstruction.h"
 
 gps_position gps_data;
 imu_data imu_data;
@@ -28,7 +28,7 @@ void gnss_data_callback(const gnss_l86_interface::GnssData::ConstPtr& gnss_msg)
     new_gps = true;
 }
 
-void imu_data_callback(const gy_88_interface::Gy88Data::ConstPtr& imu_msg)
+void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
 {
     imu_data.acceleration.x = floorf(imu_msg->si_accel_x * 100) / 100; // Put 10 for one decimal, 100 for 2, 1000 for 3, etc.
     imu_data.acceleration.y = -floorf(imu_msg->si_accel_y * 100) / 100;
@@ -40,7 +40,7 @@ void imu_data_callback(const gy_88_interface::Gy88Data::ConstPtr& imu_msg)
     new_imu = true;
 }
 
-void instruction_callback(const catamaran_controller::LogInstruction::ConstPtr& instruction_msg)
+void instruction_callback(const awsp_msgs::LogInstruction::ConstPtr& instruction_msg)
 {
     instruction = instruction_msg->instruction;
     new_instruction = true;
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
     ros::Publisher publisher = n.advertise<cartesian_pose::CartesianLog>("cartesian_log", 1000);
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
-    ros::Subscriber imu_sub = n.subscribe("gy88_data", 1000, imu_data_callback);
+    ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
     ros::Subscriber catamaran_sub = n.subscribe("log_instruction", 1000, instruction_callback);
     ros::Rate loop_rate(40);
 

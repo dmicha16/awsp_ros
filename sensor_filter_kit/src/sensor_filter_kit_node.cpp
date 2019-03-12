@@ -1,6 +1,6 @@
 #include "sensor_filter_kit/sensor_filter_kit_lib.h"
 #include "gy_88_interface/gy_88_lib.h"
-#include "gy_88_interface/Gy88Data.h"
+#include "awsp_msgs/Gy88Data.h"
 #include "sensor_filter_kit/SensorKitData.h"
 #include "ros/ros.h"
 #include "iostream"
@@ -10,7 +10,7 @@ uulong_t get_millis_since_epoch()
   uulong_t millis_since_epoch =
        std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::system_clock::now().time_since_epoch()).count();
-  
+
   return millis_since_epoch;
 }
 
@@ -23,7 +23,7 @@ struct imu_data
 
 imu_data imu_data;
 
-void imu_data_callback(const gy_88_interface::Gy88Data::ConstPtr& imu_msg)
+void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
 {
   imu_data.accel_x = imu_msg->accel_x;
   imu_data.accel_y = imu_msg->accel_y;
@@ -64,20 +64,20 @@ int main(int argc, char **argv)
 
   ros::init(argc, argv, "sensor_filter_kit_node");
   ros::NodeHandle n;
-  ros::Subscriber imu_sub = n.subscribe("gy88_data", 1000, imu_data_callback);
+  ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
   ros::Publisher publisher = n.advertise<sensor_filter_kit::SensorKitData>("sensor_kit_data", 1000);
   ros::Rate loop_rate(publishing_freq);
-  
+
   sensor_filter_kit::SensorKitData sensor_kit_data;
 
   std::vector<double> features;
   std::cout << std::fixed;
   std::cout << std::setprecision(4);
-  
+
   while(ros::ok())
   {
     ROS_INFO_STREAM_ONCE("Started advertising on topic sensor_kit_data..");
-    
+
     sensor_readings[0] = imu_data.accel_x;
     sensor_readings[1] = imu_data.accel_y;
     sensor_readings[2] = imu_data.accel_z;
@@ -88,16 +88,16 @@ int main(int argc, char **argv)
     filter_kit.window(sensor_readings, sensors, SMA);
 
     features = filter_kit.get_features();
-    
+
     sensor_kit_data.filtered_accel_x = features.at(0);
     sensor_kit_data.filtered_accel_y = features.at(1);
     sensor_kit_data.filtered_accel_z = features.at(2);
     sensor_kit_data.filtered_gyro_x = features.at(3);
     sensor_kit_data.filtered_gyro_y = features.at(4);
     sensor_kit_data.filtered_gyro_z = features.at(5);
-  
+
     sensor_kit_data.timestamp = get_millis_since_epoch();
-    
+
     publisher.publish(sensor_kit_data);
     ros::spinOnce();
     loop_rate.sleep();

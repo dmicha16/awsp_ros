@@ -9,6 +9,7 @@ add_message_files(
         DIRECTORY msg
         FILES
         Gy88Data.msg
+        LogInstruction.msg
 )
 
 generate_messages(DEPENDENCIES std_msgs)

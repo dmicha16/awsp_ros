@@ -6,6 +6,8 @@
 
 int main(int argc, char **argv)
 {
+    int update_rate = 10;
+
     if (argc < 2)
     {
         ROS_ERROR("Serial Port not specified");
@@ -16,6 +18,8 @@ int main(int argc, char **argv)
         ROS_ERROR("Baudrate not specified");
         return 1;
     }
+    else if (argc < 4) ROS_INFO("Update rate not specified. Using 10 Hz");
+    else update_rate = atoi(argv[3]);
 
     char* serial_port = argv[1];
     long baudrate = atol(argv[2]);
@@ -56,6 +60,13 @@ int main(int argc, char **argv)
         ROS_INFO_STREAM("Connection open on port " << serial_port << ". Baudrate: " << baudrate);
     }
 
+    if (!gnss.set_update_rate(update_rate))
+    {
+        ROS_ERROR("Cannot set update rate");
+        return 1;
+    }
+
+    ROS_INFO_STREAM("Update rate set to " << update_rate);
 
     ROS_INFO(" ");
     ROS_INFO("READ LINES");
@@ -63,7 +74,7 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "gnss_l86_interface_node");
     ros::NodeHandle n;
-    ros::Rate loop_rate(50);
+    ros::Rate loop_rate(100);
 
     bool first = true;
     while (ros::ok())
@@ -77,10 +88,7 @@ int main(int argc, char **argv)
         }
 
         for (int i = 0; i < lines.size(); ++i)
-        {
             ROS_INFO_STREAM(lines[i]);
-            return 0;
-        }
 
         loop_rate.sleep();
     }

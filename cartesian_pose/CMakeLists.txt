@@ -11,6 +11,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   gnss_l86_interface
   gy_88_interface
+  awsp_msgs
   roscpp
   std_msgs
   message_generation
@@ -108,7 +109,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES cartesian_pose
- CATKIN_DEPENDS roscpp message_runtime
+ CATKIN_DEPENDS roscpp message_runtime awsp_msgs
 #  DEPENDS system_lib
 )
 
