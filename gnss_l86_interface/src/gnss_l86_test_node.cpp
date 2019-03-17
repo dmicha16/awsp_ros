@@ -5,13 +5,13 @@
 #include <ros/console.h>
 #include "ros/ros.h"
 #include "gnss_l86_interface/gnss_l86_lib.h"
-#include "gnss_l86_interface/GnssData.h"
+#include "awsp_msgs/GnssData.h"
 
 position gnss_data;
 bool new_gnss = false;
 
 // Populate gnss_data struct with information from the gnss_msg and set new_gps to true
-void gnss_data_callback(const gnss_l86_interface::GnssData::ConstPtr& gnss_msg)
+void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
 {
     gnss_data.latitude = gnss_msg->latitude;
     gnss_data.longitude = gnss_msg->longitude;
@@ -42,14 +42,14 @@ int read_counter(std::string file_name)
 {
     int counter = 0;
     std::ifstream counter_file(file_name);
-    
+
     if (counter_file.good())
     {
         std::string line;
         getline(counter_file, line);
         counter = std::stoi(line);
     }
-    
+
     counter_file.close();
     return counter;
 }

@@ -108,7 +108,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES
-  CATKIN_DEPENDS roscpp message_runtime
+  CATKIN_DEPENDS roscpp message_runtime awsp_msgs
 #  DEPENDS system_lib
 )
 

@@ -1,6 +1,6 @@
 #include <ros/console.h>
 #include <signal.h>
-#include "gnss_l86_interface/GnssData.h"
+#include "awsp_msgs/GnssData.h"
 #include "ros/ros.h"
 #include "gnss_l86_interface/gnss_l86_lib.h"
 
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
             ROS_ERROR("Wrong baud rate!");
             return 1;
         }
-        
+
         ROS_INFO_STREAM("Closing serial connection on port " << serial_port << "...");
         gnss.close_connection();
 
@@ -75,11 +75,11 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "gnss_l86_interface_node");
     ros::NodeHandle n;
-    ros::Publisher publisher = n.advertise<gnss_l86_interface::GnssData>("gnss_data", 1000);
+    ros::Publisher publisher = n.advertise<awsp_msgs::GnssData>("gnss_data", 1000);
     ros::Rate loop_rate(100);
 
     int num_lines = 0;
-    gnss_l86_interface::GnssData gnss_data;
+    awsp_msgs::GnssData gnss_data;
     unsigned long long last_timestamp;
 
     ROS_INFO("Waiting for a fix...");

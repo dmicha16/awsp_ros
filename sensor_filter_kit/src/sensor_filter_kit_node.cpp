@@ -1,7 +1,7 @@
 #include "sensor_filter_kit/sensor_filter_kit_lib.h"
 #include "gy_88_interface/gy_88_lib.h"
 #include "awsp_msgs/Gy88Data.h"
-#include "sensor_filter_kit/SensorKitData.h"
+#include "awsp_msgs/SensorKitData.h"
 #include "ros/ros.h"
 #include "iostream"
 
@@ -65,10 +65,10 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "sensor_filter_kit_node");
   ros::NodeHandle n;
   ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
-  ros::Publisher publisher = n.advertise<sensor_filter_kit::SensorKitData>("sensor_kit_data", 1000);
+  ros::Publisher publisher = n.advertise<awsp_msgs::SensorKitData>("sensor_kit_data", 1000);
   ros::Rate loop_rate(publishing_freq);
 
-  sensor_filter_kit::SensorKitData sensor_kit_data;
+  awsp_msgs::SensorKitData sensor_kit_data;
 
   std::vector<double> features;
   std::cout << std::fixed;

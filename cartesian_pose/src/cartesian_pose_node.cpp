@@ -5,12 +5,12 @@
 #include <string>
 #include <ros/console.h>
 #include "ros/ros.h"
-#include "cartesian_pose/CartesianLog.h"
 #include "cartesian_pose/cartesian_pose.h"
 #include "gnss_l86_interface/gnss_l86_lib.h"
-#include "gnss_l86_interface/GnssData.h"
 #include "gy_88_interface/gy_88_lib.h"
+#include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
+#include "awsp_msgs/CartesianLog.h"
 #include "awsp_msgs/LogInstruction.h"
 
 gps_position gps_data;
@@ -20,7 +20,7 @@ bool new_gps = false;
 int instruction = 0;
 bool new_instruction = false;
 
-void gnss_data_callback(const gnss_l86_interface::GnssData::ConstPtr& gnss_msg)
+void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
 {
     gps_data.latitude = gnss_msg->latitude;
     gps_data.longitude = gnss_msg->longitude;
@@ -63,14 +63,14 @@ int read_counter(std::string file_name)
 {
     int counter = 0;
     std::ifstream counter_file(file_name);
-    
+
     if (counter_file.good())
     {
         std::string line;
         getline(counter_file, line);
         counter = std::stoi(line);
     }
-    
+
     counter_file.close();
     return counter;
 }
@@ -79,13 +79,13 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "cartesian_pose_node");
     ros::NodeHandle n;
-    ros::Publisher publisher = n.advertise<cartesian_pose::CartesianLog>("cartesian_log", 1000);
+    ros::Publisher publisher = n.advertise<awsp_msgs::CartesianLog>("cartesian_log", 1000);
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
     ros::Subscriber catamaran_sub = n.subscribe("log_instruction", 1000, instruction_callback);
     ros::Rate loop_rate(40);
 
-    cartesian_pose::CartesianLog cartesian_log;
+    awsp_msgs::CartesianLog cartesian_log;
 
     bool is_first_gps = true;
 

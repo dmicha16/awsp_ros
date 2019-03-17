@@ -6,8 +6,8 @@
 #include "catamaran_controller/esc_lib.h"
 #include "cartesian_pose/cartesian_pose.h"
 #include "gnss_l86_interface/gnss_l86_lib.h"
-#include "gnss_l86_interface/GnssData.h"
-#include "gy_88_interface/gy_88_lib.h"
+#include "awsp_msgs/GnssData.h"
+#include "awsp_msgs/gy_88_lib.h"
 #include "awsp_msgs/Gy88Data.h"
 
 gps_position gps_data;
@@ -15,7 +15,7 @@ imu_data imu_data;
 bool new_imu = false;
 bool new_gps = false;
 
-void gnss_data_callback(const gnss_l86_interface::GnssData::ConstPtr& gnss_msg)
+void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
 {
     gps_data.latitude = gnss_msg->latitude;
     gps_data.longitude = gnss_msg->longitude;
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 
     // Distance from propeller to x-axis
     float propeller_dist = 0.61;
-    
+
     // Errors
     coordinates_2d cartesian_error;
     float distance_error;

@@ -9,7 +9,11 @@ add_message_files(
         DIRECTORY msg
         FILES
         Gy88Data.msg
+        GnssData.msg
+        CartesianLog.msg
+        CartesianPose.msg
         LogInstruction.msg
+        SensorKitData.msg
 )
 
 generate_messages(DEPENDENCIES std_msgs)

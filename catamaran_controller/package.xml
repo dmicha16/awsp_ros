@@ -53,14 +53,15 @@
   <build_depend>roscpp</build_depend>
   <build_export_depend>roscpp</build_export_depend>
   <exec_depend>roscpp</exec_depend>
-
+  
+  <depend>awsp_msgs</depend>
   <build_depend>gnss_l86_interface</build_depend>
   <build_depend>gy_88_interface</build_depend>
   <build_depend>cartesian_pose</build_depend>
 
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
-  
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
