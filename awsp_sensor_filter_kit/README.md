@@ -19,7 +19,7 @@ The exponential moving average only uses the previous average sample rather than
 # Getting started
 
 To run the package do:
-`$ rosrun sensor_filter_kit sensor_filter_kit_node`
+`$ rosrun awsp_sensor_filter_kit awsp_sensor_filter_kit_node`
 
 It is neccessary to pass the lenght of the window, sensor readings and the desired filter.
 
