@@ -14,10 +14,9 @@ You can find these repos here:
 - [ros_sensor_filter_kit](https://github.com/dmicha16/ros_sensor_filter_kit)
 
 ## Getting Started
-This guide assumes that you have already install the `catkin` environment for `ROS Kinetic`. Else, follow [this installation guide](http://wiki.ros.org/catkin#Installing_catkin)
+This guide assumes that you have already install the `catkin` environment for `ROS Kinetic`. Else, follow [this installation guide](http://wiki.ros.org/catkin#Installing_catkin).
 
-You'll have to initialize a workspace:
-
+You'll have to initialize a workspace, you can choose to do it manually:
 ```shell
 source /opt/ros/kinetic/setup.bash
 mkdir -p ~/<catkin_ws_name>/src
@@ -35,9 +34,11 @@ mv awsp_ros/ src/
 catkin_make
 ```
 
+OR, you can do it by running the script `setup_awsp_ws.sh` inside `src/awsp_scripts
+`by typing `./setup_awsp_ws.sh`. This will create everything for you right away.
+
+___
+
 Credits to Kugle-ROS project for a workspace structure inspiration.
 
 [Kugle-ROS](https://github.com/mindThomas/Kugle-ROS)
-
-
-hello this a test commit
