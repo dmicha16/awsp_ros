@@ -1,4 +1,4 @@
-#include "gy_88_interface/gy_88_lib.h"
+#include "awsp_gy_88_interface/gy_88_lib.h"
 #include <iostream>
 #include <bitset>
 

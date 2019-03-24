@@ -8,7 +8,7 @@
     />
 
     <node 
-        pkg = "gy_88_interface"
+        pkg = "awsp_gy_88_interface"
         name = "gy_88_interface_node"
         type = "gy_88_interface_node"
         args = "300"

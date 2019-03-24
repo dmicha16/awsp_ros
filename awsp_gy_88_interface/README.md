@@ -35,7 +35,7 @@ $ ./build
 # Usage
 
 To run this package simply:
-`$ rosrun gy_88_interface gy_88_interface_node`
+`$ rosrun awsp_gy_88_interface gy_88_interface_node`
 and the node will start publishing to the `gy_88_data` topic. Afterwards to get the data all it takes is to subscribe to this topic.
 
 # Authors

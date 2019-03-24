@@ -1,5 +1,5 @@
 #include "awsp_sensor_filter_kit/awsp_sensor_filter_kit_lib.h"
-#include "gy_88_interface/gy_88_lib.h"
+#include "awsp_gy_88_interface/gy_88_lib.h"
 #include "awsp_msgs/Gy88Data.h"
 #include "awsp_msgs/SensorKitData.h"
 #include "ros/ros.h"

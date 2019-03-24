@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>gy_88_interface</name>
+  <name>awsp_gy_88_interface</name>
   <version>0.0.0</version>
-  <description>The gy_88_interface package</description>
+  <description>The awsp_gy_88_interface package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

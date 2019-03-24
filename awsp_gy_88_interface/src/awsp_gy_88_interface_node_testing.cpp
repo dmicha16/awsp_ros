@@ -1,4 +1,4 @@
-#include "gy_88_interface/gy_88_lib.h"
+#include "awsp_gy_88_interface/gy_88_lib.h"
 #include "ros/ros.h"
 #include <iostream>
 #include "awsp_msgs/Gy88Data.h"
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
     ChipMPU6050 chip_mpu6050;
     ChipHMC5883L chip_hmc5883l;
 
-    std::string file_name = "/home/ubuntu/catkin_ws/src/gy_88_interface/mpu6050_recording_" \
+    std::string file_name = "/home/ubuntu/catkin_ws/src/awsp_gy_88_interface/mpu6050_recording_" \
        + std::to_string(recording_freq) \
        + "_" \
        + std::to_string(get_millis_since_epoch()) + ".csv";

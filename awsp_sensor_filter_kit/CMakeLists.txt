@@ -10,7 +10,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   awsp_msgs
-  gy_88_interface
+  awsp_gy_88_interface
   std_msgs
   message_generation
   )

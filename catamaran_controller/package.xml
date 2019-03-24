@@ -56,7 +56,7 @@
   
   <depend>awsp_msgs</depend>
   <build_depend>gnss_l86_interface</build_depend>
-  <build_depend>gy_88_interface</build_depend>
+  <build_depend>awsp_gy_88_interface</build_depend>
   <build_depend>cartesian_pose</build_depend>
 
   <build_depend>message_generation</build_depend>

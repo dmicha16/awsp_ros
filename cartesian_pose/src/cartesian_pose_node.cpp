@@ -7,7 +7,7 @@
 #include "ros/ros.h"
 #include "cartesian_pose/cartesian_pose.h"
 #include "gnss_l86_interface/gnss_l86_lib.h"
-#include "gy_88_interface/gy_88_lib.h"
+#include "awsp_gy_88_interface/gy_88_lib.h"
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
 #include "awsp_msgs/CartesianLog.h"

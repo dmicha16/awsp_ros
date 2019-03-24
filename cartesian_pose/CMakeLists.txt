@@ -11,7 +11,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   awsp_msgs
   gnss_l86_interface
-  gy_88_interface
+  awsp_gy_88_interface
   awsp_msgs
   roscpp
   std_msgs
