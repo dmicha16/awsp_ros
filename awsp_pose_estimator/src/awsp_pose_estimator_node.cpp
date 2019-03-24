@@ -5,7 +5,7 @@
 #include <string>
 #include <ros/console.h>
 #include "ros/ros.h"
-#include "cartesian_pose/cartesian_pose.h"
+#include "awsp_pose_estimator/awsp_pose_estimator.h"
 #include "gnss_l86_interface/gnss_l86_lib.h"
 #include "awsp_gy_88_interface/gy_88_lib.h"
 #include "awsp_msgs/GnssData.h"
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 
     bool new_data = false;
     std::ofstream file;
-    std::string directory = "/home/ubuntu/catkin_ws/src/cartesian_pose/log/";
+    std::string directory = "/home/ubuntu/catkin_ws/src/awsp_pose_estimator/log/";
     std::string file_name;
     unsigned long long random = rand();
     int surge_counter = read_counter(directory + "surge_counter.count");

@@ -9,7 +9,7 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   gnss_l86_interface
-  cartesian_pose
+  awsp_pose_estimator
   awsp_gy_88_interface
   awsp_msgs
   roscpp
@@ -158,7 +158,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-  cartesian_pose
+  awsp_pose_estimator
   force_to_pwm
   gnss_l86_lib
   gy_88_lib
@@ -169,7 +169,7 @@ target_link_libraries(${PROJECT_NAME}_node
 )
 #
 #target_link_libraries(${PROJECT_NAME}_node_no_bearing
-#  cartesian_pose
+#  awsp_pose_estimator
 #  force_to_pwm
 #  gnss_l86_lib
 #  gy_88_lib
@@ -180,7 +180,7 @@ target_link_libraries(${PROJECT_NAME}_node
 #)
 #
 #target_link_libraries(${PROJECT_NAME}_node_no_imu
-#  cartesian_pose
+#  awsp_pose_estimator
 #  force_to_pwm
 #  gnss_l86_lib
 #  gy_88_lib
@@ -191,7 +191,7 @@ target_link_libraries(${PROJECT_NAME}_node
 #)
 
 #target_link_libraries(test_node
-#  cartesian_pose
+#  awsp_pose_estimator
 #  test_lib
 #  force_to_pwm
 #  gnss_l86_lib

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <math.h>
 #include <ros/console.h>
-#include "cartesian_pose/cartesian_pose.h"
+#include "awsp_pose_estimator/awsp_pose_estimator.h"
 
 // ******************************** CONSTRUCTORS-DESTRUCTORS *******************************
 CartesianPose::CartesianPose(gps_position magnetic_north, gps_position ref, coordinates_2d initial_vel, coordinates_2d initial_acc, float initial_bearing_mag)

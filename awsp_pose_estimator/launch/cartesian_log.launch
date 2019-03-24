@@ -16,8 +16,8 @@
     />
 
     <!-- <node
-        pkg = "cartesian_pose"
-        type = "cartesian_pose_node"
-        name = "cartesian_pose_node"
+        pkg = "awsp_pose_estimator"
+        type = "awsp_pose_estimator_node"
+        name = "awsp_pose_estimator_node"
     /> -->
 </launch>

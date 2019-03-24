@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(cartesian_pose)
+project(awsp_pose_estimator)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -109,7 +109,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES cartesian_pose
+ LIBRARIES awsp_pose_estimator
  CATKIN_DEPENDS roscpp message_runtime awsp_msgs
 #  DEPENDS system_lib
 )
@@ -126,7 +126,7 @@ include_directories(
 )
 
 ## Declare a C++ library
-add_library(${PROJECT_NAME} src/cartesian_pose.cpp)
+add_library(${PROJECT_NAME} src/awsp_pose_estimator.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -150,7 +150,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-  cartesian_pose
+  awsp_pose_estimator
   gnss_l86_lib
   gy_88_lib
   ${catkin_LIBRARIES}
