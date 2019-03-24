@@ -17,6 +17,8 @@ awsp_scripts/awsp_setup_pifi.sh
 .idea/**/shelf
 .idea/*
 
+cmake-build-debug
+
 # Generated files
 .idea/**/contentModel.xml
 

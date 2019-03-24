@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>gnss_l86_interface</name>
+  <name>awsp_gnss_l86_interface</name>
   <version>0.0.0</version>
-  <description>The gnss_l86_interface package</description>
+  <description>The awsp_gnss_l86_interface package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

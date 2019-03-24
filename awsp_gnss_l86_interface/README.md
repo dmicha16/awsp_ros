@@ -4,7 +4,7 @@ ROS package to get GNSS information from Quectel GNSS L86 modules using UART com
 
 Features
 --------
-**gnss_l86_interface** uses [**gnss_l86_lib**](https://github.com/EduPonz/gnss_l86_lib) to obtain messages from the module and publish real time GNSS information to the `gnss_data` topic. The message structure is:
+**awsp_gnss_l86_interface** uses [**gnss_l86_lib**](https://github.com/EduPonz/gnss_l86_lib) to obtain messages from the module and publish real time GNSS information to the `gnss_data` topic. The message structure is:
 
 ```
 float64 latitude
@@ -18,7 +18,7 @@ float64 timestamp
 
 Getting Started
 ---------------
-**gnss_l86_interface** has been developed and tested in November 2018 for ROS Kinetic using a Raspberry Pi 3 model B with Ubuntu 16.04 as Operating System. Other platforms, operating systems or distributions have not been tested and may requiere source code modification.
+**awsp_gnss_l86_interface** has been developed and tested in November 2018 for ROS Kinetic using a Raspberry Pi 3 model B with Ubuntu 16.04 as Operating System. Other platforms, operating systems or distributions have not been tested and may requiere source code modification.
 
 ### Prerequisites
 [**gnss_l86_lib**](https://github.com/EduPonz/gnss_l86_lib) relies on [wiringPi](http://wiringpi.com/) for establishing a serial connection with the GNSS module. The distributor offers different installation procedures. The one used for the development of this package was:
@@ -41,21 +41,21 @@ For installing this package, just place it under the `src/` directory of your Ca
 
 Usage
 -----
-The **gnss_l86_interface_node** can be run with:
+The **awsp_gnss_l86_interface_node** can be run with:
 
 ```
-$ rosrun gnss_l86_interface gnss_l86_interface_node <port>
+$ rosrun awsp_gnss_l86_interface awsp_gnss_l86_interface_node <port>
 ```
 
 Where `<port>` specifies the serial port where the module is attached. An example of this command would be:
 
 ```
-$ rosrun gnss_l86_interface gnss_l86_interface_node /dev/serial0
+$ rosrun awsp_gnss_l86_interface awsp_gnss_l86_interface_node /dev/serial0
 ```
 
 Authors
 -------
-**gnss_l86_interface_node** has been developed by **Eduardo Ponz** for the use on the project [Project Name](project_repo).
+**awsp_gnss_l86_interface_node** has been developed by **Eduardo Ponz** for the use on the project [Project Name](project_repo).
 
 License
 -------

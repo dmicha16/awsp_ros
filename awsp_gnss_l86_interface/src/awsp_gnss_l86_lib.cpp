@@ -4,7 +4,7 @@
 #include <string.h>
 #include <thread>
 #include <errno.h>
-#include "gnss_l86_interface/gnss_l86_lib.h"
+#include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 
 // ******************************** CONSTRUCTORS-DESTRUCTORS *******************************
 GnssInterface::GnssInterface()

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(gnss_l86_interface)
+project(awsp_gnss_l86_interface)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -126,7 +126,7 @@ include_directories(
 
 ## Declare a C++ library
 add_library(
-  gnss_l86_lib src/gnss_l86_lib.cpp
+  gnss_l86_lib src/awsp_gnss_l86_lib.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -138,10 +138,10 @@ add_library(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
-add_executable(gnss_l86_test_ouput_frequency src/gnss_l86_test_ouput_frequency.cpp)
-add_executable(gnss_l86_test_read_speed src/gnss_l86_test_read_speed.cpp)
-add_executable(gnss_l86_test_node src/gnss_l86_test_node.cpp)
-add_executable(gnss_l86_output src/gnss_l86_output.cpp)
+add_executable(awsp_gnss_l86_test_ouput_frequency src/awsp_gnss_l86_test_ouput_frequency.cpp)
+add_executable(awsp_gnss_l86_test_read_speed src/awsp_gnss_l86_test_read_speed.cpp)
+add_executable(awsp_gnss_l86_test_node src/awsp_gnss_l86_test_node.cpp)
+add_executable(awsp_gnss_l86_output src/awsp_gnss_l86_output.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,10 +152,10 @@ add_executable(gnss_l86_output src/gnss_l86_output.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(gnss_l86_test_ouput_frequency ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(gnss_l86_test_read_speed ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(gnss_l86_test_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(gnss_l86_output ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(awsp_gnss_l86_test_ouput_frequency ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(awsp_gnss_l86_test_read_speed ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(awsp_gnss_l86_test_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(awsp_gnss_l86_output ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
@@ -168,7 +168,7 @@ target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
 )
 
-target_link_libraries(gnss_l86_test_ouput_frequency
+target_link_libraries(awsp_gnss_l86_test_ouput_frequency
   gnss_l86_lib
   wiringPi
   pthread
@@ -178,7 +178,7 @@ target_link_libraries(gnss_l86_test_ouput_frequency
   ${catkin_LIBRARIES}
 )
 
-target_link_libraries(gnss_l86_test_read_speed
+target_link_libraries(awsp_gnss_l86_test_read_speed
   gnss_l86_lib
   wiringPi
   pthread
@@ -188,7 +188,7 @@ target_link_libraries(gnss_l86_test_read_speed
   ${catkin_LIBRARIES}
 )
 
-target_link_libraries(gnss_l86_test_node
+target_link_libraries(awsp_gnss_l86_test_node
   gnss_l86_lib
   wiringPi
   pthread
@@ -198,7 +198,7 @@ target_link_libraries(gnss_l86_test_node
   ${catkin_LIBRARIES}
 )
 
-target_link_libraries(gnss_l86_output
+target_link_libraries(awsp_gnss_l86_output
   gnss_l86_lib
   wiringPi
   pthread

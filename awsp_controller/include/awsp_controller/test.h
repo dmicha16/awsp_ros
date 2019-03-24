@@ -2,8 +2,8 @@
 #include <ros/ros.h>
 #include <ros/console.h>
 #include "awsp_controller/force_to_pwm.h"
-#include "gnss_l86_interface/gnss_l86_lib.h"
-#include "gnss_l86_interface/GnssData.h" 
+#include "awsp_gnss_l86_interface/gnss_l86_lib.h"
+#include "awsp_gnss_l86_interface/GnssData.h"
 #include "awsp_controller/esc_lib.h"
 #include "awsp_pose_estimator/CartesianLog.h"
 #include "awsp_msgs/LogInstruction.h"

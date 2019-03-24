@@ -55,7 +55,7 @@
   <exec_depend>roscpp</exec_depend>
   
   <depend>awsp_msgs</depend>
-  <build_depend>gnss_l86_interface</build_depend>
+  <build_depend>awsp_gnss_l86_interface</build_depend>
   <build_depend>awsp_gy_88_interface</build_depend>
   <build_depend>awsp_pose_estimator</build_depend>
 

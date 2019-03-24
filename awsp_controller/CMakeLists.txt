@@ -8,7 +8,7 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  gnss_l86_interface
+  awsp_gnss_l86_interface
   awsp_pose_estimator
   awsp_gy_88_interface
   awsp_msgs

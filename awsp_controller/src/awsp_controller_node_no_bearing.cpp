@@ -5,7 +5,7 @@
 #include "awsp_controller/force_to_pwm.h"
 #include "awsp_controller/esc_lib.h"
 #include "awsp_pose_estimator/awsp_pose_estimator.h"
-#include "gnss_l86_interface/gnss_l86_lib.h"
+#include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/gy_88_lib.h"
 #include "awsp_msgs/Gy88Data.h"

@@ -1,7 +1,7 @@
 #include <ros/console.h>
 #include <signal.h>
 #include "ros/ros.h"
-#include "gnss_l86_interface/gnss_l86_lib.h"
+#include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 
 
 int main(int argc, char **argv)
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     ROS_INFO("READ LINES");
     ROS_INFO("-------------------------------------------------");
 
-    ros::init(argc, argv, "gnss_l86_interface_node");
+    ros::init(argc, argv, "awsp_gnss_l86_interface_node");
     ros::NodeHandle n;
     ros::Rate loop_rate(100);
 

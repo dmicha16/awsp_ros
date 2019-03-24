@@ -2,7 +2,7 @@
 #include <signal.h>
 #include "awsp_msgs/GnssData.h"
 #include "ros/ros.h"
-#include "gnss_l86_interface/gnss_l86_lib.h"
+#include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 
 
 int main(int argc, char **argv)
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     }
     ROS_INFO("FR mode set to FITNESS_MODE");
 
-    ros::init(argc, argv, "gnss_l86_interface_node");
+    ros::init(argc, argv, "awsp_gnss_l86_interface_node");
     ros::NodeHandle n;
     ros::Publisher publisher = n.advertise<awsp_msgs::GnssData>("gnss_data", 1000);
     ros::Rate loop_rate(100);

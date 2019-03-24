@@ -3,7 +3,7 @@
 #include <ros/console.h>
 #include <vector>
 #include "ros/ros.h"
-#include "gnss_l86_interface/gnss_l86_lib.h"
+#include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 
 unsigned long get_epoch()
 {
