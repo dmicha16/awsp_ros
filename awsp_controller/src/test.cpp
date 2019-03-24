@@ -1,4 +1,4 @@
-#include "catamaran_controller/test.h"
+#include "awsp_controller/test.h"
 #include <iostream>
 #include <stdio.h>
 

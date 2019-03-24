@@ -1,5 +1,5 @@
 #include <math.h>
-#include "catamaran_controller/feed_forward_reference.h"
+#include "awsp_controller/feed_forward_reference.h"
 
 FeedForwardReference::FeedForwardReference() 
 {

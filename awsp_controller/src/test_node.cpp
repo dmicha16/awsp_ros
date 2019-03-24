@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <ros/console.h>
-#include "catamaran_controller/test.h"
+#include "awsp_controller/test.h"
 
 int main(int argc, char **argv)
 {

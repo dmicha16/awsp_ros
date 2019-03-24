@@ -2,8 +2,8 @@
 #include <ros/console.h>
 #include <math.h>
 #include "ros/ros.h"
-#include "catamaran_controller/force_to_pwm.h"
-#include "catamaran_controller/esc_lib.h"
+#include "awsp_controller/force_to_pwm.h"
+#include "awsp_controller/esc_lib.h"
 #include "cartesian_pose/cartesian_pose.h"
 #include "gnss_l86_interface/gnss_l86_lib.h"
 #include "awsp_msgs/GnssData.h"
@@ -38,7 +38,7 @@ void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
 int main(int argc, char **argv)
 {
     // ****************** Node Initialization ******************
-    ros::init(argc, argv, "catamaran_controller_node");
+    ros::init(argc, argv, "awsp_controller_node");
     ros::NodeHandle n;
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);

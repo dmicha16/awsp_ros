@@ -1,10 +1,10 @@
 #include <string>
 #include <ros/ros.h>
 #include <ros/console.h>
-#include "catamaran_controller/force_to_pwm.h"
+#include "awsp_controller/force_to_pwm.h"
 #include "gnss_l86_interface/gnss_l86_lib.h"
 #include "gnss_l86_interface/GnssData.h" 
-#include "catamaran_controller/esc_lib.h"
+#include "awsp_controller/esc_lib.h"
 #include "cartesian_pose/CartesianLog.h"
 #include "awsp_msgs/LogInstruction.h"
 #include <cstdlib>

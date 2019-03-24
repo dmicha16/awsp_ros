@@ -1,4 +1,4 @@
-#include "catamaran_controller/esc_lib.h"
+#include "awsp_controller/esc_lib.h"
 
 esc_lib::esc_lib(int pin){
     pin_ = pin;
