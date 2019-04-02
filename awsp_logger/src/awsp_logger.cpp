@@ -16,6 +16,7 @@ Logger::Logger()
     test_dir_status = mkdir(test_dir_, S_IRWXU);
 
     gnss_file_name_ = temp_test_dir_ + "/gnss_data.csv";
+    imu_file_name_ = temp_test_dir_ + "/imu_data.csv";
 }
 
 Logger::~Logger() { }
@@ -42,28 +43,47 @@ int Logger::read_counter_(std::string file_name)
     else 
     {
         ROS_INFO("Missing counter file. Using counter 1");
-        return 1;
+        return 0;
     }
 
     counter_file.close();
     return counter;
 }
 
+void Logger::set_directory(std::string path)
+{
+    directory_ = path;
+    temp_test_dir_ = directory_ + "test_" + std::to_string(test_counter_);
+    test_dir_ =  temp_test_dir_.c_str();
+    test_dir_status = mkdir(test_dir_, S_IRWXU);
+
+    gnss_file_name_ = temp_test_dir_ + "/gnss_data.csv";
+    imu_file_name_ = temp_test_dir_ + "/imu_data.csv";
+}
+
 void Logger::gnss_logger(position gnss_data)
 {
     gnss_file.open(gnss_file_name_, std::ios_base::app);
-    gnss_file << gnss_data.latitude << ";"
-            << gnss_data.longitude << ";"
-            << gnss_data.speed << ";"
-            << gnss_data.true_course << ";"
+    gnss_file << gnss_data.latitude << ","
+            << gnss_data.longitude << ","
+            << gnss_data.speed << ","
+            << gnss_data.true_course << ","
             << gnss_data.timestamp << std::endl;
     gnss_file.close();
 }
 
-void Logger::set_directory(std::string path)
+void Logger::imu_logger(imu_data imu_data)
 {
-    directory_ = path;
+    imu_file.open (imu_file_name_, std::ios_base::app);
+    imu_file << imu_data.acceleration.x <<
+                "," << imu_data.acceleration.y <<
+                "," << imu_data.yaw_vel <<
+                "," << imu_data.bearing <<
+                "," << imu_data.timestamp << std::endl;
+    imu_file.close();
 }
+
+
 
 
     

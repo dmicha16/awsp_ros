@@ -18,14 +18,15 @@ class Logger
 {
     private:
     int test_counter_;
-    std::string directory_;
-    std::string gnss_file_name_;
-    std::ofstream gnss_file;
-
     int test_dir_status;
+    std::string directory_;
     std::string temp_test_dir_;
     const char* test_dir_;
-    
+    std::string gnss_file_name_;
+    std::string imu_file_name_;
+    std::ofstream gnss_file;
+    std::ofstream imu_file;
+        
     void increase_counter_(std::string file_name, int number);
     int read_counter_(std::string file_name);
 
@@ -34,4 +35,5 @@ class Logger
     ~Logger();
     void set_directory(std::string path);
     void gnss_logger(position gnss_data);
+    void imu_logger (imu_data imu_data);
 };
