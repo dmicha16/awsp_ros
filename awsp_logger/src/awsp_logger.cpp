@@ -4,9 +4,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-Logger::Logger() 
+Logger::Logger(std::string directory) 
 {
-    directory_ = "/home/ubuntu/awsp_ws/src/awsp_logger/log/";
+    directory_ = directory;
     test_counter_ = read_counter_(directory_ + "test_counter.count");
     test_counter_ += 1;
     increase_counter_(directory_ + "test_counter", test_counter_);
@@ -42,10 +42,13 @@ int Logger::read_counter_(std::string file_name)
     }
     else 
     {
-        ROS_INFO("Missing counter file. Using counter 1");
+        ROS_INFO("Missing counter file. Creating a counter file and using a counter 1...");
+        std::ofstream counter_file;
+        counter_file.open(file_name);
+        counter_file << 0 << std::endl;
+        counter_file.close();
         return 0;
     }
-
     counter_file.close();
     return counter;
 }
@@ -81,6 +84,15 @@ void Logger::imu_logger(imu_data imu_data)
                 "," << imu_data.bearing <<
                 "," << imu_data.timestamp << std::endl;
     imu_file.close();
+}
+
+void Logger::additional_logger(std::string data_to_log, std::string file_name)
+{
+    std::ofstream file;
+    std::string file_dir = temp_test_dir_ + "/" + file_name;
+    file.open (file_dir, std::ios_base::app);
+    file << data_to_log << std::endl;
+    file.close();
 }
 
 

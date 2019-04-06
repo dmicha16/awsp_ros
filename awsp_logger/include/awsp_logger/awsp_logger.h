@@ -31,9 +31,10 @@ class Logger
     int read_counter_(std::string file_name);
 
     public:
-    Logger();
+    Logger(std::string directory);
     ~Logger();
     void set_directory(std::string path);
     void gnss_logger(position gnss_data);
     void imu_logger (imu_data imu_data);
+    void additional_logger(std::string data_to_log, std::string file_name);
 };
