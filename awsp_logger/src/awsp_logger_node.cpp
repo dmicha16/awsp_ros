@@ -1,4 +1,5 @@
 #include <string>
+#include <sstream>
 #include <ros/console.h>
 #include "ros/ros.h"
 #include "awsp_logger/awsp_logger.h"
@@ -43,7 +44,7 @@ void log_instruction_callback(const awsp_msgs::LogInstruction::ConstPtr& instruc
     log_instruction.instruction = instruction_msg->instruction;
     new_log_instruction = true;
 }
- 
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "logger_node");
@@ -52,13 +53,16 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(100);
     std::string directory = "/home/ubuntu/awsp_ws/src/awsp_logger/log/";
 
-    ROS_INFO("Create a logger object...");
+    ROS_INFO("Creating a logger object...");
     Logger logger(directory);
-  
+    ROS_INFO("Logger object created!");
 
+    ROS_INFO("Subscribing to GNSS and IMU data...");
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
     ros::Subscriber log_instruction_sub = n.subscribe("log_instruction", 1000, log_instruction_callback);
+    ROS_INFO("Subscribed successfully!");
+    ROS_INFO("Listening for instructions. Logging everything...");
 
     while (ros::ok())
     {
@@ -76,7 +80,7 @@ int main(int argc, char **argv)
                     log_instruction_imu = true;
                     ROS_INFO("Instuction is 1");
                     break;
-                case 2:        // only gnss logging 
+                case 2:        // only gnss logging
                     log_instruction_gnss = true;
                     log_instruction_imu = false;
                     ROS_INFO("Instuction is 2");
@@ -91,7 +95,7 @@ int main(int argc, char **argv)
                     log_instruction_imu = true;
                     ROS_INFO("Unidentified input. Logging all.");
                     break;
-            }            
+            }
             new_log_instruction = false;
         }
 

@@ -2,20 +2,26 @@
         that allows logging passed arguments */
     
     std::string test_file = "test_file.csv";
-    std::string file_data_1; 
-    std::string file_data_2; 
-    std::string file_data_3; 
-    std::string file_data_full; 
+    std::string file_data_1;
+    std::string file_data_2;
+    std::string file_data_3;
+    std::string file_data_full;
 
     for (int i = 0; i < 5; i ++)
     {
+        std::stringstream s1;
         file_data_1 = std::to_string (rand() % 100 + 1);
         file_data_2 = std::to_string (rand() % 100 + 1);
         file_data_3 = std::to_string (rand() % 100 + 1);
         file_data_full = file_data_1 + ", " + file_data_2 + ", " + file_data_3;
-
-        logger.additional_logger(file_data_full, test_file);
+        std::string a;
+        s1 << file_data_1 << ", " << file_data_2 << ", " << file_data_3; 
+        std::cout << s1.str() << std::endl << "Just enter something" << std::endl;
+        logger.additional_logger(s1, test_file);
+        // logger.additional_logger(file_data_full, test_file);
+        std::cin >> a; //to add a delay, so we can see it on the timestamp
     }
+
 
     /* Example code to send instructions to the logger*/
 
