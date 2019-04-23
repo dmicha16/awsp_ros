@@ -10,10 +10,48 @@
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
 
+#include "awsp_controller/dynamic_parameters.h"
+
+#include <dynamic_reconfigure/server.h>
+#include <awsp_controller/ParametersConfig.h>
+
 gps_position gps_data;
 imu_data imu_data;
 bool new_imu = false;
 bool new_gps = false;
+
+void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
+
+    switch (level) {
+        case dynr::LEVEL::GAINS:
+            dynr::control_gains.linear_gain = config.linear_gain;
+            dynr::control_gains.angular_gain = config.angular_gain;
+            dynr::control_gains.use_fault_detection = config.use_fault_detection;
+            break;
+        case dynr::LEVEL::DYNAMIC_MODEL:
+            dynr::general_config.damping_surge = config.damping_surge;
+            dynr::general_config.damping_yaw = config.damping_yaw;
+            dynr::general_config.propeller_distance = config.propeller_distance;
+            break;
+        case dynr::LEVEL::SYSTEM_MODE:
+            dynr::system_mode.vessel = config.system_mode;
+            break;
+        case dynr::LEVEL::LLA_GOAL_POINTS:
+            dynr::current_vessel_task.goal_latitude = config.goal_latitude;
+            dynr::current_vessel_task.goal_longitude = config.goal_longitude;
+            break;
+        case dynr::LEVEL::CROSS_GROUP_LOG:
+            dynr::general_config.log_general_config = config.log_general_config;
+            dynr::control_gains.log_control_system_config = config.log_control_system_config;
+            break;
+        case dynr::LEVEL::DEBUGGING:
+            dynr::debugging.log_gps_raw = config.log_gps_raw;
+            dynr::debugging.log_gps_kalman = config.log_gps_kalman;
+            dynr::debugging.log_imu_raw = config.log_imu_raw;
+            dynr::debugging.log_imu_kalman = config.log_imu_kalman;
+            break;
+    }
+}
 
 void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
 {
@@ -38,13 +76,26 @@ void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
 int main(int argc, char **argv)
 {
     // ****************** Node Initialization ******************
+
+    ROS_DEBUG("INITIALIZING CONTROLLER NODE");
+
     ros::init(argc, argv, "awsp_controller_node");
     ros::NodeHandle n;
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
     ros::Rate loop_rate(10);
 
-    // ESCs and PWM converter
+
+    dynamic_reconfigure::Server<awsp_controller::ParametersConfig> server;
+    dynamic_reconfigure::Server<awsp_controller::ParametersConfig>::CallbackType f;
+
+    f = boost::bind(&callback, _1, _2);
+    server.setCallback(f);
+
+    dynr::print_system_status();
+
+
+//     ESCs and PWM converter
     ForceToPWM pwm_converter;
     esc_lib left_esc(17);
     esc_lib right_esc(27);

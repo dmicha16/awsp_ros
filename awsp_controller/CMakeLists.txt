@@ -15,6 +15,11 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   message_generation
+  dynamic_reconfigure
+)
+
+generate_dynamic_reconfigure_options(
+        cfg/Parameters.cfg
 )
 
 ## System dependencies are found with CMake's conventions
@@ -152,6 +157,7 @@ add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(awsp_logger ${PROJECT_NAME}_gencfg)
 #add_dependencies(${PROJECT_NAME}_node_no_bearing ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #add_dependencies(${PROJECT_NAME}_node_no_imu ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #add_dependencies(test_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
