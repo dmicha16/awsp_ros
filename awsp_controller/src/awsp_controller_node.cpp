@@ -10,7 +10,7 @@
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
 
-#include "awsp_controller/dynamic_parameters.h"
+#include "awsp_controller/state_machine.h"
 
 #include <dynamic_reconfigure/server.h>
 #include <awsp_controller/ParametersConfig.h>
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 {
     // ****************** Node Initialization ******************
 
-    ROS_DEBUG("INITIALIZING CONTROLLER NODE");
+    ROS_DEBUG("===== INITIALIZING CONTROLLER NODE =====");
 
     ros::init(argc, argv, "awsp_controller_node");
     ros::NodeHandle n;
@@ -85,20 +85,11 @@ int main(int argc, char **argv)
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
     ros::Rate loop_rate(10);
 
-
     dynamic_reconfigure::Server<awsp_controller::ParametersConfig> server;
     dynamic_reconfigure::Server<awsp_controller::ParametersConfig>::CallbackType f;
 
     f = boost::bind(&callback, _1, _2);
     server.setCallback(f);
-
-    dynr::print_system_status();
-
-
-//     ESCs and PWM converter
-    ForceToPWM pwm_converter;
-    esc_lib left_esc(17);
-    esc_lib right_esc(27);
 
     // Pose estimation first construction
     coordinates_2d vel;
@@ -111,7 +102,7 @@ int main(int argc, char **argv)
     cart_pose cartesian_ref;
 
     // Distance from propeller to x-axis
-    float propeller_dist = 0.61;
+//    float propeller_dist = 0.61;
 
     // Errors
     coordinates_2d cartesian_error;
@@ -120,12 +111,12 @@ int main(int argc, char **argv)
     float bearing_error;
 
     // Proportional gains
-    float linear_gain = 0.0269;
-    float angular_gain = 0.167;
+//    float linear_gain = 0.0269;
+//    float angular_gain = 0.167;
 
     // Damping coefs
-    float damping_surge = 1.5437;
-    float damping_yaw = 1.20348;
+//    float damping_surge = 1.5437;
+//    float damping_yaw = 1.20348;
 
     // Forces and torques
     float force_drive;
@@ -141,90 +132,116 @@ int main(int argc, char **argv)
     int pwm_left;
     int pwm_right;
 
-    std::cout << std::endl;
-    std::cout << "*****************************************************" << std::endl;
-    std::cout << "* -------------- CATAMARAN CONTROLLER ------------- *" << std::endl;
-    std::cout << "*****************************************************" << std::endl;
-    std::cout << std::endl;
-    std::cout << "Waiting for GPS signal... " << std::flush;
-
     bool is_first_gps = true;
     bool ref_set = false;
 
+//    dynr::system_mode.evaluate_system_mode();
+    //     ESCs and PWM converter
+//    ForceToPWM pwm_converter;
+//    esc_lib left_esc(17);
+//    esc_lib right_esc(27);
+
     while (ros::ok())
     {
-        // Wait for GPS signal
-        //if (is_first_gps && !new_gps) continue;
-        if (!ref_set)
+        switch (state::current_system_state)
         {
-            is_first_gps = false;
-            ref_set = true;
-            // Reconstruct estimator with GPS ref
-            pose_estimator = CartesianPose(gps_data, gps_data, vel, acc, imu_data.bearing);
-            current_pose = pose_estimator.get_last_cartesian();
-            std::cout << "[acquired]" << std::endl;
+            case state::SYSTEM_OFF:
+                state::system_off();
+                state::current_system_state = state::POSE_ESTIMATION;
+                break;
+            case state::POSE_ESTIMATION:
+                state::current_system_state = state::pose_estimation();
+                break;
+            case state::GOAL_SETTING:
+                state::current_system_state = state::goal_setting();
+                break;
+            case state::BOAT_CONTROLLER:
+                state::current_system_state = state::boat_controller();
+                break;
         }
-
-        std::cout << std::endl;
-        std::cout << "------------- CONTROL MENU -------------" << std::endl;
-        std::cout << "INTRODUCE GOAL LATITUDE: " << std::flush;
-        std::cin >> gps_ref.latitude;
-        std::cout << "INTRODUCE GOAL LONGITUDE: " << std::flush;
-        std::cin >> gps_ref.longitude;
-
-        std::cout << "Let's go there!" << std::endl;
-        std::cout << std::endl;
-        std::cout << "----------- Distance Report ------------" << std::endl;
-
-        cartesian_ref = pose_estimator.cartesian_pose(gps_ref);
-
-        while (ros::ok())
-        {
-            ros::spinOnce();
-            if (new_gps)
-            {
-                current_pose = pose_estimator.cartesian_pose(gps_data);
-                new_gps = false;
-            }
-            else if (new_imu)
-            {
-                current_pose = pose_estimator.cartesian_pose(imu_data);
-                new_imu = false;
-            }
-
-            // Calculate error
-            cartesian_error.x = cartesian_ref.position.x - current_pose.position.x;
-            cartesian_error.y = cartesian_ref.position.y - current_pose.position.y;
-            distance_error = sqrt(pow(cartesian_error.x, 2) + pow(cartesian_error.y, 2));
-            bearing_goal = atan2(cartesian_error.y, cartesian_error.x);
-            bearing_error = bearing_goal - imu_data.bearing;
-            if (bearing_error > M_PI) bearing_error -= 2 * M_PI;
-            else if (bearing_error < -M_PI) bearing_error += 2 * M_PI;
-
-            if (distance_error < 2) break;
-            else std::cout << "Distance to destiny -> " << distance_error << std::endl;
-
-            // Calculate speeds
-            linear_speed = distance_error * linear_gain;
-            angular_speed = bearing_error * angular_gain;
-
-            // Calculate forces
-            force_drive = linear_speed * damping_surge;
-            torque_drive = angular_speed * damping_yaw;
-            force_right = (propeller_dist * force_drive - torque_drive) / (2 * propeller_dist);
-            force_left = force_drive - force_right;
-
-            // Calculate signals
-            pwm_left = pwm_converter.getLeftPWM(force_left);
-            pwm_right = pwm_converter.getRightPWM(force_right);
-
-            left_esc.setSpeed(pwm_left);
-            right_esc.setSpeed(pwm_right);
-
-            loop_rate.sleep();
-        }
-        std::cout << "MISSION ACCOMPLISHED!" << std::endl;
+        loop_rate.sleep();
+        ros::spinOnce();
     }
+
+//    while (ros::ok())
+//    {
+//        // Wait for GPS signal
+//        //if (is_first_gps && !new_gps) continue;
+//        if (!ref_set)
+//        {
+//            is_first_gps = false;
+//            ref_set = true;
+//            // Reconstruct estimator with GPS ref
+//            pose_estimator = CartesianPose(gps_data, gps_data, vel, acc, imu_data.bearing);
+//            current_pose = pose_estimator.get_last_cartesian();
+//            ROS_INFO("acquired?");
+//        }
+//
+//        gps_ref.latitude = dynr::current_vessel_task.goal_latitude;
+//        gps_ref.longitude = dynr::current_vessel_task.goal_longitude;
+//
+////        std::cout << std::endl;
+////        std::cout << "------------- CONTROL MENU -------------" << std::endl;
+////        std::cout << "INTRODUCE GOAL LATITUDE: " << std::flush;
+////        std::cin >> gps_ref.latitude;
+////        std::cout << "INTRODUCE GOAL LONGITUDE: " << std::flush;
+////        std::cin >> gps_ref.longitude;
+////
+////        std::cout << "Let's go there!" << std::endl;
+////        std::cout << std::endl;
+////        std::cout << "----------- Distance Report ------------" << std::endl;
+//
+//        cartesian_ref = pose_estimator.cartesian_pose(gps_ref);
+//
+//        while (ros::ok())
+//        {
+//            ros::spinOnce();
+//            if (new_gps)
+//            {
+//                current_pose = pose_estimator.cartesian_pose(gps_data);
+//                new_gps = false;
+//            }
+//            else if (new_imu)
+//            {
+//                current_pose = pose_estimator.cartesian_pose(imu_data);
+//                new_imu = false;
+//            }
+//
+//            // Calculate error
+//            cartesian_error.x = cartesian_ref.position.x - current_pose.position.x;
+//            cartesian_error.y = cartesian_ref.position.y - current_pose.position.y;
+//            distance_error = sqrt(pow(cartesian_error.x, 2) + pow(cartesian_error.y, 2));
+//            bearing_goal = atan2(cartesian_error.y, cartesian_error.x);
+//            bearing_error = bearing_goal - imu_data.bearing;
+//
+//            if (bearing_error > M_PI) bearing_error -= 2 * M_PI;
+//            else if (bearing_error < -M_PI) bearing_error += 2 * M_PI;
+//
+//            if (distance_error < 2) break;
+//            else std::cout << "Distance to destiny -> " << distance_error << std::endl;
+//
+//            // Calculate speeds
+//            linear_speed = distance_error * dynr::control_gains.linear_gain;
+//            angular_speed = bearing_error * dynr::control_gains.angular_gain;
+//
+//            // Calculate forces
+//            force_drive = linear_speed * dynr::general_config.damping_surge;
+//            torque_drive = angular_speed * dynr::general_config.damping_yaw;
+//            force_right = (dynr::general_config.propeller_distance * force_drive - torque_drive) / (2 * dynr::general_config.propeller_distance);
+//            force_left = force_drive - force_right;
+//
+//            // Calculate signals
+////            pwm_left = pwm_converter.getLeftPWM(force_left);
+////            pwm_right = pwm_converter.getRightPWM(force_right);
+//
+////            left_esc.setSpeed(pwm_left);
+////            right_esc.setSpeed(pwm_right);
+//
+//            loop_rate.sleep();
+//        }
+//        dynr::print_system_status();
+//        loop_rate.sleep();
+//    }
 
     return 0;
 }

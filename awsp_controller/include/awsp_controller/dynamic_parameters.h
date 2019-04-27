@@ -30,7 +30,6 @@ struct ControlGains {
 
 struct SystemMode {
     bool vessel = OFF;
-    bool evaluate_system_mode();
 } system_mode;
 
 struct CurrentVesselTask {
@@ -52,40 +51,8 @@ struct Debugging {
     bool log_gps_kalman = false;
 }debugging;
 
-void print_system_status()
-{
-    ROS_DEBUG_STREAM("[CURRENT GOAL LATITUDE  ] " << dynr::current_vessel_task.goal_latitude);
-    ROS_DEBUG_STREAM("[CURRENT GOAL LONGITUDE ] " << dynr::current_vessel_task.goal_longitude);
-    ROS_DEBUG_STREAM("[SYSTEM MODE IS         ] " << dynr::system_mode.vessel);
-    ROS_DEBUG_STREAM("[LINEAR GAIN            ] " << dynr::control_gains.linear_gain);
-    ROS_DEBUG_STREAM("[ANGULAR GAIN           ] " << dynr::control_gains.angular_gain);
-    ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
-    ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
-//    ROS_DEBUG_STREAM();
-    ROS_DEBUG("================================================");
-}
-
 
 }
 
-bool dynr::SystemMode::evaluate_system_mode()
-{
-    if (dynr::system_mode.vessel == OFF) {
-        ROS_WARN("The system is now TURNING OFF.");
-        ROS_INFO("The system is currently OFF, waiting for initialization.");
-        while (ros::ok()) {
-
-            if (dynr::system_mode.vessel == ON) {
-                ROS_WARN("The system is now TURNING ON.");
-                break;
-            }
-            ros::spinOnce();
-        }
-    }
-    else if (dynr::system_mode.vessel == ON)
-    {
-        return true;
-    }
-}
 
 #endif //PROJECT_DYNAMIC_PARAMETERS_H
