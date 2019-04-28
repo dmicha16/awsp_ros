@@ -22,24 +22,29 @@ gps_position gps_ref;
 cart_pose cartesian_ref;
 
 // Errors
-coordinates_2d cartesian_error;
-float distance_error;
-float bearing_goal;
-float bearing_error;
+
+struct BoatControlParams
+{
+    coordinates_2d cartesian_error;
+    float distance_error;
+    float bearing_goal;
+    float bearing_error;
 
 // Forces and torques
-float force_drive;
-float torque_drive;
-float force_left;
-float force_right;
+    float force_drive;
+    float torque_drive;
+    float force_left;
+    float force_right;
 
 // Speeds
-float linear_speed;
-float angular_speed;
+    float linear_speed;
+    float angular_speed;
 
 // Signals
-int pwm_left;
-int pwm_right;
+    int pwm_left;
+    int pwm_right;
+} boat_control_params;
+
 
 bool is_first_gps = true;
 bool ref_set = false;
@@ -90,21 +95,24 @@ void print_goal_setting_status()
     ROS_DEBUG("================================================");
 }
 
-void print_boat_controller_status()
+void print_boat_controller_status(BoatControlParams boat_control_params)
 {
     ROS_WARN_STREAM("[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
     ROS_WARN_STREAM("[SYSTEM IS IN STATE     ] 4 - BOAT_CONTROLLER");
     ROS_DEBUG_STREAM("[CURRENT GOAL LATITUDE  ] " << dynr::current_vessel_task.goal_latitude);
     ROS_DEBUG_STREAM("[CURRENT GOAL LONGITUDE ] " << dynr::current_vessel_task.goal_longitude);
 
-    /*
-     * distance to goal
-     * current velocity estimate
-     * current gps estimate
-     * current position estimate
-     * etc.
-     */
-
+    ROS_DEBUG_STREAM("[DISTANCE ERROR         ] " << boat_control_params.distance_error);
+    ROS_DEBUG_STREAM("[BEARING GOAL           ] " << boat_control_params.bearing_goal);
+    ROS_DEBUG_STREAM("[BEARING ERROR          ] " << boat_control_params.bearing_error);
+    ROS_DEBUG_STREAM("[FORCE DRIVE            ] " << boat_control_params.force_drive);
+    ROS_DEBUG_STREAM("[FORCE RIGHT            ] " << boat_control_params.force_right);
+    ROS_DEBUG_STREAM("[FORCE LEFT             ] " << boat_control_params.force_left);
+    ROS_DEBUG_STREAM("TORQUE DRIVE            ] " << boat_control_params.torque_drive);
+    ROS_DEBUG_STREAM("[LINEAR VELOCITY        ] " << boat_control_params.linear_speed);
+    ROS_DEBUG_STREAM("[ANGULAR VELOCITY       ] " << boat_control_params.angular_speed);
+    ROS_DEBUG_STREAM("[PWM LEFT               ] " << boat_control_params.pwm_left);
+    ROS_DEBUG_STREAM("[PWM RIGHT              ] " << boat_control_params.pwm_right);
 
     ROS_DEBUG_STREAM("[LINEAR GAIN            ] " << dynr::control_gains.linear_gain);
     ROS_DEBUG_STREAM("[ANGULAR GAIN           ] " << dynr::control_gains.angular_gain);
@@ -213,12 +221,12 @@ int boat_controller()
         ROS_ERROR("ESC LIB FAILED. MOTORS CANNOT BE RUN AT THIS TIME.");
     }
 
-    sleep(300);
+    ROS_INFO("WHAT IS GOING ON");
 
     while (ros::ok())
     {
 
-        state::print_boat_controller_status();
+//        state::print_boat_controller_status();
         if (state::evaluate_system_mode_status() == state::SYSTEM_OFF)
             return state::SYSTEM_OFF;
 
@@ -236,36 +244,36 @@ int boat_controller()
             new_imu = false;
         }
 
-        cartesian_error.x = cartesian_ref.position.x - current_pose.position.x;
-        cartesian_error.y = cartesian_ref.position.y - current_pose.position.y;
-        distance_error = sqrt(pow(cartesian_error.x, 2) + pow(cartesian_error.y, 2));
-        bearing_goal = atan2(cartesian_error.y, cartesian_error.x);
-        bearing_error = bearing_goal - imu_data.bearing;
+        boat_control_params.cartesian_error.x = cartesian_ref.position.x - current_pose.position.x;
+        boat_control_params.cartesian_error.y = cartesian_ref.position.y - current_pose.position.y;
+        boat_control_params.distance_error = sqrt(pow(boat_control_params.cartesian_error.x, 2) + pow(boat_control_params.cartesian_error.y, 2));
+        boat_control_params.bearing_goal = atan2(boat_control_params.cartesian_error.y, boat_control_params.cartesian_error.x);
+        boat_control_params.bearing_error = boat_control_params.bearing_goal - imu_data.bearing;
 
-        if (bearing_error > M_PI) bearing_error -= 2 * M_PI;
-        else if (bearing_error < -M_PI) bearing_error += 2 * M_PI;
+        if (boat_control_params.bearing_error > M_PI) boat_control_params.bearing_error -= 2 * M_PI;
+        else if (boat_control_params.bearing_error < -M_PI) boat_control_params.bearing_error += 2 * M_PI;
 
-        if (distance_error < 2) break;
-//        else std::cout << "Distance to destiny -> " << distance_error << std::endl;
+        if (boat_control_params.distance_error < 2)
+            return state::POSE_ESTIMATION;
 
         // Calculate speeds
-        linear_speed = distance_error * dynr::control_gains.linear_gain;
-        angular_speed = bearing_error * dynr::control_gains.angular_gain;
+        boat_control_params.linear_speed = boat_control_params.distance_error * dynr::control_gains.linear_gain;
+        boat_control_params.angular_speed = boat_control_params.bearing_error * dynr::control_gains.angular_gain;
 
         // Calculate forces
-        force_drive = linear_speed * dynr::general_config.damping_surge;
-        torque_drive = angular_speed * dynr::general_config.damping_yaw;
-        force_right = (dynr::general_config.propeller_distance * force_drive - torque_drive) / (2 * dynr::general_config.propeller_distance);
-        force_left = force_drive - force_right;
+        boat_control_params.force_drive = boat_control_params.linear_speed * dynr::general_config.damping_surge;
+        boat_control_params.torque_drive = boat_control_params.angular_speed * dynr::general_config.damping_yaw;
+        boat_control_params.force_right = (dynr::general_config.propeller_distance * boat_control_params.force_drive - boat_control_params.torque_drive) / (2 * dynr::general_config.propeller_distance);
+        boat_control_params.force_left = boat_control_params.force_drive - boat_control_params.force_right;
 
 //        Calculate signals
-        pwm_left = pwm_converter.getLeftPWM(force_left);
-        pwm_right = pwm_converter.getRightPWM(force_right);
+        boat_control_params.pwm_left = pwm_converter.getLeftPWM(boat_control_params.force_left);
+        boat_control_params.pwm_right = pwm_converter.getRightPWM(boat_control_params.force_right);
 
-        left_esc.setSpeed(pwm_left);
-        right_esc.setSpeed(pwm_right);
+//        left_esc.setSpeed(boat_control_params.pwm_left);
+//        right_esc.setSpeed(boat_control_params.pwm_right);
 
-
+        state::print_boat_controller_status(boat_control_params);
         ros::spinOnce();
         loop_rate.sleep();
     }
