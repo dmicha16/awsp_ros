@@ -14,6 +14,7 @@ add_message_files(
         CartesianPose.msg
         LogInstruction.msg
         SensorKitData.msg
+        StateMachineStatus.msg
 )
 
 generate_messages(DEPENDENCIES std_msgs)

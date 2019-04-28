@@ -128,10 +128,10 @@ void system_off()
 //        ROS_INFO("The system is currently OFF, waiting for initialization.");
         ros::Rate loop_rate(10);
 
-        state::print_system_off_status();
-
         while (ros::ok()) {
             // print status while we are waiting for the initial startup
+
+            state::print_system_off_status();
 
             if (dynr::system_mode.vessel == ON) {
                 ROS_WARN("The system is now TURNING ON.");
@@ -145,8 +145,6 @@ void system_off()
 
 int pose_estimation()
 {
-
-
     int move_to_next = 0;
 
     ros::Rate loop_rate(10);
@@ -167,13 +165,11 @@ int pose_estimation()
             // Reconstruct estimator with GPS ref
             pose_estimator = CartesianPose(gps_data, gps_data, vel, acc, imu_data.bearing);
             current_pose = pose_estimator.get_last_cartesian();
-            ROS_INFO("acquired?");
         }
 
         ros::spinOnce();
         loop_rate.sleep();
     }
-
 }
 
 int goal_setting()
@@ -208,16 +204,16 @@ int boat_controller()
 
     ros::Rate loop_rate(10);
 
-    try
+    ForceToPWM pwm_converter;
+    esc_lib left_esc(17);
+    esc_lib right_esc(27);
+
+    if (!left_esc.setup() && !right_esc.setup())
     {
-        ForceToPWM pwm_converter;
-        esc_lib left_esc(17);
-        esc_lib right_esc(27);
-    }
-    catch (...) {
-        ROS_ERROR_STREAM("COULD NOT CONSTRUCT ESC OBJECT.");
+        ROS_ERROR("ESC LIB FAILED. MOTORS CANNOT BE RUN AT THIS TIME.");
     }
 
+    sleep(300);
 
     while (ros::ok())
     {
@@ -250,7 +246,7 @@ int boat_controller()
         else if (bearing_error < -M_PI) bearing_error += 2 * M_PI;
 
         if (distance_error < 2) break;
-        else std::cout << "Distance to destiny -> " << distance_error << std::endl;
+//        else std::cout << "Distance to destiny -> " << distance_error << std::endl;
 
         // Calculate speeds
         linear_speed = distance_error * dynr::control_gains.linear_gain;
@@ -262,12 +258,12 @@ int boat_controller()
         force_right = (dynr::general_config.propeller_distance * force_drive - torque_drive) / (2 * dynr::general_config.propeller_distance);
         force_left = force_drive - force_right;
 
-        // Calculate signals
-//            pwm_left = pwm_converter.getLeftPWM(force_left);
-//            pwm_right = pwm_converter.getRightPWM(force_right);
+//        Calculate signals
+        pwm_left = pwm_converter.getLeftPWM(force_left);
+        pwm_right = pwm_converter.getRightPWM(force_right);
 
-//            left_esc.setSpeed(pwm_left);
-//            right_esc.setSpeed(pwm_right);
+        left_esc.setSpeed(pwm_left);
+        right_esc.setSpeed(pwm_right);
 
 
         ros::spinOnce();

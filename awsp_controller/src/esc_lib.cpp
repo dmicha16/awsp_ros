@@ -1,14 +1,14 @@
 #include "awsp_controller/esc_lib.h"
 
-esc_lib::esc_lib(int pin){
+esc_lib::esc_lib(int pin)
+{
     pin_ = pin;
-	setup_();
 }
 
-esc_lib::~esc_lib(){}
+esc_lib::~esc_lib() {}
 		
-void esc_lib::setup_(){
-	std::cout << "Starting the pigpio daemon." << std::endl;	
+bool esc_lib::setup(){
+	ROS_WARN("===== BEGAN PIGPIO DEAMON INITIALIZATION. =====");
 	system("sudo pigpiod");
 	sleep(2);
 
@@ -17,37 +17,40 @@ void esc_lib::setup_(){
 	// This checks if the pigpio daemon is running
 	if(pi_ < 0)
 	{
-		std::cout << "Failed.... Daemon is NOT running." << std::endl;
-		exit(0);
+//		ROS_ERROR("DEAMON FAILED TO INITIALIZE.");
+//		ROS_ERROR("RE-INITIALIZATION IS REQUIRED TO MOVE THE BOAT.");
+		return false;
 	}
 	else
 	{
-		std::cout << "Daemon was succesfully initialized." << std::endl;
+//		ROS_INFO("DAEMON SUCCESSFULLY INITIALIZED");
+		// This checks if the ESC/motor has already been initialised
+		if(!get_mode(pi_, pin_))
+		{
+//			ROS_ERROR("ERROR: Something is preventing the motor from initializing.");
+//			ROS_INFO("SUGGESTION: Check that the correct pin was chosen.");
+//			ROS_INFO("SUGGESTION: Check if the motor needs throttle stick calibration.");
+			return false;
+		}
+		else
+		{
+			set_servo_pulsewidth(pi_, pin_, NEUTRAL);
+			ROS_INFO("===== MOTOR WAS INITIALIZED. =====");
+			return true;
+		}
 	}
 
-	// This checks if the ESC/motor has already been initialised
-	if(!get_mode(pi_, pin_))
-	{
-		std::cout << "ERROR: Something is preventing the motor from initializing." << std::endl;
-		std::cout << "SUGGESTION: Check that the correct pin was chosen." << std::endl;
-		std::cout << "SUGGESTION: Check if the motor needs throttle stick calibration." << std::endl;
-		end();
-		exit(0);
-	}
-	else
-	{
-		set_servo_pulsewidth(pi_, pin_, NEUTRAL);
-		std::cout << "Motor was succesfully initialized" << std::endl;
-	}
 
 }
 
-void esc_lib::setSpeed(int speed){
+void esc_lib::setSpeed(int speed)
+{
 	//std::cout << "speed: " << speed << std::endl;
 	set_servo_pulsewidth(pi_, pin_, speed);
 }
 
-void esc_lib::end(){
+void esc_lib::end()
+{
 	std::cout <<  std::endl << "Motor initialization terminated." << std::endl << std::endl;
 	set_servo_pulsewidth(pi_, pin_, NEUTRAL);
 	pigpio_stop(pi_);

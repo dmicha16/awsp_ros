@@ -8,6 +8,7 @@
 #include "awsp_gy_88_interface/gy_88_lib.h"
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
+#include "awsp_msgs/StateMachineStatus.h"
 
 #include "awsp_controller/state_machine.h"
 
@@ -77,6 +78,11 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
+
+    ros::Publisher publisher = n.advertise<awsp_msgs::StateMachineStatus>("state_machine", 1000);
+    awsp_msgs::StateMachineStatus state_machine;
+    state_machine.current_state = state::SYSTEM_OFF;
+    publisher.publish(state_machine);
     ros::Rate loop_rate(10);
 
     dynamic_reconfigure::Server<awsp_controller::ParametersConfig> server;
@@ -92,15 +98,23 @@ int main(int argc, char **argv)
             case state::SYSTEM_OFF:
                 state::system_off();
                 state::current_system_state = state::POSE_ESTIMATION;
+                state_machine.current_state = state::POSE_ESTIMATION;
+                publisher.publish(state_machine);
                 break;
             case state::POSE_ESTIMATION:
                 state::current_system_state = state::pose_estimation();
+                state_machine.current_state = state::current_system_state;
+                publisher.publish(state_machine);
                 break;
             case state::GOAL_SETTING:
                 state::current_system_state = state::goal_setting();
+                state_machine.current_state = state::current_system_state;
+                publisher.publish(state_machine);
                 break;
             case state::BOAT_CONTROLLER:
                 state::current_system_state = state::boat_controller();
+                state_machine.current_state = state::current_system_state;
+                publisher.publish(state_machine);
                 break;
         }
         loop_rate.sleep();
