@@ -69,9 +69,19 @@ void print_system_off_status() {
     ROS_DEBUG("================================================");
 }
 
-void print_pose_estimation_status() {
-    ROS_WARN_STREAM("[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
-    ROS_WARN_STREAM("[SYSTEM IS IN STATE     ] 2 - POSE_ESTIMATION");
+void print_pose_estimation_status(gps_position gps_data, cart_pose current_pose) {
+    ROS_WARN_STREAM( "[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
+    ROS_WARN_STREAM( "[SYSTEM IS IN STATE     ] 2 - POSE_ESTIMATION");
+
+    ROS_DEBUG_STREAM("[GOAL LATITUDE          ] " << dynr::current_vessel_task.goal_latitude);
+    ROS_DEBUG_STREAM("[GOAL LONGITUDE         ] " << dynr::current_vessel_task.goal_longitude);
+
+    ROS_DEBUG_STREAM("[CURRENT LATITUDE       ] " << gps_data.latitude);
+    ROS_DEBUG_STREAM("[CURRENT LONGITUDE      ] " << gps_data.longitude);
+    ROS_DEBUG_STREAM("[CURRENT CART X         ] " << current_pose.position.x);
+    ROS_DEBUG_STREAM("[CURRENT CART Y         ] " << current_pose.position.y);
+    ROS_DEBUG_STREAM("[CURRENT BEARING        ] " << current_pose.bearing);
+
     ROS_DEBUG_STREAM("[LINEAR GAIN            ] " << dynr::control_gains.linear_gain);
     ROS_DEBUG_STREAM("[ANGULAR GAIN           ] " << dynr::control_gains.angular_gain);
     ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
@@ -80,12 +90,18 @@ void print_pose_estimation_status() {
     ROS_DEBUG("================================================");
 }
 
-void print_goal_setting_status()
+void print_goal_setting_status(gps_position gps_data, cart_pose current_pose)
 {
-    ROS_WARN_STREAM("[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
-    ROS_WARN_STREAM("[SYSTEM IS IN STATE     ] 3 - GOAL_SETTING");
-    ROS_DEBUG_STREAM("[CURRENT GOAL LATITUDE  ] " << dynr::current_vessel_task.goal_latitude);
-    ROS_DEBUG_STREAM("[CURRENT GOAL LONGITUDE ] " << dynr::current_vessel_task.goal_longitude);
+    ROS_WARN_STREAM( "[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
+    ROS_WARN_STREAM( "[SYSTEM IS IN STATE     ] 3 - GOAL_SETTING");
+    ROS_DEBUG_STREAM("[GOAL LATITUDE          ] " << dynr::current_vessel_task.goal_latitude);
+    ROS_DEBUG_STREAM("[GOAL LONGITUDE         ] " << dynr::current_vessel_task.goal_longitude);
+
+    ROS_DEBUG_STREAM("[CURRENT LATITUDE       ] " << gps_data.latitude);
+    ROS_DEBUG_STREAM("[CURRENT LONGITUDE      ] " << gps_data.longitude);
+    ROS_DEBUG_STREAM("[CURRENT CART X         ] " << current_pose.position.x);
+    ROS_DEBUG_STREAM("[CURRENT CART Y         ] " << current_pose.position.y);
+    ROS_DEBUG_STREAM("[CURRENT BEARING        ] " << current_pose.bearing);
 
     ROS_DEBUG_STREAM("[LINEAR GAIN            ] " << dynr::control_gains.linear_gain);
     ROS_DEBUG_STREAM("[ANGULAR GAIN           ] " << dynr::control_gains.angular_gain);
@@ -108,7 +124,7 @@ void print_boat_controller_status(BoatControlParams boat_control_params)
     ROS_DEBUG_STREAM("[FORCE DRIVE            ] " << boat_control_params.force_drive);
     ROS_DEBUG_STREAM("[FORCE RIGHT            ] " << boat_control_params.force_right);
     ROS_DEBUG_STREAM("[FORCE LEFT             ] " << boat_control_params.force_left);
-    ROS_DEBUG_STREAM("TORQUE DRIVE            ] " << boat_control_params.torque_drive);
+    ROS_DEBUG_STREAM("[TORQUE DRIVE           ] " << boat_control_params.torque_drive);
     ROS_DEBUG_STREAM("[LINEAR VELOCITY        ] " << boat_control_params.linear_speed);
     ROS_DEBUG_STREAM("[ANGULAR VELOCITY       ] " << boat_control_params.angular_speed);
     ROS_DEBUG_STREAM("[PWM LEFT               ] " << boat_control_params.pwm_left);
@@ -132,8 +148,10 @@ int evaluate_system_mode_status()
 void system_off()
 {
     if (dynr::system_mode.vessel == OFF) {
-//        ROS_WARN("The system is now TURNING OFF.");
-//        ROS_INFO("The system is currently OFF, waiting for initialization.");
+
+        dynr::current_vessel_task.goal_latitude = 0;
+        dynr::current_vessel_task.goal_longitude = 0;
+
         ros::Rate loop_rate(10);
 
         while (ros::ok()) {
@@ -159,7 +177,6 @@ int pose_estimation()
 
     while (ros::ok())
     {
-        state::print_pose_estimation_status();
         if (state::evaluate_system_mode_status() == state::SYSTEM_OFF)
             return state::SYSTEM_OFF;
 
@@ -175,6 +192,7 @@ int pose_estimation()
             current_pose = pose_estimator.get_last_cartesian();
         }
 
+        state::print_pose_estimation_status(gps_data, current_pose);
         ros::spinOnce();
         loop_rate.sleep();
     }
@@ -188,7 +206,7 @@ int goal_setting()
 
     while (ros::ok())
     {
-        state::print_goal_setting_status();
+
         if (state::evaluate_system_mode_status() == state::SYSTEM_OFF)
             return state::SYSTEM_OFF;
         if (dynr::debugging.log_imu_kalman == true)
@@ -200,6 +218,7 @@ int goal_setting()
             cartesian_ref = pose_estimator.cartesian_pose(gps_ref);
             return state::BOAT_CONTROLLER;
         }
+        state::print_goal_setting_status(gps_data, current_pose);
 
         ros::spinOnce();
         loop_rate.sleep();
