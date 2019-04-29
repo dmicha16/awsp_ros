@@ -27,7 +27,7 @@ bool esc_lib::setup(){
 		// This checks if the ESC/motor has already been initialised
 		if(!get_mode(pi_, pin_))
 		{
-//			ROS_ERROR("ERROR: Something is preventing the motor from initializing.");
+			ROS_ERROR("MOTOR CANNOT BE INITIALIZED AT THIS TIME.");
 //			ROS_INFO("SUGGESTION: Check that the correct pin was chosen.");
 //			ROS_INFO("SUGGESTION: Check if the motor needs throttle stick calibration.");
 			return false;

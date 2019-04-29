@@ -36,6 +36,7 @@ struct CurrentVesselTask {
     float goal_latitude;
     float goal_longitude;
     bool ready_to_move;
+    int distance_error_tol;
 } current_vessel_task;
 
 struct GeneralConfig {
@@ -50,6 +51,7 @@ struct Debugging {
     bool log_imu_kalman = false;
     bool log_gps_raw = false;
     bool log_gps_kalman = false;
+    bool log_state_machine = false;
 }debugging;
 
 

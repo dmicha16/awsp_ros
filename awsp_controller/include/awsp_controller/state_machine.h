@@ -99,6 +99,7 @@ void print_goal_setting_status(gps_position gps_data, cart_pose current_pose)
     ROS_DEBUG_STREAM("[GPS FIX STATUS         ] " << gps_data.fix);
     ROS_DEBUG_STREAM("[GOAL LATITUDE          ] " << dynr::current_vessel_task.goal_latitude);
     ROS_DEBUG_STREAM("[GOAL LONGITUDE         ] " << dynr::current_vessel_task.goal_longitude);
+    ROS_DEBUG_STREAM("[DISTANCE ERROR TOL     ] " << dynr::current_vessel_task.distance_error_tol);
 
     ROS_DEBUG_STREAM("[CURRENT LATITUDE       ] " << gps_data.latitude);
     ROS_DEBUG_STREAM("[CURRENT LONGITUDE      ] " << gps_data.longitude);
@@ -122,6 +123,7 @@ void print_boat_controller_status(BoatControlParams boat_control_params)
     ROS_DEBUG_STREAM("[CURRENT GOAL LONGITUDE ] " << dynr::current_vessel_task.goal_longitude);
 
     ROS_DEBUG_STREAM("[DISTANCE ERROR         ] " << boat_control_params.distance_error);
+    ROS_DEBUG_STREAM("[DISTANCE ERROR TOL     ] " << dynr::current_vessel_task.distance_error_tol);
     ROS_DEBUG_STREAM("[BEARING GOAL           ] " << boat_control_params.bearing_goal);
     ROS_DEBUG_STREAM("[BEARING ERROR          ] " << boat_control_params.bearing_error);
     ROS_DEBUG_STREAM("[FORCE DRIVE            ] " << boat_control_params.force_drive);
@@ -243,7 +245,8 @@ int boat_controller()
 
     if (!left_esc.setup() && !right_esc.setup())
     {
-        ROS_ERROR("ESC LIB FAILED. MOTORS CANNOT BE RUN AT THIS TIME.");
+        ROS_ERROR("ESC LIB FAILED.");
+        ros::Duration(3).sleep();
     }
 
     while (ros::ok())
@@ -273,11 +276,19 @@ int boat_controller()
         boat_control_params.bearing_goal = atan2(boat_control_params.cartesian_error.y, boat_control_params.cartesian_error.x);
         boat_control_params.bearing_error = boat_control_params.bearing_goal - imu_data.bearing;
 
-        if (boat_control_params.bearing_error > M_PI) boat_control_params.bearing_error -= 2 * M_PI;
-        else if (boat_control_params.bearing_error < -M_PI) boat_control_params.bearing_error += 2 * M_PI;
+        if (boat_control_params.bearing_error > M_PI)
+        {
+            boat_control_params.bearing_error -= 2 * M_PI;
+        }
+        else if (boat_control_params.bearing_error < -M_PI)
+        {
+            boat_control_params.bearing_error += 2 * M_PI;
+        }
 
-        if (boat_control_params.distance_error < 2)
+        if (boat_control_params.distance_error < dynr::current_vessel_task.distance_error_tol)
+        {
             return state::POSE_ESTIMATION;
+        }
 
         // Calculate speeds
         boat_control_params.linear_speed = boat_control_params.distance_error * dynr::control_gains.linear_gain;

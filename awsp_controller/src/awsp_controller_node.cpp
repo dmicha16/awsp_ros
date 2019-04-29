@@ -35,6 +35,7 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::current_vessel_task.goal_latitude = config.goal_latitude;
             dynr::current_vessel_task.goal_longitude = config.goal_longitude;
             dynr::current_vessel_task.ready_to_move = config.ready_to_move;
+            dynr::current_vessel_task.distance_error_tol = config.distance_error_tol;
             break;
         case dynr::LEVEL::CROSS_GROUP_LOG:
             dynr::general_config.log_general_config = config.log_general_config;
@@ -45,6 +46,7 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::debugging.log_gps_kalman = config.log_gps_kalman;
             dynr::debugging.log_imu_raw = config.log_imu_raw;
             dynr::debugging.log_imu_kalman = config.log_imu_kalman;
+            dynr::debugging.log_state_machine = config.log_state_machine;
             break;
     }
 }
