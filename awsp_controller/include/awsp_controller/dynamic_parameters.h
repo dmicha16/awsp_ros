@@ -35,6 +35,7 @@ struct SystemMode {
 struct CurrentVesselTask {
     float goal_latitude;
     float goal_longitude;
+    bool ready_to_move;
 } current_vessel_task;
 
 struct GeneralConfig {

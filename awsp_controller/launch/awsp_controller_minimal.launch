@@ -1,10 +1,10 @@
 <launch>
     <env name="ROSCONSOLE_CONFIG_FILE" value="$(find awsp_controller)/config/rosconsole.conf"/>
     <node
-        pkg = "awsp_controller"
-        name = "awsp_controller_node"
-        type = "awsp_controller_node"
-        output="screen"
-        required = "true"
+            pkg = "awsp_controller"
+            name = "awsp_controller_node"
+            type = "awsp_controller_node"
+            output="screen"
+            required = "true"
     />
 </launch>

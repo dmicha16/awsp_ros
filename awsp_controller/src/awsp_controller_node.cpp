@@ -34,6 +34,7 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
         case dynr::LEVEL::LLA_GOAL_POINTS:
             dynr::current_vessel_task.goal_latitude = config.goal_latitude;
             dynr::current_vessel_task.goal_longitude = config.goal_longitude;
+            dynr::current_vessel_task.ready_to_move = config.ready_to_move;
             break;
         case dynr::LEVEL::CROSS_GROUP_LOG:
             dynr::general_config.log_general_config = config.log_general_config;
@@ -53,6 +54,7 @@ void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
     gps_data.latitude = gnss_msg->latitude;
     gps_data.longitude = gnss_msg->longitude;
     gps_data.timestamp = gnss_msg->timestamp;
+    gps_data.fix = gnss_msg->fix;
     new_gps = true;
 }
 

@@ -5,6 +5,7 @@ struct gps_position
     float latitude;     // Parallel [degrees]
     float longitude;    // Meridian [degrees]
     unsigned long long timestamp;    // Unix timestamp [ms]
+    int fix; //
 };
 
 struct coordinates_2d

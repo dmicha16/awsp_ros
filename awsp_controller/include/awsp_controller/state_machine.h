@@ -73,6 +73,7 @@ void print_pose_estimation_status(gps_position gps_data, cart_pose current_pose)
     ROS_WARN_STREAM( "[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
     ROS_WARN_STREAM( "[SYSTEM IS IN STATE     ] 2 - POSE_ESTIMATION");
 
+    ROS_DEBUG_STREAM("[GPS FIX STATUS         ] " << gps_data.fix);
     ROS_DEBUG_STREAM("[GOAL LATITUDE          ] " << dynr::current_vessel_task.goal_latitude);
     ROS_DEBUG_STREAM("[GOAL LONGITUDE         ] " << dynr::current_vessel_task.goal_longitude);
 
@@ -94,6 +95,8 @@ void print_goal_setting_status(gps_position gps_data, cart_pose current_pose)
 {
     ROS_WARN_STREAM( "[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
     ROS_WARN_STREAM( "[SYSTEM IS IN STATE     ] 3 - GOAL_SETTING");
+
+    ROS_DEBUG_STREAM("[GPS FIX STATUS         ] " << gps_data.fix);
     ROS_DEBUG_STREAM("[GOAL LATITUDE          ] " << dynr::current_vessel_task.goal_latitude);
     ROS_DEBUG_STREAM("[GOAL LONGITUDE         ] " << dynr::current_vessel_task.goal_longitude);
 
@@ -209,10 +212,13 @@ int goal_setting()
 
         if (state::evaluate_system_mode_status() == state::SYSTEM_OFF)
             return state::SYSTEM_OFF;
-        if (dynr::debugging.log_imu_kalman == true)
-            return state::BOAT_CONTROLLER;
+//        if (dynr::current_vessel_task.ready_to_move == true)
+//            return state::BOAT_CONTROLLER;
 
-        if (dynr::current_vessel_task.goal_latitude != 0 && dynr::current_vessel_task.goal_longitude != 0) {
+        if (dynr::current_vessel_task.goal_latitude != 0
+            && dynr::current_vessel_task.goal_longitude != 0
+                && dynr::current_vessel_task.ready_to_move == true)
+        {
             gps_ref.latitude = dynr::current_vessel_task.goal_latitude;
             gps_ref.longitude = dynr::current_vessel_task.goal_longitude;
             cartesian_ref = pose_estimator.cartesian_pose(gps_ref);
@@ -239,8 +245,6 @@ int boat_controller()
     {
         ROS_ERROR("ESC LIB FAILED. MOTORS CANNOT BE RUN AT THIS TIME.");
     }
-
-    ROS_INFO("WHAT IS GOING ON");
 
     while (ros::ok())
     {
