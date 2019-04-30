@@ -5,20 +5,23 @@
 #ifndef PROJECT_DYNAMIC_PARAMETERS_H
 #define PROJECT_DYNAMIC_PARAMETERS_H
 
-#define ON 1
-#define OFF 0
+#define OFF     1
+#define ON      0
+#define TESTING 2
 
 // Needs to have default values to change from
 
 namespace dynr
 {
 namespace LEVEL {
-const int GAINS = 0;
-const int DYNAMIC_MODEL = 1;
-const int SYSTEM_MODE = 2;
-const int LLA_GOAL_POINTS = 3;
-const int CROSS_GROUP_LOG = 4;
-const int DEBUGGING = 5;
+const int GAINS              = 0;
+const int DYNAMIC_MODEL      = 1;
+const int SYSTEM_MODE        = 2;
+const int LLA_GOAL_POINTS    = 3;
+const int CROSS_GROUP_LOG    = 4;
+const int DEBUGGING          = 5;
+const int LOW_PASS_FILTERING = 6;
+const int BOAT_TESTING       = 7;
 }
 
 struct ControlGains {
@@ -26,10 +29,11 @@ struct ControlGains {
     float angular_gain = 0.167;
     bool log_control_system_config = false;
     bool use_fault_detection = true;
+    bool use_imu_bearing = true;
 } control_gains;
 
 struct SystemMode {
-    bool vessel = OFF;
+    int vessel = OFF;
 } system_mode;
 
 struct CurrentVesselTask {
@@ -54,6 +58,23 @@ struct Debugging {
     bool log_state_machine = false;
 }debugging;
 
+struct LowPassFilteringConfig {
+    int low_pass_filtering_mode = 0;
+    bool low_pass_imu_acc = false;
+    bool low_pass_imu_gyro = false;
+    bool low_pass_gps_lat = false;
+    bool low_pass_gps_long = false;
+} low_pass_filtering_config;
+
+struct BoatTestingConfig
+{
+    bool ready_to_test = false;
+    int left_motor_force = 0;
+    int right_motor_force = 0;
+    bool max_force_right_motor = false;
+    bool max_force_left_motor = false;
+    bool forward_force = true;
+} boat_testing_config;
 
 }
 

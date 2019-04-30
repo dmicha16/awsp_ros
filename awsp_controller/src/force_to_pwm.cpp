@@ -46,22 +46,38 @@ float ForceToPWM::getRightPWM(float force)
 
 bool ForceToPWM::setLeftMotorForce_(float left_force)
 {
-  if (left_force < MIN_MAX_LEFT_MOTOR_FORCE_[0] || left_force > MIN_MAX_LEFT_MOTOR_FORCE_[1])
+  if (left_force < MIN_MAX_LEFT_MOTOR_FORCE_[0])
   {
-    return false;
+    left_motor_force_ = MIN_MAX_LEFT_MOTOR_FORCE_[0];
+    return true;
+  }
+  else if(left_force > MIN_MAX_LEFT_MOTOR_FORCE_[1])
+  {
+    left_motor_force_ = MIN_MAX_LEFT_MOTOR_FORCE_[1];
+    return true;
   }
   else
+  {
     left_motor_force_ = left_force;
-  return true;
+    return true;
+  }
 }
 
 bool ForceToPWM::setRightMotorForce_(float right_force)
 {
-  if (right_force < MIN_MAX_RIGHT_MOTOR_FORCE_[0] || right_force > MIN_MAX_RIGHT_MOTOR_FORCE_[1])
+  if (right_force < MIN_MAX_RIGHT_MOTOR_FORCE_[0])
   {
-    return false;
+    right_motor_force_ = MIN_MAX_RIGHT_MOTOR_FORCE_[0];
+    return true;
+  }
+  else if (right_force > MIN_MAX_RIGHT_MOTOR_FORCE_[1])
+  {
+    right_motor_force_ = MIN_MAX_RIGHT_MOTOR_FORCE_[1];
+    return true;
   }
   else
+  {
     right_motor_force_ = right_force;
-  return true;
+    return true;
+  }
 }

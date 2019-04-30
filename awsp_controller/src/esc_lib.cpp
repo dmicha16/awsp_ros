@@ -8,9 +8,8 @@ esc_lib::esc_lib(int pin)
 esc_lib::~esc_lib() {}
 		
 bool esc_lib::setup(){
-	ROS_WARN("===== BEGAN PIGPIO DEAMON INITIALIZATION. =====");
-	system("sudo pigpiod");
-	sleep(2);
+
+    ROS_WARN("===== BEGAN PIGPIO DEAMON INITIALIZATION. =====");
 
 	pi_ = pigpio_start(NULL, NULL);
 
@@ -39,8 +38,6 @@ bool esc_lib::setup(){
 			return true;
 		}
 	}
-
-
 }
 
 void esc_lib::setSpeed(int speed)
@@ -51,9 +48,8 @@ void esc_lib::setSpeed(int speed)
 
 void esc_lib::end()
 {
-	std::cout <<  std::endl << "Motor initialization terminated." << std::endl << std::endl;
+	ROS_INFO("Motor initialization terminated.");
 	set_servo_pulsewidth(pi_, pin_, NEUTRAL);
 	pigpio_stop(pi_);
 	stop_thread(NULL);
-	system("sudo killall pigpiod");
 }

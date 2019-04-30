@@ -22,6 +22,7 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::control_gains.linear_gain = config.linear_gain;
             dynr::control_gains.angular_gain = config.angular_gain;
             dynr::control_gains.use_fault_detection = config.use_fault_detection;
+            dynr::control_gains.use_imu_bearing = config.use_imu_bearing;
             break;
         case dynr::LEVEL::DYNAMIC_MODEL:
             dynr::general_config.damping_surge = config.damping_surge;
@@ -48,6 +49,20 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::debugging.log_imu_kalman = config.log_imu_kalman;
             dynr::debugging.log_state_machine = config.log_state_machine;
             break;
+        case dynr::LEVEL::LOW_PASS_FILTERING:
+            dynr::low_pass_filtering_config.low_pass_filtering_mode = config.low_pass_filtering_mode;
+            dynr::low_pass_filtering_config.low_pass_imu_acc = config.low_pass_imu_acc;
+            dynr::low_pass_filtering_config.low_pass_imu_gyro = config.low_pass_imu_gyro;
+            dynr::low_pass_filtering_config.low_pass_gps_lat = config.low_pass_gps_lat;
+            dynr::low_pass_filtering_config.low_pass_gps_long = config.low_pass_gps_long;
+
+        case dynr::LEVEL::BOAT_TESTING:
+            dynr::boat_testing_config.ready_to_test = config.ready_to_test;
+            dynr::boat_testing_config.left_motor_force = config.left_motor_force;
+            dynr::boat_testing_config.right_motor_force = config.right_motor_force;
+            dynr::boat_testing_config.max_force_right_motor = config.max_force_right_motor;
+            dynr::boat_testing_config.max_force_left_motor = config.max_force_left_motor;
+            dynr::boat_testing_config.forward_force = config.forward_force;
     }
 }
 
@@ -95,14 +110,14 @@ int main(int argc, char **argv)
     f = boost::bind(&callback, _1, _2);
     server.setCallback(f);
 
+
     while (ros::ok())
     {
         switch (state::current_system_state)
         {
             case state::SYSTEM_OFF:
-                state::system_off();
-                state::current_system_state = state::POSE_ESTIMATION;
-                state_machine.current_state = state::POSE_ESTIMATION;
+                state::current_system_state = state::system_off();
+                state_machine.current_state = state::current_system_state;
                 publisher.publish(state_machine);
                 break;
             case state::POSE_ESTIMATION:
@@ -117,6 +132,11 @@ int main(int argc, char **argv)
                 break;
             case state::BOAT_CONTROLLER:
                 state::current_system_state = state::boat_controller();
+                state_machine.current_state = state::current_system_state;
+                publisher.publish(state_machine);
+                break;
+            case state::BOAT_TESTING:
+                state::current_system_state = state::boat_testing();
                 state_machine.current_state = state::current_system_state;
                 publisher.publish(state_machine);
                 break;
