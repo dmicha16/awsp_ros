@@ -4,6 +4,9 @@
 
 ### Sensitive Scripts ###
 awsp_scripts/awsp_setup_pifi.sh
+awsp_logger/log/*
+awsp_gnss_l86_interface/log/*
+awsp_scripts/*
 
 ### CLion ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
