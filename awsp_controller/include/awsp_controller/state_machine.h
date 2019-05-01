@@ -171,6 +171,7 @@ void print_boat_testing_status(BoatTestingParams boat_testing_params)
 {
     ROS_WARN_STREAM( "[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
     ROS_WARN_STREAM( "[SYSTEM IS IN STATE     ] 5 - BOAT_TESTING");
+    ROS_WARN_STREAM( "[READY TO TEST          ] " << dynr::boat_testing_config.ready_to_test);
 
     ROS_DEBUG_STREAM("[FORCE DRIVE            ] " << boat_testing_params.force_drive);
     ROS_DEBUG_STREAM("[FORCE RIGHT            ] " << boat_testing_params.force_right);
@@ -422,61 +423,61 @@ int boat_testing()
 
         if (dynr::boat_testing_config.log_sensors_testing == true)
         {
+        	std::string ready_to_test_out;
+        	if (dynr::boat_testing_config.ready_to_test)
+		        ready_to_test_out = "1";
+            else
+		        ready_to_test_out = "0";
+
             sensor_testing_data = std::to_string(gps_data.latitude)
                     + "," + std::to_string(gps_data.longitude)
-                    + "," + std::to_string(gps_data.latitude)
                     + "," + std::to_string(imu_data.acceleration.x)
                     + "," + std::to_string(imu_data.acceleration.y)
                     + "," + std::to_string(imu_data.yaw_vel)
                     + "," + std::to_string(boat_testing_params.pwm_right)
                     + "," + std::to_string(boat_testing_params.pwm_left)
                     + "," + std::to_string(dynr::boat_testing_config.right_motor_force)
-                    + "," + std::to_string(dynr::boat_testing_config.left_motor_force);
+                    + "," + std::to_string(dynr::boat_testing_config.left_motor_force)
+                    + "," + ready_to_test_out;
             logger.additional_logger(sensor_testing_data, testing_file);
         }
 
+	    boat_testing_params.force_right = dynr::boat_testing_config.right_motor_force;
+	    boat_testing_params.force_left = dynr::boat_testing_config.left_motor_force;
+
+	    if (dynr::boat_testing_config.max_force_right_motor == true
+	        && dynr::boat_testing_config.forward_force == true)
+	    {
+		    boat_testing_params.force_right = 15;
+//                boat_testing_params.force_left = 0;
+	    }
+	    else if (dynr::boat_testing_config.max_force_left_motor == true
+	             && dynr::boat_testing_config.forward_force == true)
+	    {
+//                boat_testing_params.force_right = 0;
+		    boat_testing_params.force_left = 15;
+	    }
+	    else if (dynr::boat_testing_config.max_force_right_motor == true
+	             && dynr::boat_testing_config.forward_force == false)
+	    {
+		    boat_testing_params.force_right = -15;
+//                boat_testing_params.force_left = 0;
+	    }
+	    else if (dynr::boat_testing_config.max_force_left_motor == true
+	             && dynr::boat_testing_config.forward_force == false)
+	    {
+//                boat_testing_params.force_right = 0;
+		    boat_testing_params.force_left = -15;
+	    }
+
+	    boat_testing_params.pwm_right = pwm_converter.getRightPWM(boat_testing_params.force_right);
+	    boat_testing_params.pwm_left = pwm_converter.getLeftPWM(boat_testing_params.force_left);
+
         if (dynr::boat_testing_config.ready_to_test == true)
         {
-            boat_testing_params.force_right = dynr::boat_testing_config.right_motor_force;
-            boat_testing_params.force_left = dynr::boat_testing_config.left_motor_force;
-
-            if (dynr::boat_testing_config.max_force_right_motor == true
-                && dynr::boat_testing_config.forward_force == true)
-            {
-                boat_testing_params.force_right = 15;
-//                boat_testing_params.force_left = 0;
-            }
-            else if (dynr::boat_testing_config.max_force_left_motor == true
-                     && dynr::boat_testing_config.forward_force == true)
-            {
-//                boat_testing_params.force_right = 0;
-                boat_testing_params.force_left = 15;
-            }
-            else if (dynr::boat_testing_config.max_force_right_motor == true
-                     && dynr::boat_testing_config.forward_force == false)
-            {
-                boat_testing_params.force_right = -15;
-//                boat_testing_params.force_left = 0;
-            }
-            else if (dynr::boat_testing_config.max_force_left_motor == true
-                     && dynr::boat_testing_config.forward_force == false)
-            {
-//                boat_testing_params.force_right = 0;
-                boat_testing_params.force_left = -15;
-            }
+	        right_esc.setSpeed(boat_testing_params.pwm_right);
+	        left_esc.setSpeed(boat_testing_params.pwm_left);
         }
-        else
-        {
-            boat_testing_params.force_right = 0;
-            boat_testing_params.force_left = 0;
-        }
-
-//        Calculate signals
-        boat_testing_params.pwm_right = pwm_converter.getRightPWM(boat_testing_params.force_right);
-        boat_testing_params.pwm_left = pwm_converter.getLeftPWM(boat_testing_params.force_left);
-
-        right_esc.setSpeed(boat_testing_params.pwm_right);
-        left_esc.setSpeed(boat_testing_params.pwm_left);
 
         state::print_boat_testing_status(boat_testing_params);
         ros::spinOnce();
