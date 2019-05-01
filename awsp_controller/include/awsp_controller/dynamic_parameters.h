@@ -13,7 +13,8 @@
 
 namespace dynr
 {
-namespace LEVEL {
+namespace LEVEL
+{
 const int GAINS              = 0;
 const int DYNAMIC_MODEL      = 1;
 const int SYSTEM_MODE        = 2;
@@ -24,7 +25,8 @@ const int LOW_PASS_FILTERING = 6;
 const int BOAT_TESTING       = 7;
 }
 
-struct ControlGains {
+struct ControlGains
+{
     float linear_gain = 0.0269;
     float angular_gain = 0.167;
     bool log_control_system_config = false;
@@ -32,25 +34,29 @@ struct ControlGains {
     bool use_imu_bearing = true;
 } control_gains;
 
-struct SystemMode {
+struct SystemMode
+{
     int vessel = OFF;
 } system_mode;
 
-struct CurrentVesselTask {
+struct CurrentVesselTask
+{
     float goal_latitude;
     float goal_longitude;
     bool ready_to_move;
     int distance_error_tol;
 } current_vessel_task;
 
-struct GeneralConfig {
+struct GeneralConfig
+{
     float damping_surge;
     float damping_yaw;
     float propeller_distance;
     bool log_general_config = false;
 } general_config;
 
-struct Debugging {
+struct Debugging
+{
     bool log_imu_raw = false;
     bool log_imu_kalman = false;
     bool log_gps_raw = false;
@@ -58,7 +64,8 @@ struct Debugging {
     bool log_state_machine = false;
 }debugging;
 
-struct LowPassFilteringConfig {
+struct LowPassFilteringConfig
+{
     int low_pass_filtering_mode = 0;
     bool low_pass_imu_acc = false;
     bool low_pass_imu_gyro = false;
@@ -74,6 +81,7 @@ struct BoatTestingConfig
     bool max_force_right_motor = false;
     bool max_force_left_motor = false;
     bool forward_force = true;
+    bool log_sensors_testing = true;
 } boat_testing_config;
 
 }

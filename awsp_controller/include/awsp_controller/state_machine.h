@@ -3,6 +3,7 @@
 //
 #include "awsp_controller/dynamic_parameters.h"
 #include "awsp_pose_estimator/awsp_pose_estimator.h"
+#include "awsp_logger/awsp_logger.h"
 
 #ifndef PROJECT_STATE_MACHINE_H
 #define PROJECT_STATE_MACHINE_H
@@ -71,6 +72,11 @@ const int BOAT_CONTROLLER = 4;
 const int BOAT_TESTING = 5;
 
 int current_system_state = SYSTEM_OFF;
+
+void log_selective_data()
+{
+
+}
 
 void print_system_off_status()
 {
@@ -387,6 +393,12 @@ int boat_testing()
 {
     ros::Rate loop_rate(10);
 
+    std::string testing_file = "boat_testing.csv";
+	std::string sensor_testing_data;
+    std::string directory = "/home/ubuntu/awsp_stable_ws/src/awsp_logger/log/";
+
+	Logger logger(directory);
+
     ForceToPWM pwm_converter;
     esc_lib left_esc(17);
     esc_lib right_esc(27);
@@ -408,6 +420,21 @@ int boat_testing()
             return state::SYSTEM_OFF;
         }
 
+        if (dynr::boat_testing_config.log_sensors_testing == true)
+        {
+            sensor_testing_data = std::to_string(gps_data.latitude)
+                    + "," + std::to_string(gps_data.longitude)
+                    + "," + std::to_string(gps_data.latitude)
+                    + "," + std::to_string(imu_data.acceleration.x)
+                    + "," + std::to_string(imu_data.acceleration.y)
+                    + "," + std::to_string(imu_data.yaw_vel)
+                    + "," + std::to_string(boat_testing_params.pwm_right)
+                    + "," + std::to_string(boat_testing_params.pwm_left)
+                    + "," + std::to_string(dynr::boat_testing_config.right_motor_force)
+                    + "," + std::to_string(dynr::boat_testing_config.left_motor_force);
+            logger.additional_logger(sensor_testing_data, testing_file);
+        }
+
         if (dynr::boat_testing_config.ready_to_test == true)
         {
             boat_testing_params.force_right = dynr::boat_testing_config.right_motor_force;
@@ -417,24 +444,24 @@ int boat_testing()
                 && dynr::boat_testing_config.forward_force == true)
             {
                 boat_testing_params.force_right = 15;
-                boat_testing_params.force_left = 0;
+//                boat_testing_params.force_left = 0;
             }
             else if (dynr::boat_testing_config.max_force_left_motor == true
                      && dynr::boat_testing_config.forward_force == true)
             {
-                boat_testing_params.force_right = 0;
+//                boat_testing_params.force_right = 0;
                 boat_testing_params.force_left = 15;
             }
             else if (dynr::boat_testing_config.max_force_right_motor == true
                      && dynr::boat_testing_config.forward_force == false)
             {
                 boat_testing_params.force_right = -15;
-                boat_testing_params.force_left = 0;
+//                boat_testing_params.force_left = 0;
             }
             else if (dynr::boat_testing_config.max_force_left_motor == true
                      && dynr::boat_testing_config.forward_force == false)
             {
-                boat_testing_params.force_right = 0;
+//                boat_testing_params.force_right = 0;
                 boat_testing_params.force_left = -15;
             }
         }

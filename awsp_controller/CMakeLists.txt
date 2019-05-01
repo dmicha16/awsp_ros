@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   awsp_gnss_l86_interface
   awsp_pose_estimator
   awsp_gy_88_interface
+  awsp_logger
   awsp_msgs
   roscpp
   std_msgs
@@ -165,6 +166,7 @@ add_dependencies(awsp_logger ${PROJECT_NAME}_gencfg)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
   awsp_pose_estimator
+  awsp_logger
   force_to_pwm
   gnss_l86_lib
   gy_88_lib

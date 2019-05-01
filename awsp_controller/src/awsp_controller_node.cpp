@@ -63,6 +63,7 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::boat_testing_config.max_force_right_motor = config.max_force_right_motor;
             dynr::boat_testing_config.max_force_left_motor = config.max_force_left_motor;
             dynr::boat_testing_config.forward_force = config.forward_force;
+		    dynr::boat_testing_config.log_sensors_testing = config.log_sensors_testing;
     }
 }
 
