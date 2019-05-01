@@ -478,6 +478,11 @@ int boat_testing()
 	        right_esc.setSpeed(boat_testing_params.pwm_right);
 	        left_esc.setSpeed(boat_testing_params.pwm_left);
         }
+        else
+        {
+	        right_esc.setSpeed(1500);
+	        left_esc.setSpeed(1500);
+        }
 
         state::print_boat_testing_status(boat_testing_params);
         ros::spinOnce();
