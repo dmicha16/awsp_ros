@@ -3,6 +3,8 @@
 #include <wiringPi.h>
 #include <wiringSerial.h>
 
+#ifndef AWSP_GNSS_L86_LIB_H
+#define AWSP_GNSS_L86_LIB_H
 
 struct position
 {
@@ -73,3 +75,5 @@ class GnssInterface
         bool set_fr_mode(int mode);
         bool set_update_rate(int update_rate);
 };
+
+#endif

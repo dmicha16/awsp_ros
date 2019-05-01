@@ -1,3 +1,6 @@
+#ifndef AWSP_POSE_ESTIMATOR_H
+#define AWSP_POSE_ESTIMATOR_H
+
 #define EARTH_R 6371000
 
 struct gps_position
@@ -80,3 +83,5 @@ class CartesianPose
         bool set_magnetic_north_gps(gps_position gps);
         void set_velocity(coordinates_2d velocity);
 };
+
+#endif

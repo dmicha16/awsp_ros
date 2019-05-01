@@ -8,9 +8,10 @@
 #include <ros/console.h>
 #include "ros/ros.h"
 #include <unistd.h>
+
 #include "awsp_pose_estimator/awsp_pose_estimator.h"
 #include "awsp_gnss_l86_interface/gnss_l86_lib.h"
-#include "awsp_gy_88_interface/gy_88_lib.h"
+
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
 #include "awsp_msgs/CartesianLog.h"
@@ -18,12 +19,12 @@
 
 typedef unsigned long long uulong_t;
 
-
 class Logger
 {
     private:
     int test_counter_;
     int test_dir_status;
+
     std::string directory_;
     std::string temp_test_dir_;
     const char* test_dir_;
@@ -42,8 +43,8 @@ class Logger
     Logger(std::string directory);
     ~Logger();
     void set_directory(std::string path);
-    void gnss_logger(position gnss_data);
-    void imu_logger (imu_data imu_data);
+	void gnss_logger(position gnss_data);
+	void imu_logger (imu_data imu_data);
     void additional_logger(std::string data_to_log, std::string file_name);
     void additional_logger(std::stringstream& data_to_log, std::string file_name);
 };

@@ -10,6 +10,7 @@
 
 position gnss_data;
 imu_data imu_data;
+
 awsp_msgs::LogInstruction log_instruction;
 bool new_imu = false;
 bool new_gnss = false;
@@ -24,6 +25,7 @@ void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
     gnss_data.speed = gnss_msg->speed;
     gnss_data.true_course = gnss_msg->true_course;
     gnss_data.timestamp = gnss_msg->timestamp;
+    gnss_data.fix = gnss_msg->fix;
     new_gnss = true;
 }
 
@@ -31,8 +33,6 @@ void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
 {
     imu_data.acceleration.x = floorf(imu_msg->si_accel_x * 100) / 100; // Put 10 for one decimal, 100 for 2, 1000 for 3, etc.
     imu_data.acceleration.y = -floorf(imu_msg->si_accel_y * 100) / 100;
-    // imu_data.acceleration.x = imu_msg->si_accel_x;
-    // imu_data.acceleration.y = -imu_msg->si_accel_y;
     imu_data.yaw_vel = imu_msg->gyro_z;
     imu_data.bearing = imu_msg->compass_angle;
     imu_data.timestamp = imu_msg->timestamp;
@@ -117,7 +117,6 @@ int main(int argc, char **argv)
     }
     return 0;
 }
-
 
 
 

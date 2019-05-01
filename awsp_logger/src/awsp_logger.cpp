@@ -71,7 +71,7 @@ void Logger::set_directory(std::string path)
 void Logger::gnss_logger(position gnss_data)
 {
     gnss_file_.open(gnss_file_name_, std::ios_base::app);
-    gnss_file_ << gnss_data.timestamp << "," 
+    gnss_file_ << gnss_data.timestamp << ","
             << gnss_data.latitude << ","
             << gnss_data.longitude << ","
             << gnss_data.speed << ","
@@ -96,7 +96,7 @@ void Logger::additional_logger(std::string data_to_log, std::string file_name)
     std::ofstream file;
     std::string file_dir = temp_test_dir_ + "/" + file_name;
     file.open (file_dir, std::ios_base::app);
-    file << current_millis_since_epoch_ << ", " << data_to_log << std::endl;
+    file << current_millis_since_epoch_ << "," << data_to_log << std::endl;
     file.close();
 }
 
@@ -106,7 +106,7 @@ void Logger::additional_logger(std::stringstream& data_to_log, std::string file_
     std::ofstream file;
     std::string file_dir = temp_test_dir_ + "/" + file_name;
     file.open (file_dir, std::ios_base::app);
-    file << current_millis_since_epoch_ << ", " << data_to_log.str() << std::endl;
+    file << current_millis_since_epoch_ << "," << data_to_log.str() << std::endl;
     file.close();
 }
 

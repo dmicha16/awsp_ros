@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 
     // Initialize the log file gnss_l86_test_X.csv
     std::ofstream file;
-    std::string directory = "/home/ubuntu/catkin_ws/src/awsp_gnss_l86_interface/log/";
+    std::string directory = "/home/ubuntu/awsp_stable_ws/src/awsp_gnss_l86_interface/log/";
     int gnss_test_counter = read_counter(directory + "gnss_test.count");
     increase_counter(directory + "gnss_test.count", gnss_test_counter + 1);
     std::string file_name = directory + "gnss_l86_test_" + std::to_string(gnss_test_counter) + ".csv";
