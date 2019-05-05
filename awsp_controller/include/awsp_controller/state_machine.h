@@ -4,6 +4,8 @@
 #include "awsp_controller/dynamic_parameters.h"
 #include "awsp_pose_estimator/awsp_pose_estimator.h"
 #include "awsp_logger/awsp_logger.h"
+#include <sstream>
+#include <iomanip>
 
 #ifndef PROJECT_STATE_MACHINE_H
 #define PROJECT_STATE_MACHINE_H
@@ -63,6 +65,12 @@ struct BoatControlParams
 bool is_first_gps = true;
 bool ref_set = false;
 
+// Global system level logger, alive until state machine is alive
+std::string global_log_file = "boat_global_log.csv";
+std::string directory = "/home/ubuntu/awsp_stable_ws/src/awsp_logger/log/";
+
+Logger global_logger(directory);
+
 namespace state {
 
 const int SYSTEM_OFF = 1;
@@ -73,9 +81,49 @@ const int BOAT_TESTING = 5;
 
 int current_system_state = SYSTEM_OFF;
 
-void log_selective_data()
+void log_global()
 {
 
+    std::stringstream log_stream;
+    std::string ready_to_move_boat;
+    if (dynr::current_vessel_task.ready_to_move)
+        ready_to_move_boat = "1";
+    else
+        ready_to_move_boat = "0";
+
+    log_stream << std::fixed << std::setprecision(7)
+            << dynr::system_mode.vessel
+            << "," << gps_data.latitude
+            << "," << gps_data.longitude
+            << "," << dynr::current_vessel_task.goal_latitude
+            << "," << dynr::current_vessel_task.goal_longitude
+            << "," << imu_data.acceleration.x
+            << "," << imu_data.acceleration.y
+            << "," << imu_data.yaw_vel
+            << "," << dynr::control_gains.use_imu_bearing
+            << "," << boat_control_params.pwm_right
+            << "," << boat_control_params.pwm_left
+            << "," << boat_control_params.torque_drive
+            << "," << boat_control_params.force_right
+            << "," << boat_control_params.force_left
+            << "," << ready_to_move_boat
+            << "," << current_pose.position.x
+            << "," << current_pose.position.y
+            << "," << current_pose.bearing
+            << "," << cartesian_ref.position.x
+            << "," << cartesian_ref.position.y
+            << "," << boat_control_params.cartesian_error.x
+            << "," << boat_control_params.cartesian_error.y
+            << "," << boat_control_params.distance_error
+            << "," << boat_control_params.bearing_error
+            << "," << boat_control_params.bearing_goal
+            << "," << boat_control_params.linear_speed
+            << "," << dynr::control_gains.linear_gain
+            << "," << dynr::control_gains.angular_gain
+            << "," << dynr::control_gains.use_fault_detection
+            << "," << dynr::current_vessel_task.distance_error_tol;
+
+    global_logger.additional_logger(log_stream.str(), global_log_file);
 }
 
 void print_system_off_status()
@@ -211,7 +259,7 @@ int system_off()
 
         while (ros::ok()) {
             // print status while we are waiting for the initial startup
-
+            log_global();
             state::print_system_off_status();
 
             if (dynr::system_mode.vessel == ON) {
@@ -232,13 +280,12 @@ int pose_estimation()
     int move_to_next = 0;
 
     ros::Rate loop_rate(10);
-    ROS_INFO("HOLD THE FUCK UP");
 
     while (ros::ok())
     {
+        log_global();
         if (evaluate_system_mode_status() == state::SYSTEM_OFF)
         {
-            ROS_INFO("is this where i break");
             return state::SYSTEM_OFF;
         }
 
@@ -268,11 +315,9 @@ int goal_setting()
 
     while (ros::ok())
     {
-
+        log_global();
         if (state::evaluate_system_mode_status() == state::SYSTEM_OFF)
             return state::SYSTEM_OFF;
-//        if (dynr::current_vessel_task.ready_to_move == true)
-//            return state::BOAT_CONTROLLER;
 
         if (dynr::current_vessel_task.goal_latitude != 0
             && dynr::current_vessel_task.goal_longitude != 0
@@ -310,9 +355,9 @@ int boat_controller()
     ros::Duration(3).sleep();
 
 
-    while (ros::ok()) {
-
-//        state::print_boat_controller_status();
+    while (ros::ok())
+    {
+        log_global();
         if (state::evaluate_system_mode_status() == state::SYSTEM_OFF)
         {
             left_esc.end();
@@ -320,6 +365,7 @@ int boat_controller()
             return state::SYSTEM_OFF;
         }
 
+        // bypass to next state
         if (dynr::debugging.log_gps_raw == true)
         {
             left_esc.end();

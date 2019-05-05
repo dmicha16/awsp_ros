@@ -73,22 +73,22 @@ int main(int argc, char **argv)
                 case 0:         // stop logging
                     log_instruction_gnss = false;
                     log_instruction_imu = false;
-                    ROS_INFO("Instuction is 0");
+                    ROS_INFO("Instruction is 0");
                     break;
                 case 1:        // start logging
                     log_instruction_gnss = true;
                     log_instruction_imu = true;
-                    ROS_INFO("Instuction is 1");
+                    ROS_INFO("Instruction is 1");
                     break;
                 case 2:        // only gnss logging
                     log_instruction_gnss = true;
                     log_instruction_imu = false;
-                    ROS_INFO("Instuction is 2");
+                    ROS_INFO("Instruction is 2");
                     break;
                 case 3:        // only imu logging
                     log_instruction_gnss = false;
                     log_instruction_imu = true;
-                    ROS_INFO("Instuction is 3");
+                    ROS_INFO("Instruction is 3");
                     break;
                 default:
                     log_instruction_gnss = true;
@@ -110,7 +110,6 @@ int main(int argc, char **argv)
             logger.imu_logger(imu_data);
             new_imu = false;
             ROS_INFO("Logging IMU");
-
         }
     ros::spinOnce();
     loop_rate.sleep();

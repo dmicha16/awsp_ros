@@ -45,6 +45,7 @@ struct CurrentVesselTask
     float goal_longitude;
     bool ready_to_move;
     int distance_error_tol;
+    bool log_goal_points = true;
 } current_vessel_task;
 
 struct GeneralConfig
