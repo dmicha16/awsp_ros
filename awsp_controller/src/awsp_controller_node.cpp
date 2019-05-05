@@ -39,8 +39,8 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::current_vessel_task.distance_error_tol = config.distance_error_tol;
             break;
         case dynr::LEVEL::CROSS_GROUP_LOG:
-            dynr::general_config.log_general_config = config.log_general_config;
-            dynr::control_gains.log_control_system_config = config.log_control_system_config;
+//            dynr::general_config.log_general_config = config.log_general_config;
+//            dynr::control_gains.log_control_system_config = config.log_control_system_config;
             break;
         case dynr::LEVEL::DEBUGGING:
             dynr::debugging.log_gps_raw = config.log_gps_raw;
@@ -49,12 +49,12 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::debugging.log_imu_kalman = config.log_imu_kalman;
             dynr::debugging.log_state_machine = config.log_state_machine;
             break;
-        case dynr::LEVEL::LOW_PASS_FILTERING:
-            dynr::low_pass_filtering_config.low_pass_filtering_mode = config.low_pass_filtering_mode;
-            dynr::low_pass_filtering_config.low_pass_imu_acc = config.low_pass_imu_acc;
-            dynr::low_pass_filtering_config.low_pass_imu_gyro = config.low_pass_imu_gyro;
-            dynr::low_pass_filtering_config.low_pass_gps_lat = config.low_pass_gps_lat;
-            dynr::low_pass_filtering_config.low_pass_gps_long = config.low_pass_gps_long;
+//        case dynr::LEVEL::LOW_PASS_FILTERING:
+//            dynr::low_pass_filtering_config.low_pass_filtering_mode = config.low_pass_filtering_mode;
+//            dynr::low_pass_filtering_config.low_pass_imu_acc = config.low_pass_imu_acc;
+//            dynr::low_pass_filtering_config.low_pass_imu_gyro = config.low_pass_imu_gyro;
+//            dynr::low_pass_filtering_config.low_pass_gps_lat = config.low_pass_gps_lat;
+//            dynr::low_pass_filtering_config.low_pass_gps_long = config.low_pass_gps_long;
 
         case dynr::LEVEL::BOAT_TESTING:
             dynr::boat_testing_config.ready_to_test = config.ready_to_test;

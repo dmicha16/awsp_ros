@@ -469,23 +469,36 @@ int boat_testing()
 
         if (dynr::boat_testing_config.log_sensors_testing == true)
         {
+        	std::stringstream stream_out;
         	std::string ready_to_test_out;
         	if (dynr::boat_testing_config.ready_to_test)
 		        ready_to_test_out = "1";
             else
 		        ready_to_test_out = "0";
 
-            sensor_testing_data = std::to_string(gps_data.latitude)
-                    + "," + std::to_string(gps_data.longitude)
-                    + "," + std::to_string(imu_data.acceleration.x)
-                    + "," + std::to_string(imu_data.acceleration.y)
-                    + "," + std::to_string(imu_data.yaw_vel)
-                    + "," + std::to_string(boat_testing_params.pwm_right)
-                    + "," + std::to_string(boat_testing_params.pwm_left)
-                    + "," + std::to_string(dynr::boat_testing_config.right_motor_force)
-                    + "," + std::to_string(dynr::boat_testing_config.left_motor_force)
-                    + "," + ready_to_test_out;
-            logger.additional_logger(sensor_testing_data, testing_file);
+            stream_out << std::fixed << std::setprecision(7)
+	                << "," << gps_data.latitude
+	                << "," << gps_data.longitude
+	                << "," << imu_data.acceleration.x
+	                << "," << imu_data.acceleration.y
+	                << "," << imu_data.yaw_vel
+	                << "," << boat_testing_params.pwm_right
+		            << "," << boat_testing_params.pwm_left
+		            << "," << dynr::boat_testing_config.right_motor_force
+		            << "," << dynr::boat_testing_config.left_motor_force
+		            << "," << ready_to_test_out;
+
+//            sensor_testing_data = std::to_string(gps_data.latitude)
+//                    + "," + std::to_string(gps_data.longitude)
+//                    + "," + std::to_string(imu_data.acceleration.x)
+//                    + "," + std::to_string(imu_data.acceleration.y)
+//                    + "," + std::to_string(imu_data.yaw_vel)
+//                    + "," + std::to_string(boat_testing_params.pwm_right)
+//                    + "," + std::to_string(boat_testing_params.pwm_left)
+//                    + "," + std::to_string(dynr::boat_testing_config.right_motor_force)
+//                    + "," + std::to_string(dynr::boat_testing_config.left_motor_force)
+//                    + "," + ready_to_test_out;
+            logger.additional_logger(stream_out.str(), testing_file);
         }
 
 	    boat_testing_params.force_right = dynr::boat_testing_config.right_motor_force;
