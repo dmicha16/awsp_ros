@@ -1,3 +1,6 @@
+#ifndef TEST_H
+#define TEST_H
+
 #include <string>
 #include <ros/ros.h>
 #include <ros/console.h>
@@ -36,3 +39,5 @@ class PropellerTest
     PropellerTest(ros::NodeHandle n, int left_pin, int right_pin);
     ~PropellerTest();
 };
+
+#endif //TEST_H

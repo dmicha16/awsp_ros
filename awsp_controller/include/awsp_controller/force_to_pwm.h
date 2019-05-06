@@ -1,3 +1,5 @@
+#ifndef FORCE_TO_PWM_H
+#define FORCE_TO_PWM_H
 
 class ForceToPWM
 { 
@@ -19,3 +21,5 @@ class ForceToPWM
     float getRightPWM(float force);
     float getLeftPWM(float force);
 };
+
+#endif //FORCE_TO_PWM_H

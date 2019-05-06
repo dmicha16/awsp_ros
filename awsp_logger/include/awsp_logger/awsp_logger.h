@@ -1,3 +1,6 @@
+#ifndef AWSP_LOGGER_H
+#define AWSP_LOGGER_H
+
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -48,3 +51,5 @@ class Logger
     void additional_logger(std::string data_to_log, std::string file_name);
     void additional_logger(std::stringstream& data_to_log, std::string file_name);
 };
+
+#endif //AWSP_LOGGER_H

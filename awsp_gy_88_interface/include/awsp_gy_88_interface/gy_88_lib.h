@@ -1,4 +1,7 @@
 
+#ifndef GY_88_LIB_H
+#define GY_88_LIB_H
+
 #include <cmath>
 #include <bitset>
 #include <sstream>
@@ -188,3 +191,5 @@ class Gy88Interface
     float calculate_compass_angle_();
     int convert_bytes_to_short_(short msb, short lsb);
 };
+
+#endif //GY_88_LIB_H

@@ -1,3 +1,6 @@
+#ifndef FEED_FORWARD_REF_H
+#define FEED_FORWARD_REF_H
+
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
@@ -50,3 +53,5 @@ class FeedForwardReference
     // struct goal_position {float goal_x, float goal_y};
     float angleToGoal(float current_x, float current_y, float current_bearing);
 };
+
+#endif //FEED_FORWARD_REF_H

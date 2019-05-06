@@ -1,3 +1,6 @@
+#ifndef AWSP_SENSOR_KIT_H
+#define AWSP_SENSOR_KIT_H
+
 #include <vector>
 #include <time.h>
 #include <chrono>
@@ -39,3 +42,5 @@ class FilterKit
     std::vector<WindowContainer> windows_holder_;
     std::vector<double> features_;
 };
+
+#endif //AWSP_SENSOR_KIT_H
