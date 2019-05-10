@@ -72,7 +72,7 @@ int main(int argc, char **argv)
   uint sensors[SENSOR_NUMBER] = {ACCEL_X, ACCEL_Y, ACCEL_Z, GYRO_X, GYRO_Y, GYRO_Z};
   float sensor_readings[SENSOR_NUMBER];
 
-  FilterKit filter_kit(SENSOR_NUMBER, window_size);
+  FilterKit filter_kit(SENSOR_NUMBER, window_size, 0.5);
 
   ROS_INFO("Successfully constructed FilterKit class..");
   

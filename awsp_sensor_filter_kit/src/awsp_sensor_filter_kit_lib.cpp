@@ -3,20 +3,20 @@
 // ******************************** CONSTRUCTORS-DESTRUCTORS *******************************
 
 
-FilterKit::FilterKit(uint sensor_num, const uint window_size)
+FilterKit::FilterKit(uint sensor_num, const uint window_size, uint alpha)
 {
-  window_size_ = window_size;
+	window_size_ = window_size;
+	alpha_ = alpha;
+	sensor_num_ = sensor_num;
 
-  sensor_num_ = sensor_num;
+	WindowContainer window_filler;
 
-  WindowContainer window_filler;
+	for(int i = 0; i < sensor_num; i++)
+	{
+		windows_holder_.push_back(window_filler);
+	}
 
-  for(int i = 0; i < sensor_num; i++)
-  {
-    windows_holder_.push_back(window_filler);
-  }
-
-  previous_ema_ = 0;
+	previous_ema_ = 0;
 }
 
 FilterKit::~FilterKit() {}
@@ -25,78 +25,75 @@ FilterKit::~FilterKit() {}
 
 void FilterKit::window(float sensor_readings[], uint sensors[], uint method)
 {
-  std::vector<float>::iterator window_it;
-  features_.clear();
+	std::vector<float>::iterator window_it;
+	features_.clear();
 
-  for(int i = 0; i < windows_holder_.size(); i++)
-  {
-    window_it = windows_holder_[i].window.begin();
-    windows_holder_[i].window.insert(window_it, sensor_readings[sensors[i]]);
-  }
+	for(int i = 0; i < windows_holder_.size(); i++)
+	{
+		window_it = windows_holder_[i].window.begin();
+		windows_holder_[i].window.insert(window_it, sensor_readings[sensors[i]]);
+	}
 
-  if (windows_holder_[0].window.size() == window_size_)
-  {
-    for(int i = 0; i < windows_holder_.size(); i++)
-    {
-      windows_holder_[i].window.pop_back();
+	if (windows_holder_[0].window.size() == window_size_)
+	{
+		for(int i = 0; i < windows_holder_.size(); i++)
+		{
+			windows_holder_[i].window.pop_back();
 
-      switch (method)
-      {
-        case SMA:
-          sma_(windows_holder_[i].window);
-          break;
-        case EMA:
-          sma_(windows_holder_[i].window);
-          break;
-        case KALMAN:
-          sma_(windows_holder_[i].window);
-          break;
-      }
-    }
-  }
+			switch (method)
+			{
+				case SMA:
+					sma_(windows_holder_[i].window);
+					break;
+				case EMA:
+					sma_(windows_holder_[i].window);
+					break;
+			}
+		}
+	}
 }
 
 std::vector<double> FilterKit::get_features()
 {
-  std::vector<double> temp;
+	std::vector<double> temp;
 
-  if (features_.size() != 0)
-  {
-    return features_;
-  }
-  else
-  {
-    for (int i = 0; i < sensor_num_; ++i)
-    {
-      temp.push_back(0);
-    }
+	if (features_.size() != 0)
+	{
+		return features_;
+	}
+	else
+	{
+		for (int i = 0; i < sensor_num_; ++i)
+		{
+			temp.push_back(0);
+		}
 
-    return temp;
-  } 
+		return temp;
+	}
 }
 
 // **************************************** PRIVATE ****************************************
 
 void FilterKit::sma_(std::vector<float> current_window)
 {
-  float temp_window_value = 0;
+	float temp_window_value = 0;
 
-  for(int i = 0; i < current_window.size(); i++)
-  {
-    temp_window_value += current_window[i];
-  }
+	for(int i = 0; i < current_window.size(); i++)
+	{
+		temp_window_value += current_window[i];
+	}
 
-  temp_window_value = temp_window_value / current_window.size();
+	temp_window_value = temp_window_value / current_window.size();
 
-  features_.push_back(temp_window_value);
+	features_.push_back(temp_window_value);
 }
 
 void FilterKit::ema_(std::vector<float> current_window)
 {
 
-  float new_ema = 0;
-  new_ema = ALPHA_WEIGHT * current_window.front() + (1 - ALPHA_WEIGHT) * previous_ema_;
+	float new_ema = 0;
+	new_ema = alpha_ * current_window.front() + (1 - alpha_) * previous_ema_;
 
-  features_.push_back(new_ema);
-  previous_ema_ = new_ema;
+	features_.push_back(new_ema);
+	previous_ema_ = new_ema;
 }
