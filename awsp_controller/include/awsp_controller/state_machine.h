@@ -118,8 +118,10 @@ void log_global()
             << "," << boat_control_params.bearing_error
             << "," << boat_control_params.bearing_goal
             << "," << boat_control_params.linear_speed
-            << "," << dynr::control_gains.linear_gain
-            << "," << dynr::control_gains.angular_gain
+            << "," << dynr::control_gains.p_linear_gain
+		    << "," << dynr::control_gains.d_linear_gain
+            << "," << dynr::control_gains.p_angular_gain
+		    << "," << dynr::control_gains.d_angular_gain
             << "," << dynr::control_gains.use_fault_detection
             << "," << dynr::current_vessel_task.distance_error_tol;
 
@@ -130,8 +132,10 @@ void print_system_off_status()
 {
     ROS_WARN_STREAM( "[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
     ROS_WARN_STREAM( "[SYSTEM IS IN STATE     ] 1 - SYSTEM_OFF");
-    ROS_DEBUG_STREAM("[LINEAR GAIN            ] " << dynr::control_gains.linear_gain);
-    ROS_DEBUG_STREAM("[ANGULAR GAIN           ] " << dynr::control_gains.angular_gain);
+    ROS_DEBUG_STREAM("[P LINEAR GAIN          ] " << dynr::control_gains.p_linear_gain);
+	ROS_DEBUG_STREAM("[D LINEAR GAIN          ] " << dynr::control_gains.d_linear_gain);
+    ROS_DEBUG_STREAM("[P ANGULAR GAIN         ] " << dynr::control_gains.p_angular_gain);
+	ROS_DEBUG_STREAM("[D ANGULAR GAIN         ] " << dynr::control_gains.d_angular_gain);
     ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
     ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
 //    ROS_DEBUG_STREAM();
@@ -153,8 +157,10 @@ void print_pose_estimation_status(gps_position gps_data, cart_pose current_pose)
     ROS_DEBUG_STREAM("[CURRENT CART Y         ] " << current_pose.position.y);
     ROS_DEBUG_STREAM("[CURRENT BEARING        ] " << current_pose.bearing);
 
-    ROS_DEBUG_STREAM("[LINEAR GAIN            ] " << dynr::control_gains.linear_gain);
-    ROS_DEBUG_STREAM("[ANGULAR GAIN           ] " << dynr::control_gains.angular_gain);
+	ROS_DEBUG_STREAM("[P LINEAR GAIN          ] " << dynr::control_gains.p_linear_gain);
+	ROS_DEBUG_STREAM("[D LINEAR GAIN          ] " << dynr::control_gains.d_linear_gain);
+	ROS_DEBUG_STREAM("[P ANGULAR GAIN         ] " << dynr::control_gains.p_angular_gain);
+	ROS_DEBUG_STREAM("[D ANGULAR GAIN         ] " << dynr::control_gains.d_angular_gain);
     ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
     ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
 
@@ -178,8 +184,10 @@ void print_goal_setting_status(gps_position gps_data, cart_pose current_pose)
     ROS_DEBUG_STREAM("[CURRENT CART Y         ] " << current_pose.position.y);
     ROS_DEBUG_STREAM("[CURRENT BEARING        ] " << current_pose.bearing);
 
-    ROS_DEBUG_STREAM("[LINEAR GAIN            ] " << dynr::control_gains.linear_gain);
-    ROS_DEBUG_STREAM("[ANGULAR GAIN           ] " << dynr::control_gains.angular_gain);
+	ROS_DEBUG_STREAM("[P LINEAR GAIN          ] " << dynr::control_gains.p_linear_gain);
+	ROS_DEBUG_STREAM("[D LINEAR GAIN          ] " << dynr::control_gains.d_linear_gain);
+	ROS_DEBUG_STREAM("[P ANGULAR GAIN         ] " << dynr::control_gains.p_angular_gain);
+	ROS_DEBUG_STREAM("[D ANGULAR GAIN         ] " << dynr::control_gains.d_angular_gain);
     ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
     ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
 
@@ -207,8 +215,10 @@ void print_boat_controller_status(BoatControlParams boat_control_params)
     ROS_DEBUG_STREAM("[PWM LEFT               ] " << boat_control_params.pwm_left);
     ROS_DEBUG_STREAM("[PWM RIGHT              ] " << boat_control_params.pwm_right);
 
-    ROS_DEBUG_STREAM("[LINEAR GAIN            ] " << dynr::control_gains.linear_gain);
-    ROS_DEBUG_STREAM("[ANGULAR GAIN           ] " << dynr::control_gains.angular_gain);
+	ROS_DEBUG_STREAM("[P LINEAR GAIN          ] " << dynr::control_gains.p_linear_gain);
+	ROS_DEBUG_STREAM("[D LINEAR GAIN          ] " << dynr::control_gains.d_linear_gain);
+	ROS_DEBUG_STREAM("[P ANGULAR GAIN         ] " << dynr::control_gains.p_angular_gain);
+	ROS_DEBUG_STREAM("[D ANGULAR GAIN         ] " << dynr::control_gains.d_angular_gain);
     ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
     ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
 
@@ -230,8 +240,10 @@ void print_boat_testing_status(BoatTestingParams boat_testing_params)
     ROS_DEBUG_STREAM("[PWM LEFT               ] " << boat_testing_params.pwm_left);
     ROS_DEBUG_STREAM("[PWM RIGHT              ] " << boat_testing_params.pwm_right);
 
-    ROS_DEBUG_STREAM("[LINEAR GAIN            ] " << dynr::control_gains.linear_gain);
-    ROS_DEBUG_STREAM("[ANGULAR GAIN           ] " << dynr::control_gains.angular_gain);
+	ROS_DEBUG_STREAM("[P LINEAR GAIN          ] " << dynr::control_gains.p_linear_gain);
+	ROS_DEBUG_STREAM("[D LINEAR GAIN          ] " << dynr::control_gains.d_linear_gain);
+	ROS_DEBUG_STREAM("[P ANGULAR GAIN         ] " << dynr::control_gains.p_angular_gain);
+	ROS_DEBUG_STREAM("[D ANGULAR GAIN         ] " << dynr::control_gains.d_angular_gain);
     ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
 
     ROS_DEBUG("================================================");
@@ -289,7 +301,7 @@ int pose_estimation()
             return state::SYSTEM_OFF;
         }
 
-        if (dynr::debugging.log_imu_raw == true)
+        if (dynr::state_bypass.bypass_2_3 == true)
             return state::GOAL_SETTING;
 
         if (!ref_set)
@@ -328,6 +340,9 @@ int goal_setting()
             cartesian_ref = pose_estimator.cartesian_pose(gps_ref);
             return state::BOAT_CONTROLLER;
         }
+
+        if (dynr::state_bypass.bypass_3_4 == true)
+        	return state::BOAT_CONTROLLER;
         state::print_goal_setting_status(gps_data, current_pose);
 
         ros::spinOnce();
@@ -366,7 +381,7 @@ int boat_controller()
         }
 
         // bypass to next state
-        if (dynr::debugging.log_gps_raw == true)
+        if (dynr::state_bypass.bypass_4_2 == true)
         {
             left_esc.end();
             right_esc.end();
@@ -411,8 +426,8 @@ int boat_controller()
 
 
         // Calculate speeds
-        boat_control_params.linear_speed = boat_control_params.distance_error * dynr::control_gains.linear_gain;
-        boat_control_params.angular_speed = boat_control_params.bearing_error * dynr::control_gains.angular_gain;
+        boat_control_params.linear_speed = boat_control_params.distance_error * dynr::control_gains.p_linear_gain;
+        boat_control_params.angular_speed = boat_control_params.bearing_error * dynr::control_gains.p_angular_gain;
 
         // Calculate forces
         boat_control_params.force_drive = boat_control_params.linear_speed * dynr::general_config.damping_surge;

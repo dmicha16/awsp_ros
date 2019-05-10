@@ -19,8 +19,10 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
 
     switch (level) {
         case dynr::LEVEL::GAINS:
-            dynr::control_gains.linear_gain = config.linear_gain;
-            dynr::control_gains.angular_gain = config.angular_gain;
+            dynr::control_gains.p_linear_gain = config.p_linear_gain;
+            dynr::control_gains.d_linear_gain = config.d_linear_gain;
+            dynr::control_gains.p_angular_gain = config.p_angular_gain;
+            dynr::control_gains.d_angular_gain = config.d_angular_gain;
             dynr::control_gains.use_fault_detection = config.use_fault_detection;
             dynr::control_gains.use_imu_bearing = config.use_imu_bearing;
             break;
@@ -64,6 +66,11 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::boat_testing_config.max_force_left_motor = config.max_force_left_motor;
             dynr::boat_testing_config.forward_force = config.forward_force;
 		    dynr::boat_testing_config.log_sensors_testing = config.log_sensors_testing;
+
+        case dynr::LEVEL::STATE_BYPASS:
+            dynr::state_bypass.bypass_2_3 = config.bypass_2_3;
+            dynr::state_bypass.bypass_3_4 = config.bypass_3_4;
+            dynr::state_bypass.bypass_4_2 = config.bypass_4_2;
     }
 }
 

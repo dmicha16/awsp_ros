@@ -23,12 +23,15 @@ const int CROSS_GROUP_LOG    = 4;
 const int DEBUGGING          = 5;
 const int LOW_PASS_FILTERING = 6;
 const int BOAT_TESTING       = 7;
+const int STATE_BYPASS       = 8;
 }
 
 struct ControlGains
 {
-    float linear_gain = 0.0269;
-    float angular_gain = 0.167;
+    float p_linear_gain = 0.0269;
+	float d_linear_gain = 0.0269;
+    float p_angular_gain = 0.167;
+	float d_angular_gain = 0.167;
     bool log_control_system_config = false;
     bool use_fault_detection = true;
     bool use_imu_bearing = true;
@@ -84,6 +87,13 @@ struct BoatTestingConfig
     bool forward_force = true;
     bool log_sensors_testing = true;
 } boat_testing_config;
+
+struct StateBypass
+{
+	bool bypass_2_3 = false;
+	bool bypass_3_4 = false;
+	bool bypass_4_2 = false;
+} state_bypass;
 
 }
 
