@@ -143,7 +143,7 @@ add_library(esc_lib src/esc_lib.cpp)
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
+add_executable(${PROJECT_NAME}_node nodes/${PROJECT_NAME}_node.cpp)
 #add_executable(${PROJECT_NAME}_node_no_bearing src/${PROJECT_NAME}_node_no_bearing.cpp)
 #add_executable(${PROJECT_NAME}_node_no_imu src/${PROJECT_NAME}_node_no_imu.cpp)
 #add_executable(test_node src/test_node.cpp)

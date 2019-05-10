@@ -340,6 +340,10 @@ int goal_setting()
             cartesian_ref = pose_estimator.cartesian_pose(gps_ref);
             return state::BOAT_CONTROLLER;
         }
+        else if (dynr::current_vessel_task.use_gps_waypoints == true)
+        {
+        	return state::BOAT_CONTROLLER;
+        }
 
         if (dynr::state_bypass.bypass_3_4 == true)
         	return state::BOAT_CONTROLLER;

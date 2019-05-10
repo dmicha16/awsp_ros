@@ -15,6 +15,12 @@
 #include <dynamic_reconfigure/server.h>
 #include <awsp_controller/ParametersConfig.h>
 
+/**
+ * Callback function for dynamic reconfigure gui. Populates each struct corresponding to
+ * groups in the gui. Handles the bitmap levels specified by the Parameters.cfg
+ * @param config variable which holds all values from the gui
+ * @param level bitmap level specified by the Parameters.cfg
+ */
 void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
 
     switch (level) {
@@ -39,24 +45,26 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::current_vessel_task.goal_longitude = config.goal_longitude;
             dynr::current_vessel_task.ready_to_move = config.ready_to_move;
             dynr::current_vessel_task.distance_error_tol = config.distance_error_tol;
+            dynr::current_vessel_task.use_gps_waypoints = config.use_gps_waypoints;
             break;
         case dynr::LEVEL::CROSS_GROUP_LOG:
 //            dynr::general_config.log_general_config = config.log_general_config;
 //            dynr::control_gains.log_control_system_config = config.log_control_system_config;
             break;
         case dynr::LEVEL::DEBUGGING:
-            dynr::debugging.log_gps_raw = config.log_gps_raw;
-            dynr::debugging.log_gps_kalman = config.log_gps_kalman;
-            dynr::debugging.log_imu_raw = config.log_imu_raw;
-            dynr::debugging.log_imu_kalman = config.log_imu_kalman;
-            dynr::debugging.log_state_machine = config.log_state_machine;
+//            dynr::debugging.log_gps_raw = config.log_gps_raw;
+//            dynr::debugging.log_gps_kalman = config.log_gps_kalman;
+//            dynr::debugging.log_imu_raw = config.log_imu_raw;
+//            dynr::debugging.log_imu_kalman = config.log_imu_kalman;
+//            dynr::debugging.log_state_machine = config.log_state_machine;
             break;
-//        case dynr::LEVEL::LOW_PASS_FILTERING:
+        case dynr::LEVEL::LOW_PASS_FILTERING:
 //            dynr::low_pass_filtering_config.low_pass_filtering_mode = config.low_pass_filtering_mode;
 //            dynr::low_pass_filtering_config.low_pass_imu_acc = config.low_pass_imu_acc;
 //            dynr::low_pass_filtering_config.low_pass_imu_gyro = config.low_pass_imu_gyro;
 //            dynr::low_pass_filtering_config.low_pass_gps_lat = config.low_pass_gps_lat;
 //            dynr::low_pass_filtering_config.low_pass_gps_long = config.low_pass_gps_long;
+			break;
 
         case dynr::LEVEL::BOAT_TESTING:
             dynr::boat_testing_config.ready_to_test = config.ready_to_test;
@@ -66,14 +74,21 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::boat_testing_config.max_force_left_motor = config.max_force_left_motor;
             dynr::boat_testing_config.forward_force = config.forward_force;
 		    dynr::boat_testing_config.log_sensors_testing = config.log_sensors_testing;
+		    break;
 
         case dynr::LEVEL::STATE_BYPASS:
             dynr::state_bypass.bypass_2_3 = config.bypass_2_3;
             dynr::state_bypass.bypass_3_4 = config.bypass_3_4;
             dynr::state_bypass.bypass_4_2 = config.bypass_4_2;
+            break;
     }
 }
 
+/**
+ * Callback function. Populates the gps_data with the currently measured LLA and
+ * gps fix. Also set a variable to true if this callback function has been triggered.
+ * @param gnss_msg
+ */
 void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
 {
     gps_data.latitude = gnss_msg->latitude;
@@ -83,6 +98,11 @@ void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
     new_gps = true;
 }
 
+/**
+ * Callback function. Populates the imu_data with the currently measured imu_data.
+ * Also set a variable to true if this callback function has been triggered.
+ * @param imu_msg
+ */
 void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
 {
     // imu_data.acceleration.x = imu_msg->si_accel_x;
