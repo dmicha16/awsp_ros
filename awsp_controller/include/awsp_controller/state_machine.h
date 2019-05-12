@@ -2,6 +2,7 @@
 // Created by davidm on 4/27/19.
 //
 #include "awsp_controller/dynamic_parameters.h"
+#include "awsp_controller/pd_controller.h"
 #include "awsp_pose_estimator/awsp_pose_estimator.h"
 #include "awsp_logger/awsp_logger.h"
 #include <sstream>
@@ -12,6 +13,7 @@
 
 gps_position gps_data;
 imu_data imu_data;
+//imu_data low_pass_imu_data;
 bool new_imu = false;
 bool new_gps = false;
 
@@ -259,6 +261,11 @@ int evaluate_system_mode_status()
     return -1;
 }
 
+cart_pose estimate_current_pose()
+{
+
+}
+
 int system_off()
 {
     if (dynr::system_mode.vessel == OFF)
@@ -373,6 +380,8 @@ int boat_controller()
     }
     ros::Duration(3).sleep();
 
+    PDController surge_pd_ctrl(0.1, 15, -15);
+    PDController yaw_pd_ctrl(0.1, 15, -15);
 
     while (ros::ok())
     {
@@ -428,15 +437,13 @@ int boat_controller()
             return state::POSE_ESTIMATION;
         }
 
-
-        // Calculate speeds
-        boat_control_params.linear_speed = boat_control_params.distance_error * dynr::control_gains.p_linear_gain;
-        boat_control_params.angular_speed = boat_control_params.bearing_error * dynr::control_gains.p_angular_gain;
-
         // Calculate forces
-        boat_control_params.force_drive = boat_control_params.linear_speed * dynr::general_config.damping_surge;
-        boat_control_params.torque_drive = boat_control_params.angular_speed * dynr::general_config.damping_yaw;
-        boat_control_params.force_right = (dynr::general_config.propeller_distance * boat_control_params.force_drive - boat_control_params.torque_drive) / (2 * dynr::general_config.propeller_distance);
+        boat_control_params.force_drive = surge_pd_ctrl.get_force(boat_control_params.distance_error,
+                dynr::control_gains.p_linear_gain, dynr::control_gains.d_linear_gain);
+        boat_control_params.torque_drive = yaw_pd_ctrl.get_force(boat_control_params.bearing_error,
+                dynr::control_gains.p_angular_gain, dynr::control_gains.d_angular_gain);
+        boat_control_params.force_right = (dynr::general_config.propeller_distance * boat_control_params.force_drive
+                - boat_control_params.torque_drive) / (2 * dynr::general_config.propeller_distance);
         boat_control_params.force_left = boat_control_params.force_drive - boat_control_params.force_right;
 
 //        Calculate signals
@@ -445,9 +452,6 @@ int boat_controller()
 
         left_esc.setSpeed(boat_control_params.pwm_left);
         right_esc.setSpeed(boat_control_params.pwm_right);
-
-//        left_esc.setSpeed(1800);
-//        right_esc.setSpeed(1800);
 
         state::print_boat_controller_status(boat_control_params);
         ros::spinOnce();

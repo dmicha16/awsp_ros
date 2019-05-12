@@ -174,6 +174,7 @@ target_link_libraries(${PROJECT_NAME}_node
   esc_lib
   pigpiod_if2
   pthread
+  pd_controller
   ${catkin_LIBRARIES}
 )
 #

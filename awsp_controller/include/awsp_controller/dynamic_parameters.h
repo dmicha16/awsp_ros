@@ -26,12 +26,20 @@ const int BOAT_TESTING       = 7;
 const int STATE_BYPASS       = 8;
 }
 
+namespace FILTER
+{
+const int SMA = 0;
+const int EMA = 1;
+const int NONE = 2;
+
+}
+
 struct ControlGains
 {
-    float p_linear_gain = 0.0269;
-	float d_linear_gain = 0.0269;
-    float p_angular_gain = 0.167;
-	float d_angular_gain = 0.167;
+    float p_linear_gain = 0.35014830776512;
+	float d_linear_gain = 3.41234381251693;
+    float p_angular_gain = 1.37254843957504;
+	float d_angular_gain = 3.22145409227058;
     bool log_control_system_config = false;
     bool use_fault_detection = true;
     bool use_imu_bearing = true;
@@ -72,11 +80,10 @@ struct Debugging
 
 struct LowPassFilteringConfig
 {
-    int low_pass_filtering_mode = 0;
-    bool low_pass_imu_acc = false;
-    bool low_pass_imu_gyro = false;
-    bool low_pass_gps_lat = false;
-    bool low_pass_gps_long = false;
+    int filtering_mode = FILTER::NONE;
+    bool imu_acc = false;
+    bool imu_gyro = false;
+    int window_size = 100;
 } low_pass_filtering_config;
 
 struct BoatTestingConfig

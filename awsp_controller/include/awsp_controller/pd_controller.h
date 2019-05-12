@@ -8,17 +8,15 @@
 class PDController
 {
 public:
-    PDController(double dt, double max_output, double min_output, double p_gain, double d_gain);
+    PDController(double dt, double max_output, double min_output);
     ~PDController();
 
-    double get_force(double set_point, double pv);
+    double get_force(double error, double p_gain, double d_gain);
 
 private:
     double dt_;
     double max_output_;
     double min_output_;
-    double p_gain_;
-    double d_gain_;
     double previous_error_;
     double force_;
 
