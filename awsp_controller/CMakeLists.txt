@@ -132,6 +132,7 @@ include_directories(
 ## Declare a C++ library
 add_library(force_to_pwm src/force_to_pwm.cpp)
 add_library(feed_forward_reference src/feed_forward_reference.cpp)
+add_library(pd_controller src/pd_controller.cpp)
 #add_library(test_lib src/test.cpp)
 add_library(esc_lib src/esc_lib.cpp)
 
