@@ -3,8 +3,6 @@ project(awsp_msgs)
 
 find_package(catkin REQUIRED COMPONENTS message_generation std_msgs)
 
-# Inspired from https://github.com/ros/common_msgs/tree/jade-devel/nav_msgs
-
 add_message_files(
         DIRECTORY msg
         FILES
@@ -15,6 +13,7 @@ add_message_files(
         LogInstruction.msg
         SensorKitData.msg
         StateMachineStatus.msg
+        ObstacleData.msg
 )
 
 generate_messages(DEPENDENCIES std_msgs)

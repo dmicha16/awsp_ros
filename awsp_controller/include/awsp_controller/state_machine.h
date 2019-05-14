@@ -261,11 +261,6 @@ int evaluate_system_mode_status()
     return -1;
 }
 
-cart_pose estimate_current_pose()
-{
-
-}
-
 int system_off()
 {
     if (dynr::system_mode.vessel == OFF)

@@ -1,0 +1,2 @@
+float64 front_obstacle_dist
+int64 front_obstacle
