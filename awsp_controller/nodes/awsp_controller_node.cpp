@@ -32,6 +32,7 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::control_gains.d_angular_gain = config.d_angular_gain;
             dynr::control_gains.use_fault_detection = config.use_fault_detection;
             dynr::control_gains.use_imu_bearing = config.use_imu_bearing;
+            dynr::control_gains.use_obstacle_detector = config.use_obstacle_detector;
             break;
         case dynr::LEVEL::DYNAMIC_MODEL:
             dynr::general_config.damping_surge = config.damping_surge;

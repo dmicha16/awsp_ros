@@ -402,7 +402,7 @@ int boat_controller()
             return state::POSE_ESTIMATION;
         }
 
-        if (obstacle_data.front_obstacle)
+        if (obstacle_data.front_obstacle && dynr::control_gains.use_obstacle_detector)
         {
             left_esc.end();
             right_esc.end();

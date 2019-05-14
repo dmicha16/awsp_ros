@@ -43,6 +43,7 @@ struct ControlGains
     bool log_control_system_config = false;
     bool use_fault_detection = true;
     bool use_imu_bearing = true;
+    bool use_obstacle_detector = true;
 } control_gains;
 
 struct SystemMode
