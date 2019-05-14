@@ -131,7 +131,9 @@ void log_global()
             << "," << dynr::control_gains.p_angular_gain
 		    << "," << dynr::control_gains.d_angular_gain
             << "," << dynr::control_gains.use_fault_detection
-            << "," << dynr::current_vessel_task.distance_error_tol;
+            << "," << dynr::current_vessel_task.distance_error_tol
+            << "," << gps_data.speed
+            << "," << gps_data.true_course;
 
     global_logger.additional_logger(log_stream.str(), global_log_file);
 }
@@ -518,7 +520,9 @@ int boat_testing()
 		            << "," << boat_testing_params.pwm_left
 		            << "," << dynr::boat_testing_config.right_motor_force
 		            << "," << dynr::boat_testing_config.left_motor_force
-		            << "," << ready_to_test_out;
+		            << "," << ready_to_test_out
+                    << "," << gps_data.speed
+                    << "," << gps_data.true_course;
 
 //            sensor_testing_data = std::to_string(gps_data.latitude)
 //                    + "," + std::to_string(gps_data.longitude)

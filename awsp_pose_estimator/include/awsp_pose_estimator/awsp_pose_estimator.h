@@ -8,7 +8,9 @@ struct gps_position
     float latitude;     // Parallel [degrees]
     float longitude;    // Meridian [degrees]
     unsigned long long timestamp;    // Unix timestamp [ms]
-    int fix; //
+    int fix;
+    float speed;
+    float true_course;
 };
 
 struct coordinates_2d

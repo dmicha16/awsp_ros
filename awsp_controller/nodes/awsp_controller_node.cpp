@@ -96,6 +96,8 @@ void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
     gps_data.longitude = gnss_msg->longitude;
     gps_data.timestamp = gnss_msg->timestamp;
     gps_data.fix = gnss_msg->fix;
+    gps_data.true_course = gnss_msg->true_course;
+    gps_data.speed = gnss_msg->speed;
     new_gps = true;
 }
 
