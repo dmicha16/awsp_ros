@@ -64,6 +64,12 @@ struct BoatControlParams
     int pwm_right;
 } boat_control_params;
 
+struct ObstacleData
+{
+    float front_obstacle_dist;
+    bool front_obstacle;
+} obstacle_data;
+
 bool is_first_gps = true;
 bool ref_set = false;
 
@@ -393,6 +399,14 @@ int boat_controller()
         {
             left_esc.end();
             right_esc.end();
+            return state::POSE_ESTIMATION;
+        }
+
+        if (obstacle_data.front_obstacle)
+        {
+            left_esc.end();
+            right_esc.end();
+            ROS_WARN("OBSTACLE DETECTED, STOPPING.");
             return state::POSE_ESTIMATION;
         }
 

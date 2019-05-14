@@ -8,6 +8,7 @@
 #include "awsp_gy_88_interface/gy_88_lib.h"
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
+#include "awsp_msgs/ObstacleData.h"
 #include "awsp_msgs/StateMachineStatus.h"
 
 #include "awsp_controller/state_machine.h"
@@ -114,6 +115,16 @@ void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
     new_imu = true;
 }
 
+/**
+ * Callback function. Populates the obstacle_data struct.
+ * @param obstacle_msg
+ */
+void obstacle_data_callback(const awsp_msgs::ObstacleData::ConstPtr obstacle_msg)
+{
+    obstacle_data.front_obstacle_dist = obstacle_msg->front_obstacle_dist;
+    obstacle_data.front_obstacle = obstacle_msg->front_obstacle;
+}
+
 int main(int argc, char **argv)
 {
     // ****************** Node Initialization ******************
@@ -124,6 +135,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
+    ros::Subscriber obstacle_sub = n.subscribe("obstacle_data", 1000, obstacle_data_callback);
 
     ros::Publisher publisher = n.advertise<awsp_msgs::StateMachineStatus>("state_machine", 1000);
     awsp_msgs::StateMachineStatus state_machine;
@@ -136,7 +148,6 @@ int main(int argc, char **argv)
 
     f = boost::bind(&callback, _1, _2);
     server.setCallback(f);
-
 
     while (ros::ok())
     {
