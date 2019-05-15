@@ -523,17 +523,6 @@ int boat_testing()
 		            << "," << ready_to_test_out
                     << "," << gps_data.speed
                     << "," << gps_data.true_course;
-
-//            sensor_testing_data = std::to_string(gps_data.latitude)
-//                    + "," + std::to_string(gps_data.longitude)
-//                    + "," + std::to_string(imu_data.acceleration.x)
-//                    + "," + std::to_string(imu_data.acceleration.y)
-//                    + "," + std::to_string(imu_data.yaw_vel)
-//                    + "," + std::to_string(boat_testing_params.pwm_right)
-//                    + "," + std::to_string(boat_testing_params.pwm_left)
-//                    + "," + std::to_string(dynr::boat_testing_config.right_motor_force)
-//                    + "," + std::to_string(dynr::boat_testing_config.left_motor_force)
-//                    + "," + ready_to_test_out;
             logger.additional_logger(stream_out.str(), testing_file);
         }
 
@@ -542,7 +531,7 @@ int boat_testing()
             left_esc.end();
             right_esc.end();
             ROS_WARN("OBSTACLE DETECTED, STOPPING.");
-            return state::SYSTEM_OFF;
+//            return state::SYSTEM_OFF;
         }
 
 	    boat_testing_params.force_right = dynr::boat_testing_config.right_motor_force;
