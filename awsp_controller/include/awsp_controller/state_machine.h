@@ -537,33 +537,47 @@ int boat_testing()
             logger.additional_logger(stream_out.str(), testing_file);
         }
 
+        if (obstacle_data.front_obstacle && dynr::control_gains.use_obstacle_detector)
+        {
+            left_esc.end();
+            right_esc.end();
+            ROS_WARN("OBSTACLE DETECTED, STOPPING.");
+            return state::SYSTEM_OFF;
+        }
+
 	    boat_testing_params.force_right = dynr::boat_testing_config.right_motor_force;
 	    boat_testing_params.force_left = dynr::boat_testing_config.left_motor_force;
 
-	    if (dynr::boat_testing_config.max_force_right_motor == true
-	        && dynr::boat_testing_config.forward_force == true)
-	    {
-		    boat_testing_params.force_right = 15;
-//                boat_testing_params.force_left = 0;
-	    }
-	    else if (dynr::boat_testing_config.max_force_left_motor == true
-	             && dynr::boat_testing_config.forward_force == true)
-	    {
-//                boat_testing_params.force_right = 0;
-		    boat_testing_params.force_left = 15;
-	    }
-	    else if (dynr::boat_testing_config.max_force_right_motor == true
-	             && dynr::boat_testing_config.forward_force == false)
-	    {
-		    boat_testing_params.force_right = -15;
-//                boat_testing_params.force_left = 0;
-	    }
-	    else if (dynr::boat_testing_config.max_force_left_motor == true
-	             && dynr::boat_testing_config.forward_force == false)
-	    {
-//                boat_testing_params.force_right = 0;
-		    boat_testing_params.force_left = -15;
-	    }
+        if (dynr::boat_testing_config.forward_force == false)
+        {
+            boat_testing_params.force_right = -14;
+            boat_testing_params.force_left = -14;
+        }
+
+// 	    if (dynr::boat_testing_config.max_force_right_motor == true
+// 	        && dynr::boat_testing_config.forward_force == true)
+// 	    {
+// 		    boat_testing_params.force_right = 15;
+// //                boat_testing_params.force_left = 0;
+// 	    }
+// 	    else if (dynr::boat_testing_config.max_force_left_motor == true
+// 	             && dynr::boat_testing_config.forward_force == true)
+// 	    {
+// //                boat_testing_params.force_right = 0;
+// 		    boat_testing_params.force_left = 15;
+// 	    }
+// 	    else if (dynr::boat_testing_config.max_force_right_motor == true
+// 	             && dynr::boat_testing_config.forward_force == false)
+// 	    {
+// 		    boat_testing_params.force_right = -15;
+// //                boat_testing_params.force_left = 0;
+// 	    }
+// 	    else if (dynr::boat_testing_config.max_force_left_motor == true
+// 	             && dynr::boat_testing_config.forward_force == false)
+// 	    {
+// //                boat_testing_params.force_right = 0;
+// 		    boat_testing_params.force_left = -15;
+// 	    }
 
 	    boat_testing_params.pwm_right = pwm_converter.getRightPWM(boat_testing_params.force_right);
 	    boat_testing_params.pwm_left = pwm_converter.getLeftPWM(boat_testing_params.force_left);

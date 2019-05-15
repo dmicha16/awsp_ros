@@ -1,8 +1,6 @@
 <launch>
     <env name="ROSCONSOLE_CONFIG_FILE" value="$(find awsp_controller)/config/rosconsole.conf"/>
 
-    <arg name="serial_port" default="/dev/serial0" />
-    <arg name="baudrate" default="9600" />
     <node
             pkg = "awsp_gnss_l86_interface"
             name = "awsp_gnss_l86_interface_node"
@@ -12,11 +10,19 @@
     />
 
     <node
-    pkg = "awsp_gy_88_interface"
-    name = "awsp_gy_88_interface_node"
-    type = "awsp_gy_88_interface_node"
-    args = "300"
-    required = "true"
+            pkg = "awsp_gy_88_interface"
+            name = "awsp_gy_88_interface_node"
+            type = "awsp_gy_88_interface_node"
+            args = "300"
+            required = "true"
+    />
+
+    <node
+            pkg = "awsp_obstacle_detector"
+            name = "awsp_obstacle_detector"
+            type = "awsp_obstacle_detector"
+            args = "23 24 300 30000"
+            required = "true"
     />
     
     <node

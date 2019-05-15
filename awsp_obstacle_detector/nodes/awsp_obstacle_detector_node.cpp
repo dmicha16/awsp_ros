@@ -14,6 +14,8 @@ bool evaluate_obstacle(double front_obstacle_dist, float distance_thresh)
 
     else if (front_obstacle_dist > distance_thresh)
         return false;
+    else if (front_obstacle_dist > 0 && front_obstacle_dist < distance_thresh)
+        return true;
     else
         return true;
 }
@@ -47,9 +49,9 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
     ros::Publisher publisher = n.advertise<awsp_msgs::ObstacleData>("obstacle_data", 1000);
     awsp_msgs::ObstacleData obstacle_data;
-    ros::Rate rate(100);
+    ros::Rate rate(10);
 
-    if (wiringPiSetup() != 0)
+    if (wiringPiSetupGpio() != 0)
     {
         ROS_ERROR("Failed to wiringPiSetup()\n");
     }
@@ -84,6 +86,8 @@ int main(int argc, char **argv)
 
         obstacle_data.front_obstacle_dist = front_obstacle_dist;
         obstacle_data.front_obstacle = evaluate_obstacle(front_obstacle_dist, distance_thresh);
+
+        publisher.publish(obstacle_data);
 
         ros::spinOnce();
         rate.sleep();
