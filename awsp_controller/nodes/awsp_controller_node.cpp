@@ -76,6 +76,9 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::boat_testing_config.max_force_left_motor = config.max_force_left_motor;
             dynr::boat_testing_config.forward_force = config.forward_force;
 		    dynr::boat_testing_config.log_sensors_testing = config.log_sensors_testing;
+            dynr::boat_testing_config.use_pwm = config.use_pwm_instead_of_force;
+            dynr::boat_testing_config.left_motor_pwm = config.left_motor_pwm;
+            dynr::boat_testing_config.right_motor_pwm = config.right_motor_pwm;
 		    break;
 
         case dynr::LEVEL::STATE_BYPASS:
@@ -145,7 +148,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
-    ros::Subscriber cart_pose_sub = n.subscribe("gy_88_data", 1000, cart_pose_callback);
+    ros::Subscriber cart_pose_sub = n.subscribe("cartesian_pose", 1000, cart_pose_callback);
     ros::Subscriber obstacle_sub = n.subscribe("obstacle_data", 1000, obstacle_data_callback);
 
     ros::Publisher publisher = n.advertise<awsp_msgs::StateMachineStatus>("state_machine", 1000);

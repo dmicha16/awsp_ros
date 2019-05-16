@@ -571,10 +571,19 @@ int boat_testing()
 	    boat_testing_params.pwm_right = pwm_converter.getRightPWM(boat_testing_params.force_right);
 	    boat_testing_params.pwm_left = pwm_converter.getLeftPWM(boat_testing_params.force_left);
 
-        if (dynr::boat_testing_config.ready_to_test == true)
+        if (dynr::boat_testing_config.ready_to_test == true &&
+                dynr::boat_testing_config.use_pwm == false)
         {
 	        right_esc.setSpeed(boat_testing_params.pwm_right);
 	        left_esc.setSpeed(boat_testing_params.pwm_left);
+        }
+        else if (dynr::boat_testing_config.ready_to_test == true &&
+                dynr::boat_testing_config.use_pwm == true)
+        {
+            boat_testing_params.pwm_right = dynr::boat_testing_config.right_motor_pwm;
+            boat_testing_params.pwm_left = dynr::boat_testing_config.left_motor_pwm;
+            right_esc.setSpeed(boat_testing_params.pwm_right);
+            left_esc.setSpeed(boat_testing_params.pwm_left);
         }
         else
         {

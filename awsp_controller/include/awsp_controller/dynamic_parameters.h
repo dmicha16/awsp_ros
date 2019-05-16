@@ -92,10 +92,13 @@ struct BoatTestingConfig
     bool ready_to_test = false;
     int left_motor_force = 0;
     int right_motor_force = 0;
+	int left_motor_pwm = 1500;
+	int right_motor_pwm = 1500;
     bool max_force_right_motor = false;
     bool max_force_left_motor = false;
     bool forward_force = true;
     bool log_sensors_testing = true;
+    bool use_pwm = false;
 } boat_testing_config;
 
 struct StateBypass
