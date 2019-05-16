@@ -10,6 +10,7 @@
 #include "awsp_msgs/Gy88Data.h"
 #include "awsp_msgs/ObstacleData.h"
 #include "awsp_msgs/StateMachineStatus.h"
+#include "awsp_msgs/CartesianPose.h"
 
 #include "awsp_controller/state_machine.h"
 
@@ -128,6 +129,12 @@ void obstacle_data_callback(const awsp_msgs::ObstacleData::ConstPtr obstacle_msg
     obstacle_data.front_obstacle = obstacle_msg->front_obstacle;
 }
 
+void cart_pose_callback(const awsp_msgs::CartesianPose::ConstPtr cart_pose_msg)
+{
+    cartesian_pose.position.x = cart_pose_msg->x;
+    cartesian_pose.position.y = cart_pose_msg->y;
+}
+
 int main(int argc, char **argv)
 {
     // ****************** Node Initialization ******************
@@ -138,6 +145,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
+    ros::Subscriber cart_pose_sub = n.subscribe("gy_88_data", 1000, cart_pose_callback);
     ros::Subscriber obstacle_sub = n.subscribe("obstacle_data", 1000, obstacle_data_callback);
 
     ros::Publisher publisher = n.advertise<awsp_msgs::StateMachineStatus>("state_machine", 1000);

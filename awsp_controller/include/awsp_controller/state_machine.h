@@ -13,6 +13,7 @@
 
 gps_position gps_data;
 imu_data imu_data;
+cart_pose cartesian_pose;
 //imu_data low_pass_imu_data;
 bool new_imu = false;
 bool new_gps = false;
@@ -273,7 +274,6 @@ int system_off()
 {
     if (dynr::system_mode.vessel == OFF)
     {
-
         dynr::current_vessel_task.goal_latitude = 0;
         dynr::current_vessel_task.goal_longitude = 0;
 
