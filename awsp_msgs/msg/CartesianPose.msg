@@ -4,3 +4,6 @@ float64 y
 float64 z
 float64 bearing
 float64 timestamp
+float64 goal_x
+float64 goal_y
+float64 num_estimations

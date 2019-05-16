@@ -11,6 +11,7 @@
 #include "awsp_msgs/ObstacleData.h"
 #include "awsp_msgs/StateMachineStatus.h"
 #include "awsp_msgs/CartesianPose.h"
+#include "awsp_msgs/GoalCoordinates.h"
 
 #include "awsp_controller/state_machine.h"
 
@@ -136,6 +137,8 @@ void cart_pose_callback(const awsp_msgs::CartesianPose::ConstPtr cart_pose_msg)
 {
     cartesian_pose.position.x = cart_pose_msg->x;
     cartesian_pose.position.y = cart_pose_msg->y;
+    cartesian_pose.goal_x = cart_pose_msg->goal_x;
+    cartesian_pose.goal_y = cart_pose_msg->goal_y;
 }
 
 int main(int argc, char **argv)
@@ -152,7 +155,10 @@ int main(int argc, char **argv)
     ros::Subscriber obstacle_sub = n.subscribe("obstacle_data", 1000, obstacle_data_callback);
 
     ros::Publisher publisher = n.advertise<awsp_msgs::StateMachineStatus>("state_machine", 1000);
+    ros::Publisher coord_publisher = n.advertise<awsp_msgs::GoalCoordinates>("goal_coord", 1000);
     awsp_msgs::StateMachineStatus state_machine;
+    awsp_msgs::GoalCoordinates goal_coordinates;
+
     state_machine.current_state = state::SYSTEM_OFF;
     publisher.publish(state_machine);
     ros::Rate loop_rate(10);
@@ -180,6 +186,9 @@ int main(int argc, char **argv)
             case state::GOAL_SETTING:
                 state::current_system_state = state::goal_setting();
                 state_machine.current_state = state::current_system_state;
+                goal_coordinates.latitude = gps_ref.latitude;
+                goal_coordinates.longitude = gps_ref.longitude;
+                coord_publisher.publish(goal_coordinates);
                 publisher.publish(state_machine);
                 break;
             case state::BOAT_CONTROLLER:

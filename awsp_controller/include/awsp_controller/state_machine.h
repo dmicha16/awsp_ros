@@ -314,14 +314,7 @@ int pose_estimation()
         if (dynr::state_bypass.bypass_2_3 == true)
             return state::GOAL_SETTING;
 
-        if (!ref_set)
-        {
-            is_first_gps = false;
-            ref_set = true;
-            // Reconstruct estimator with GPS ref
-            pose_estimator = CartesianPose(gps_data, gps_data, vel, acc, imu_data.bearing);
-            current_pose = pose_estimator.get_last_cartesian();
-        }
+
 
         state::print_pose_estimation_status(gps_data, current_pose);
         ros::spinOnce();
@@ -347,7 +340,6 @@ int goal_setting()
         {
             gps_ref.latitude = dynr::current_vessel_task.goal_latitude;
             gps_ref.longitude = dynr::current_vessel_task.goal_longitude;
-            cartesian_ref = pose_estimator.cartesian_pose(gps_ref);
             return state::BOAT_CONTROLLER;
         }
         else if (dynr::current_vessel_task.use_gps_waypoints == true)
@@ -412,19 +404,19 @@ int boat_controller()
             return state::POSE_ESTIMATION;
         }
 
-        if (new_gps)
-        {
-            current_pose = pose_estimator.cartesian_pose(gps_data);
-            new_gps = false;
-        }
-        else if (new_imu)
-        {
-            current_pose = pose_estimator.cartesian_pose(imu_data);
-            new_imu = false;
-        }
+//        if (new_gps)
+//        {
+//            current_pose = pose_estimator.cartesian_pose(gps_data);
+//            new_gps = false;
+//        }
+//        else if (new_imu)
+//        {
+//            current_pose = pose_estimator.cartesian_pose(imu_data);
+//            new_imu = false;
+//        }
 
-        boat_control_params.cartesian_error.x = cartesian_ref.position.x - current_pose.position.x;
-        boat_control_params.cartesian_error.y = cartesian_ref.position.y - current_pose.position.y;
+        boat_control_params.cartesian_error.x = cartesian_pose.goal_x - cartesian_pose.position.x;
+        boat_control_params.cartesian_error.y = cartesian_pose.goal_y - cartesian_pose.position.y;
         boat_control_params.distance_error = sqrt(pow(boat_control_params.cartesian_error.x, 2) + pow(boat_control_params.cartesian_error.y, 2));
         boat_control_params.bearing_goal = atan2(boat_control_params.cartesian_error.y, boat_control_params.cartesian_error.x);
         boat_control_params.bearing_error = boat_control_params.bearing_goal - imu_data.bearing;

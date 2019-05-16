@@ -10,14 +10,16 @@
 #include "awsp_gy_88_interface/gy_88_lib.h"
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
+#include "awsp_msgs/GoalCoordinates.h"
 #include "awsp_msgs/CartesianPose.h"
 
 gps_position gps_data;
+gps_position goal_gps_data;
 imu_data imu_data;
+cart_pose cartesian_ref;
 bool new_imu = false;
 bool new_gps = false;
-int instruction = 0;
-bool new_instruction = false;
+bool new_goal = false;
 
 void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
 {
@@ -39,6 +41,13 @@ void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
     new_imu = true;
 }
 
+void goal_coord_sub(const awsp_msgs::GoalCoordinates::ConstPtr& goal_msg)
+{
+    goal_gps_data.latitude = goal_msg->latitude;
+    goal_gps_data.longitude = goal_msg->longitude;
+    new_goal = true;
+}
+
 
 int main(int argc, char **argv)
 {
@@ -47,7 +56,10 @@ int main(int argc, char **argv)
     ros::Publisher publisher = n.advertise<awsp_msgs::CartesianPose>("cartesian_pose", 1000);
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
+    ros::Subscriber goal_sub = n.subscribe("goal_coord", 100, goal_coord_sub);
     ros::Rate loop_rate(40);
+
+    awsp_msgs::CartesianPose cart_pose_msg;
 
     bool is_first_gps = true;
 
@@ -66,6 +78,11 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
+        if (new_goal)
+        {
+            cartesian_ref = pose.cartesian_pose(goal_gps_data);
+            new_goal = false;
+        }
         // if (is_first_gps && new_imu)
         if (is_first_gps && new_imu && new_gps)
         {
@@ -76,7 +93,7 @@ int main(int argc, char **argv)
             new_imu = false;
             new_data = true;
         }
-            // else if (!is_first_gps)
+        // else if (!is_first_gps)
         else if (new_gps && !is_first_gps)
         {
             cartesian_pose = pose.cartesian_pose(gps_data);
@@ -89,6 +106,14 @@ int main(int argc, char **argv)
             new_imu = false;
             new_data = true;
         }
+
+
+        // Publish the states:
+        cart_pose_msg.x = cartesian_pose.position.x;
+        cart_pose_msg.y = cartesian_pose.position.y;
+        cart_pose_msg.goal_x = cartesian_ref.position.x;
+        cart_pose_msg.goal_y = cartesian_ref.position.y;
+        publisher.publish(cart_pose_msg);
 
         ros::spinOnce();
         loop_rate.sleep();

@@ -14,6 +14,7 @@ add_message_files(
         SensorKitData.msg
         StateMachineStatus.msg
         ObstacleData.msg
+        GoalCoordinates.msg
 )
 
 generate_messages(DEPENDENCIES std_msgs)
