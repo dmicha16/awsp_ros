@@ -7,6 +7,8 @@
 #include "awsp_logger/awsp_logger.h"
 #include <sstream>
 #include <iomanip>
+#include <iostream>
+#include <fstream>
 
 #ifndef PROJECT_STATE_MACHINE_H
 #define PROJECT_STATE_MACHINE_H
@@ -260,6 +262,28 @@ void print_boat_testing_status(BoatTestingParams boat_testing_params)
     ROS_DEBUG("================================================");
 }
 
+std::vector<std::vector<float>> load_gps_waypoints()
+{
+    std::string file_name = "/home/ubuntu/awsp_stable_ws/src/awsp_controller/waypoints/waypoints.csv";
+    std::fstream gps_file(file_name);
+    std::string line = "";
+    std::vector<std::vector<float> > data;
+
+    while (getline(gps_file, line))                   // read a whole line of the file
+    {
+        std::stringstream ss(line);                     // put it in a stringstream (internal stream)
+        std::vector<float> row;
+        std::string data_s;
+        while (getline(ss, data_s, ',' ))           // read (string) items up to a comma
+        {
+            row.push_back(stod(data_s));            // use stod() to convert to double; put in row vector
+        }
+        if (row.size() > 0)
+            data.push_back(row);    // add non-empty rows to matrix
+    }
+    return data;
+}
+
 int evaluate_system_mode_status()
 {
     if (dynr::system_mode.vessel == OFF)
@@ -336,7 +360,8 @@ int goal_setting()
 
         if (dynr::current_vessel_task.goal_latitude != 0
             && dynr::current_vessel_task.goal_longitude != 0
-                && dynr::current_vessel_task.ready_to_move == true)
+                && dynr::current_vessel_task.ready_to_move == true
+                    && !dynr::current_vessel_task.use_gps_waypoints)
         {
             gps_ref.latitude = dynr::current_vessel_task.goal_latitude;
             gps_ref.longitude = dynr::current_vessel_task.goal_longitude;
@@ -344,6 +369,17 @@ int goal_setting()
         }
         else if (dynr::current_vessel_task.use_gps_waypoints == true)
         {
+            std::vector<std::vector<float>> gps_points = load_gps_waypoints();
+//            std::cout << gps_points.size() << std::endl;
+//            for (int i = 0; i < gps_points.size(); i++)
+//            {
+//                std::cout << gps_points[i][0] << " -- " << gps_points[i][1] << std::endl;
+////                for (int j = 0; j < gps_points[i].size(); j++)
+////                {
+////                    ROS_ERROR("PRINT SOMETHING YOU FUCK222");
+////
+////                }
+//            }
         	return state::BOAT_CONTROLLER;
         }
 
@@ -403,17 +439,6 @@ int boat_controller()
             ROS_WARN("OBSTACLE DETECTED, STOPPING.");
             return state::POSE_ESTIMATION;
         }
-
-//        if (new_gps)
-//        {
-//            current_pose = pose_estimator.cartesian_pose(gps_data);
-//            new_gps = false;
-//        }
-//        else if (new_imu)
-//        {
-//            current_pose = pose_estimator.cartesian_pose(imu_data);
-//            new_imu = false;
-//        }
 
         boat_control_params.cartesian_error.x = cartesian_pose.goal_x - cartesian_pose.position.x;
         boat_control_params.cartesian_error.y = cartesian_pose.goal_y - cartesian_pose.position.y;
