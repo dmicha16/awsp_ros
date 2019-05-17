@@ -49,8 +49,10 @@ void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
 {
     imu_data.acceleration.x = floorf(imu_msg->si_accel_x * 100) / 100; // Put 10 for one decimal, 100 for 2, 1000 for 3, etc.
     imu_data.acceleration.y = -floorf(imu_msg->si_accel_y * 100) / 100;
-    // imu_data.acceleration.x = imu_msg->si_accel_x;
-    // imu_data.acceleration.y = -imu_msg->si_accel_y;
+    imu_data.accel_z = imu_msg->si_accel_z;
+    imu_data.gyro.x = imu_msg->gyro_x;
+    imu_data.gyro.y = imu_msg->gyro_y;
+    imu_data.gyro.z = imu_msg->gyro_z;
     imu_data.yaw_vel = imu_msg->gyro_z;
     imu_data.bearing = imu_msg->compass_angle;
     imu_data.timestamp = imu_msg->timestamp;
@@ -82,42 +84,46 @@ void filter_imu()
     filter_kit.set_window_size(dynr_p::low_pass_filtering_config.window_size);
     filter_kit.set_alpha_weight(dynr_p::low_pass_filtering_config.alpha_weight);
 
-    filter_kit.window(sensor_readings, sensors,
-                      dynr_p::low_pass_filtering_config.filtering_mode);
-
-    features = filter_kit.get_features();
-
-    if (dynr_p::low_pass_filtering_config.imu_gyro &&
-        dynr_p::low_pass_filtering_config.imu_acc)
+    if(dynr_p::low_pass_filtering_config.filtering_mode != dynr_p::FILTER::NONE)
     {
-        filtered_imu.acceleration.x  = features.at(0);
-        filtered_imu.acceleration.y  = features.at(1);
-        filtered_imu.accel_z  = features.at(2);
-        filtered_imu.gyro.x = features.at(3);
-        filtered_imu.gyro.y = features.at(4);
-        filtered_imu.gyro.z = features.at(5);
-    }
 
-    else if (dynr_p::low_pass_filtering_config.imu_gyro == false &&
-        dynr_p::low_pass_filtering_config.imu_acc)
-    {
-        filtered_imu.acceleration.x  = features.at(0);
-        filtered_imu.acceleration.y  = features.at(1);
-        filtered_imu.accel_z  = features.at(2);
-        filtered_imu.gyro.x = imu_data.gyro.x;
-        filtered_imu.gyro.y = imu_data.gyro.y;
-        filtered_imu.gyro.z = imu_data.gyro.z;
+        filter_kit.window(sensor_readings, sensors,
+                          dynr_p::low_pass_filtering_config.filtering_mode);
 
-    }
-    else if (dynr_p::low_pass_filtering_config.imu_gyro &&
-             dynr_p::low_pass_filtering_config.imu_acc == false)
-    {
-        filtered_imu.acceleration.x = imu_data.acceleration.x;
-        filtered_imu.acceleration.y = imu_data.acceleration.y;
-        filtered_imu.accel_z = imu_data.accel_z;
-        filtered_imu.gyro.x = features.at(3);
-        filtered_imu.gyro.y = features.at(4);
-        filtered_imu.gyro.z = features.at(5);
+        features = filter_kit.get_features();
+
+        if (dynr_p::low_pass_filtering_config.imu_gyro &&
+            dynr_p::low_pass_filtering_config.imu_acc)
+        {
+            filtered_imu.acceleration.x = features.at(0);
+            filtered_imu.acceleration.y = features.at(1);
+            filtered_imu.accel_z = features.at(2);
+            filtered_imu.gyro.x = features.at(3);
+            filtered_imu.gyro.y = features.at(4);
+            filtered_imu.gyro.z = features.at(5);
+        } else if (dynr_p::low_pass_filtering_config.imu_gyro == false &&
+                   dynr_p::low_pass_filtering_config.imu_acc)
+        {
+            filtered_imu.acceleration.x = features.at(0);
+            filtered_imu.acceleration.y = features.at(1);
+            filtered_imu.accel_z = features.at(2);
+            filtered_imu.gyro.x = imu_data.gyro.x;
+            filtered_imu.gyro.y = imu_data.gyro.y;
+            filtered_imu.gyro.z = imu_data.gyro.z;
+
+        } else if (dynr_p::low_pass_filtering_config.imu_gyro &&
+                   dynr_p::low_pass_filtering_config.imu_acc == false)
+        {
+            filtered_imu.acceleration.x = imu_data.acceleration.x;
+            filtered_imu.acceleration.y = imu_data.acceleration.y;
+            filtered_imu.accel_z = imu_data.accel_z;
+            filtered_imu.gyro.x = features.at(3);
+            filtered_imu.gyro.y = features.at(4);
+            filtered_imu.gyro.z = features.at(5);
+        } else
+        {
+            filtered_imu = imu_data;
+        }
     }
     else
     {
@@ -137,6 +143,27 @@ void publish_filtered_data(awsp_msgs::SensorKitData sensor_kit_data, ros::Publis
     filter_publisher.publish(sensor_kit_data);
 }
 
+void print_pose_estimator_status(cart_pose cartesian_pose)
+{
+//  ROS_DEBUG_STREAM("[GPS FIX STATUS         ] " << gps_data.fix);
+    ROS_DEBUG_STREAM("[GOAL GPS LAT           ] " << goal_gps_data.latitude);
+    ROS_DEBUG_STREAM("[GOAL GPS LONG          ] " << goal_gps_data.longitude);
+
+    ROS_DEBUG_STREAM("[GOAL X CART REF        ] " << cartesian_ref.position.x);
+    ROS_DEBUG_STREAM("[GOAL Y CART REF        ] " << cartesian_ref.position.y);
+
+    ROS_DEBUG_STREAM("[CURR CART POSE X       ] " << cartesian_pose.position.x);
+    ROS_DEBUG_STREAM("[CURR CART POSE Y       ] " << cartesian_pose.position.y);
+
+    ROS_DEBUG_STREAM("[IMU FILTER METHOD      ] " << dynr_p::low_pass_filtering_config.filtering_mode);
+    ROS_DEBUG_STREAM("[FILTER WINDOW SIZE     ] " << dynr_p::low_pass_filtering_config.window_size);
+    ROS_DEBUG_STREAM("[ALPHA WEIGHT           ] " << dynr_p::low_pass_filtering_config.alpha_weight);
+    ROS_DEBUG_STREAM("[FILTER ACCELEROMETER   ] " << dynr_p::low_pass_filtering_config.imu_acc);
+    ROS_DEBUG_STREAM("[FILTER GYRO            ] " << dynr_p::low_pass_filtering_config.imu_gyro);
+
+    ROS_DEBUG("================================================");
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "cartesian_pose_ekf_node");
@@ -146,7 +173,7 @@ int main(int argc, char **argv)
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
     ros::Subscriber goal_sub = n.subscribe("goal_coord", 100, goal_coord_sub);
-    ros::Rate loop_rate(40);
+    ros::Rate loop_rate(10);
 
     dynamic_reconfigure::Server<awsp_pose_estimator::PoseParametersConfig> server_pose;
     dynamic_reconfigure::Server<awsp_pose_estimator::PoseParametersConfig>::CallbackType d;
@@ -175,6 +202,7 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         filter_imu();
+        print_pose_estimator_status(cartesian_pose);
         if (new_goal)
         {
             cartesian_ref = pose.cartesian_pose(goal_gps_data);

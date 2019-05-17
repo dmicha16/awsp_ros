@@ -11,7 +11,7 @@ typedef unsigned int uint;
 typedef unsigned long ulong_t;
 typedef unsigned long long uulong_t;
 
-enum feature_method {SMA = 1, EMA = 2};
+enum feature_method {SMA = 0, EMA = 1};
 enum {ACCEL_X = 0, ACCEL_Y = 1, ACCEL_Z = 2, GYRO_X = 3, \
   GYRO_Y = 4, GYRO_Z = 5};
 

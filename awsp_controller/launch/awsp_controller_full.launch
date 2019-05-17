@@ -1,5 +1,6 @@
 <launch>
     <env name="ROSCONSOLE_CONFIG_FILE" value="$(find awsp_controller)/config/rosconsole.conf"/>
+    <!--<env name="ROSCONSOLE_CONFIG_FILE" value="$(find awsp_pose_estimator)/config/rosconsole.conf"/>-->
 
     <node
             pkg = "awsp_gnss_l86_interface"
@@ -19,11 +20,19 @@
 
     <node
             pkg = "awsp_obstacle_detector"
-            name = "awsp_obstacle_detector"
-            type = "awsp_obstacle_detector"
+            name = "awsp_obstacle_detector_node"
+            type = "awsp_obstacle_detector_node"
             args = "23 24 300 30000"
             required = "true"
     />
+
+    <!--<node-->
+            <!--pkg = "awsp_pose_estimator"-->
+            <!--name = "awsp_pose_estimator_ekf_node"-->
+            <!--type = "awsp_pose_estimator_ekf_node"-->
+            <!--output="screen"-->
+            <!--required = "true"-->
+    <!--/>-->
     
     <node
             pkg = "awsp_controller"
