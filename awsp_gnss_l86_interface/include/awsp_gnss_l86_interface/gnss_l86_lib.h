@@ -16,7 +16,7 @@ struct position
     int number_of_satelites;        // Satelites on view
     float horizontal_precision;     // In meters;
     float altitude;                 // Over sea level
-    float speed;                    // In meters per second
+    float speed;                    // In kilometers per hour
     float true_course;              // True course over ground in degress [0; 360)
 };
 
