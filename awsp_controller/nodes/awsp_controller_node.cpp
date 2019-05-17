@@ -62,12 +62,6 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
 //            dynr::debugging.log_imu_kalman = config.log_imu_kalman;
 //            dynr::debugging.log_state_machine = config.log_state_machine;
             break;
-//        case dynr::LEVEL::LOW_PASS_FILTERING:
-//            dynr::low_pass_filtering_config.filtering_mode = config.low_pass_filtering_mode;
-//            dynr::low_pass_filtering_config.imu_acc = config.low_pass_imu_acc;
-//            dynr::low_pass_filtering_config.imu_gyro = config.low_pass_imu_gyro;
-//            dynr::low_pass_filtering_config.window_size = config.window_size;
-//			break;
 
         case dynr::LEVEL::BOAT_TESTING:
             dynr::boat_testing_config.ready_to_test = config.ready_to_test;

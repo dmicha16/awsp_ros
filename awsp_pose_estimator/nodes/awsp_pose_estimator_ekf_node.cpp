@@ -12,6 +12,10 @@
 #include "awsp_msgs/Gy88Data.h"
 #include "awsp_msgs/GoalCoordinates.h"
 #include "awsp_msgs/CartesianPose.h"
+#include "awsp_pose_estimator/pose_parameters.h"
+
+#include <dynamic_reconfigure/server.h>
+#include <awsp_pose_estimator/PoseParametersConfig.h>
 
 gps_position gps_data;
 gps_position goal_gps_data;
@@ -20,6 +24,14 @@ cart_pose cartesian_ref;
 bool new_imu = false;
 bool new_gps = false;
 bool new_goal = false;
+
+void dynr_p_callback(awsp_pose_estimator::PoseParametersConfig &config, uint32_t level)
+{
+//    dynr_p::low_pass_filtering_config.filtering_mode = config.low_pass_filtering_mode;
+//    dynr_p::low_pass_filtering_config.imu_acc = config.low_pass_imu_acc;
+//    dynr_p::low_pass_filtering_config.imu_gyro = config.low_pass_imu_gyro;
+    dynr_p::low_pass_filtering_config.window_size = config.window_size;
+}
 
 void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
 {
@@ -58,6 +70,12 @@ int main(int argc, char **argv)
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
     ros::Subscriber goal_sub = n.subscribe("goal_coord", 100, goal_coord_sub);
     ros::Rate loop_rate(40);
+
+    dynamic_reconfigure::Server<awsp_pose_estimator::PoseParametersConfig> server_pose;
+    dynamic_reconfigure::Server<awsp_pose_estimator::PoseParametersConfig>::CallbackType d;
+
+    d = boost::bind(&dynr_p_callback, _1, _2);
+    server_pose.setCallback(d);
 
     awsp_msgs::CartesianPose cart_pose_msg;
 

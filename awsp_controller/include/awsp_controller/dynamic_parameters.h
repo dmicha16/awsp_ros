@@ -79,14 +79,6 @@ struct Debugging
     bool log_state_machine = false;
 }debugging;
 
-struct LowPassFilteringConfig
-{
-    int filtering_mode = FILTER::NONE;
-    bool imu_acc = false;
-    bool imu_gyro = false;
-    int window_size = 100;
-} low_pass_filtering_config;
-
 struct BoatTestingConfig
 {
     bool ready_to_test = false;
