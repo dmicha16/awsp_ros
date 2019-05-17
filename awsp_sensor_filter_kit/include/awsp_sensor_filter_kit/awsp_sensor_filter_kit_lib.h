@@ -22,15 +22,18 @@ typedef struct WindowContainer {
 class FilterKit
 {
   public:
-    FilterKit(uint sensor_num, const uint window_size, uint alpha);
+    FilterKit(uint sensor_num);
     ~FilterKit();
 
     void window(float sensor_readings[], uint sensors[], uint method);
+    void set_window_size(const uint window_size);
+    void set_alpha_weight(const uint alpha_weight);
     std::vector<double> get_features();
 
   private:
 
-    uint alpha_;
+    uint alpha_weight_;
+    uint window_size_;
 
     // Simple Moving Average (SMA)
     void sma_(std::vector<float> current_window);
@@ -39,7 +42,6 @@ class FilterKit
     void ema_(std::vector<float> current_window);
     float previous_ema_;
 
-    uint window_size_;
     uint sensor_num_;
     std::vector<WindowContainer> windows_holder_;
     std::vector<double> features_;

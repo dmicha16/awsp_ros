@@ -22,6 +22,7 @@ struct LowPassFilteringConfig
     bool imu_acc = false;
     bool imu_gyro = false;
     int window_size = 100;
+    double alpha_weight = 1;
 } low_pass_filtering_config;
 
 }

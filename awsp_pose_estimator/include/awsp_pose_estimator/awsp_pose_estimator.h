@@ -19,6 +19,13 @@ struct coordinates_2d
     float y;
 };
 
+struct gyro_3d
+{
+    float x;
+    float y;
+    float z;
+};
+
 struct cart_pose
 {
     coordinates_2d position;    // Distance [m]
@@ -31,6 +38,8 @@ struct cart_pose
 struct imu_data
 {
     coordinates_2d acceleration;    // Liner acceleration [m/s^2]
+    float accel_z;
+    gyro_3d gyro;
     float yaw_vel;                  // Yaw angular acceleration [degrees/s^2]
     float bearing;                  // Magnetic heading [degrees]
     unsigned long long timestamp;                // Unix timestamp [ms]

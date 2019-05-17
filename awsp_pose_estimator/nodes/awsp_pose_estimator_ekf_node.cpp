@@ -8,8 +8,10 @@
 #include "awsp_pose_estimator/awsp_pose_estimator.h"
 #include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 #include "awsp_gy_88_interface/gy_88_lib.h"
+#include "awsp_sensor_filter_kit/awsp_sensor_filter_kit_lib.h"
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
+#include "awsp_msgs/SensorKitData.h"
 #include "awsp_msgs/GoalCoordinates.h"
 #include "awsp_msgs/CartesianPose.h"
 #include "awsp_pose_estimator/pose_parameters.h"
@@ -19,18 +21,20 @@
 
 gps_position gps_data;
 gps_position goal_gps_data;
-imu_data imu_data;
+imu_data imu_data, filtered_imu;
 cart_pose cartesian_ref;
 bool new_imu = false;
 bool new_gps = false;
 bool new_goal = false;
+FilterKit filter_kit(6);
 
 void dynr_p_callback(awsp_pose_estimator::PoseParametersConfig &config, uint32_t level)
 {
-//    dynr_p::low_pass_filtering_config.filtering_mode = config.low_pass_filtering_mode;
-//    dynr_p::low_pass_filtering_config.imu_acc = config.low_pass_imu_acc;
-//    dynr_p::low_pass_filtering_config.imu_gyro = config.low_pass_imu_gyro;
+    dynr_p::low_pass_filtering_config.filtering_mode = config.low_pass_filtering_mode;
+    dynr_p::low_pass_filtering_config.imu_acc = config.low_pass_imu_acc;
+    dynr_p::low_pass_filtering_config.imu_gyro = config.low_pass_imu_gyro;
     dynr_p::low_pass_filtering_config.window_size = config.window_size;
+    dynr_p::low_pass_filtering_config.alpha_weight = config.alpha_weight;
 }
 
 void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
@@ -61,11 +65,84 @@ void goal_coord_sub(const awsp_msgs::GoalCoordinates::ConstPtr& goal_msg)
 }
 
 
+void filter_imu()
+{
+    std::vector<double> features;
+    const uint SENSOR_NUMBER = 6;
+    uint sensors[SENSOR_NUMBER] = {ACCEL_X, ACCEL_Y, ACCEL_Z, GYRO_X, GYRO_Y, GYRO_Z};
+    float sensor_readings[SENSOR_NUMBER];
+
+    sensor_readings[0] = imu_data.acceleration.x;
+    sensor_readings[1] = imu_data.acceleration.y;
+    sensor_readings[2] = imu_data.accel_z;
+    sensor_readings[3] = imu_data.gyro.x;
+    sensor_readings[4] = imu_data.gyro.y;
+    sensor_readings[5] = imu_data.gyro.z;
+
+    filter_kit.set_window_size(dynr_p::low_pass_filtering_config.window_size);
+    filter_kit.set_alpha_weight(dynr_p::low_pass_filtering_config.alpha_weight);
+
+    filter_kit.window(sensor_readings, sensors,
+                      dynr_p::low_pass_filtering_config.filtering_mode);
+
+    features = filter_kit.get_features();
+
+    if (dynr_p::low_pass_filtering_config.imu_gyro &&
+        dynr_p::low_pass_filtering_config.imu_acc)
+    {
+        filtered_imu.acceleration.x  = features.at(0);
+        filtered_imu.acceleration.y  = features.at(1);
+        filtered_imu.accel_z  = features.at(2);
+        filtered_imu.gyro.x = features.at(3);
+        filtered_imu.gyro.y = features.at(4);
+        filtered_imu.gyro.z = features.at(5);
+    }
+
+    else if (dynr_p::low_pass_filtering_config.imu_gyro == false &&
+        dynr_p::low_pass_filtering_config.imu_acc)
+    {
+        filtered_imu.acceleration.x  = features.at(0);
+        filtered_imu.acceleration.y  = features.at(1);
+        filtered_imu.accel_z  = features.at(2);
+        filtered_imu.gyro.x = imu_data.gyro.x;
+        filtered_imu.gyro.y = imu_data.gyro.y;
+        filtered_imu.gyro.z = imu_data.gyro.z;
+
+    }
+    else if (dynr_p::low_pass_filtering_config.imu_gyro &&
+             dynr_p::low_pass_filtering_config.imu_acc == false)
+    {
+        filtered_imu.acceleration.x = imu_data.acceleration.x;
+        filtered_imu.acceleration.y = imu_data.acceleration.y;
+        filtered_imu.accel_z = imu_data.accel_z;
+        filtered_imu.gyro.x = features.at(3);
+        filtered_imu.gyro.y = features.at(4);
+        filtered_imu.gyro.z = features.at(5);
+    }
+    else
+    {
+        filtered_imu = imu_data;
+    }
+}
+
+void publish_filtered_data(awsp_msgs::SensorKitData sensor_kit_data, ros::Publisher filter_publisher)
+{
+    sensor_kit_data.filtered_accel_x = filtered_imu.acceleration.x;
+    sensor_kit_data.filtered_accel_y = filtered_imu.acceleration.y;
+    sensor_kit_data.filtered_accel_z = filtered_imu.accel_z;
+    sensor_kit_data.filtered_gyro_x = filtered_imu.gyro.x;
+    sensor_kit_data.filtered_gyro_y = filtered_imu.gyro.y;
+    sensor_kit_data.filtered_gyro_z = filtered_imu.gyro.z;
+
+    filter_publisher.publish(sensor_kit_data);
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "cartesian_pose_ekf_node");
     ros::NodeHandle n;
     ros::Publisher publisher = n.advertise<awsp_msgs::CartesianPose>("cartesian_pose", 1000);
+    ros::Publisher filter_publisher = n.advertise<awsp_msgs::SensorKitData>("sensor_kit_data", 1000);
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
     ros::Subscriber goal_sub = n.subscribe("goal_coord", 100, goal_coord_sub);
@@ -78,6 +155,7 @@ int main(int argc, char **argv)
     server_pose.setCallback(d);
 
     awsp_msgs::CartesianPose cart_pose_msg;
+    awsp_msgs::SensorKitData sensor_kit_data_msg;
 
     bool is_first_gps = true;
 
@@ -96,6 +174,7 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
+        filter_imu();
         if (new_goal)
         {
             cartesian_ref = pose.cartesian_pose(goal_gps_data);
@@ -120,7 +199,7 @@ int main(int argc, char **argv)
         }
         else if (new_imu && !is_first_gps)
         {
-            cartesian_pose = pose.cartesian_pose(imu_data);
+            cartesian_pose = pose.cartesian_pose(filtered_imu);
             new_imu = false;
             new_data = true;
         }
@@ -132,6 +211,8 @@ int main(int argc, char **argv)
         cart_pose_msg.goal_x = cartesian_ref.position.x;
         cart_pose_msg.goal_y = cartesian_ref.position.y;
         publisher.publish(cart_pose_msg);
+
+        publish_filtered_data(sensor_kit_data_msg, filter_publisher);
 
         ros::spinOnce();
         loop_rate.sleep();

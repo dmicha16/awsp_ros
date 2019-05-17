@@ -3,10 +3,8 @@
 // ******************************** CONSTRUCTORS-DESTRUCTORS *******************************
 
 
-FilterKit::FilterKit(uint sensor_num, const uint window_size, uint alpha)
+FilterKit::FilterKit(uint sensor_num)
 {
-	window_size_ = window_size;
-	alpha_ = alpha;
 	sensor_num_ = sensor_num;
 
 	WindowContainer window_filler;
@@ -22,6 +20,16 @@ FilterKit::FilterKit(uint sensor_num, const uint window_size, uint alpha)
 FilterKit::~FilterKit() {}
 
 // **************************************** PUBLIC *****************************************
+
+void FilterKit::set_window_size(const uint window_size)
+{
+	window_size_ = window_size;
+}
+
+void FilterKit::set_alpha_weight(const uint alpha_weight)
+{
+	alpha_weight_ = alpha_weight;
+}
 
 void FilterKit::window(float sensor_readings[], uint sensors[], uint method)
 {
@@ -92,7 +100,7 @@ void FilterKit::ema_(std::vector<float> current_window)
 {
 
 	float new_ema = 0;
-	new_ema = alpha_ * current_window.front() + (1 - alpha_) * previous_ema_;
+	new_ema = alpha_weight_ * current_window.front() + (1 - alpha_weight_) * previous_ema_;
 
 	features_.push_back(new_ema);
 	previous_ema_ = new_ema;
