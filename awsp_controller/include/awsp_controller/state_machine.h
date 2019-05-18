@@ -474,6 +474,9 @@ int boat_controller()
                 - boat_control_params.torque_drive) / (2 * dynr::general_config.propeller_distance);
         boat_control_params.force_left = boat_control_params.force_drive - boat_control_params.force_right;
 
+        boat_control_params.force_left = boat_control_params.force_left * dynr::control_gains.left_motor_force_gain;
+        boat_control_params.force_right = boat_control_params.force_right * dynr::control_gains.right_motor_force_gain;
+
 //        Calculate signals
         boat_control_params.pwm_left = pwm_converter.getLeftPWM(boat_control_params.force_left);
         boat_control_params.pwm_right = pwm_converter.getRightPWM(boat_control_params.force_right);

@@ -40,6 +40,8 @@ struct ControlGains
 	float d_linear_gain = 3.41234381251693;
     float p_angular_gain = 1.37254843957504;
 	float d_angular_gain = 3.22145409227058;
+	float left_motor_force_gain = 1;
+	float right_motor_force_gain = 1;
     bool log_control_system_config = false;
     bool use_fault_detection = true;
     bool use_imu_bearing = true;
