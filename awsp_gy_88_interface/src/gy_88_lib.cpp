@@ -56,9 +56,12 @@ int Gy88Interface::set_MPU6050_gyro_range(int range)
     return set_range;
 }
 
-void Gy88Interface::set_dt(int loop_rate_freq)
+void Gy88Interface::set_dt(float loop_rate_freq)
 {
+    ROS_INFO("loop_reate %i", loop_rate_freq);
+    ROS_INFO("dt_ %d", dt_);
     dt_ = 1/loop_rate_freq;
+    ROS_INFO("dt_ %d", dt_);
 }
 
 bool Gy88Interface::set_MPU6050_sample_rate(int sample_rate)
@@ -195,6 +198,7 @@ void Gy88Interface::read_MPU6059_accel_()
 
     calculate_si_accel_();
     estimate_inclination_();
+//    estimate_velocity_();
 }
 
 void Gy88Interface::read_MPU6059_gyro_()
@@ -244,9 +248,14 @@ void Gy88Interface::calculate_si_accel_()
 
 void Gy88Interface::estimate_velocity_()
 {
+//    ROS_INFO("do i do this");
     chip_mpu6050_.vel_x += chip_mpu6050_.accel_x * dt_;
     chip_mpu6050_.vel_y += chip_mpu6050_.accel_y * dt_;
     chip_mpu6050_.vel_z += chip_mpu6050_.accel_z * dt_;
+    ROS_INFO("dt_ %f", dt_);
+    ROS_INFO("x: %f", chip_mpu6050_.vel_x);
+    ROS_INFO("y: %f", chip_mpu6050_.vel_y);
+    ROS_INFO("z: %f", chip_mpu6050_.vel_z);
 }
 
 void Gy88Interface::estimate_inclination_()

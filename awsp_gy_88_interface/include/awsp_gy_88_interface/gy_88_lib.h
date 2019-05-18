@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
+#include "ros/ros.h"
 #include <time.h>
 #include <string>
 #include <string.h>
@@ -163,7 +164,7 @@ class Gy88Interface
     int set_MPU6050_accel_range(int range);
     int set_MPU6050_gyro_range(int range);
 
-    void set_dt(int loop_rate_freq);
+    void set_dt(float loop_rate_freq);
 
     bool set_MPU6050_sample_rate(int sample_rate);
     bool set_HMC5883L_sample_rate(int sample_rate);

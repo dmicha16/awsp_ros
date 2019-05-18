@@ -132,6 +132,9 @@ void filter_imu()
     {
         filtered_imu = imu_data;
     }
+
+    filtered_imu.vel_x += filtered_imu.acceleration.x * 1/10;
+
 }
 
 void publish_filtered_data(awsp_msgs::SensorKitData sensor_kit_data, ros::Publisher filter_publisher)
@@ -163,9 +166,9 @@ void print_pose_estimator_status(cart_pose cartesian_pose)
     ROS_DEBUG_STREAM("[ALPHA WEIGHT           ] " << dynr_p::low_pass_filtering_config.alpha_weight);
     ROS_DEBUG_STREAM("[FILTER ACCELEROMETER   ] " << dynr_p::low_pass_filtering_config.imu_acc);
     ROS_DEBUG_STREAM("[FILTER GYRO            ] " << dynr_p::low_pass_filtering_config.imu_gyro);
-    ROS_DEBUG_STREAM("[ESTIMATED X VEL        ] " << imu_data.vel_x);
-    ROS_DEBUG_STREAM("[ESTIMATED Y VEL        ] " << imu_data.vel_y);
-    ROS_DEBUG_STREAM("[ESTIMATED Z VEL        ] " << imu_data.vel_z);
+//    ROS_DEBUG_STREAM("[ESTIMATED X VEL        ] " << filtered_imu.vel_x);
+//    ROS_DEBUG_STREAM("[ESTIMATED Y VEL        ] " << imu_data.vel_y);
+//    ROS_DEBUG_STREAM("[ESTIMATED Z VEL        ] " << imu_data.vel_z);
 
     ROS_DEBUG("================================================");
 }

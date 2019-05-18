@@ -7,14 +7,14 @@
             name = "awsp_gnss_l86_interface_node"
             type = "awsp_gnss_l86_interface_node"
             args = "/dev/serial0 9600 10"
-            required = "true"
+            required = "false"
     />
 
     <node
             pkg = "awsp_gy_88_interface"
             name = "awsp_gy_88_interface_node"
             type = "awsp_gy_88_interface_node"
-            args = "300"
+            args = "100"
             required = "true"
     />
 
@@ -33,7 +33,7 @@
             <!--output="screen"-->
             <!--required = "true"-->
     <!--/>-->
-    
+
     <node
             pkg = "awsp_controller"
             name = "awsp_controller_node"
