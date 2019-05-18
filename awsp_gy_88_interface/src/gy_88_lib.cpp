@@ -56,6 +56,11 @@ int Gy88Interface::set_MPU6050_gyro_range(int range)
     return set_range;
 }
 
+void Gy88Interface::set_dt(int loop_rate_freq)
+{
+    dt_ = 1/loop_rate_freq;
+}
+
 bool Gy88Interface::set_MPU6050_sample_rate(int sample_rate)
 {
 
@@ -235,6 +240,13 @@ void Gy88Interface::calculate_si_accel_()
     chip_mpu6050_.si_accel_x = chip_mpu6050_.accel_x * STANDARD_GRAVITY;
     chip_mpu6050_.si_accel_y = chip_mpu6050_.accel_y * STANDARD_GRAVITY;
     chip_mpu6050_.si_accel_z = chip_mpu6050_.accel_z * STANDARD_GRAVITY;
+}
+
+void Gy88Interface::estimate_velocity_()
+{
+    chip_mpu6050_.vel_x += chip_mpu6050_.accel_x * dt_;
+    chip_mpu6050_.vel_y += chip_mpu6050_.accel_y * dt_;
+    chip_mpu6050_.vel_z += chip_mpu6050_.accel_z * dt_;
 }
 
 void Gy88Interface::estimate_inclination_()

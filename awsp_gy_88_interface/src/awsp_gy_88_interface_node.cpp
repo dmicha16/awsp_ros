@@ -27,6 +27,7 @@ int main(int argc, char **argv)
     else
         ROS_INFO("Connected to HMC5883L's I2C bus!");
 
+    imu.set_dt(loop_rate_freq);
     imu.set_MPU6050_accel_range(MPU6050_ACCEL_CONFIG_16G);
     imu.set_MPU6050_gyro_range(MPU6050_GYRO_CONFIG_2000);
 
@@ -56,6 +57,10 @@ int main(int argc, char **argv)
         gy_88_data.accel_x = chip_mpu6050.accel_x;
         gy_88_data.accel_y = chip_mpu6050.accel_y;
         gy_88_data.accel_z = chip_mpu6050.accel_z;
+
+        gy_88_data.vel_x = chip_mpu6050.vel_x;
+        gy_88_data.vel_y = chip_mpu6050.vel_y;
+        gy_88_data.vel_z = chip_mpu6050.vel_z;
 
         gy_88_data.si_accel_x = chip_mpu6050.si_accel_x;
         gy_88_data.si_accel_y = chip_mpu6050.si_accel_y;

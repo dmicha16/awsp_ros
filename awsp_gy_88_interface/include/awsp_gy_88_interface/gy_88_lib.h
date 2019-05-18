@@ -114,6 +114,10 @@ struct ChipMPU6050
     float accel_y;
     float accel_z;
 
+    float vel_x;
+    float vel_y;
+    float vel_z;
+
     float si_accel_x;
     float si_accel_y;
     float si_accel_z;
@@ -159,6 +163,8 @@ class Gy88Interface
     int set_MPU6050_accel_range(int range);
     int set_MPU6050_gyro_range(int range);
 
+    void set_dt(int loop_rate_freq);
+
     bool set_MPU6050_sample_rate(int sample_rate);
     bool set_HMC5883L_sample_rate(int sample_rate);
 
@@ -169,6 +175,8 @@ class Gy88Interface
   private:
     int MPU6050_fd_;
     int HMC5883L_fd_;
+    float dt_;
+
     float accel_scale_range_;
     float gyro_scale_range_;
 
@@ -187,6 +195,7 @@ class Gy88Interface
 
     void calculate_si_accel_();
     void estimate_inclination_();
+    void estimate_velocity_();
 
     float calculate_compass_angle_();
     int convert_bytes_to_short_(short msb, short lsb);

@@ -43,6 +43,9 @@ struct imu_data
     float yaw_vel;                  // Yaw angular acceleration [degrees/s^2]
     float bearing;                  // Magnetic heading [degrees]
     unsigned long long timestamp;                // Unix timestamp [ms]
+    float vel_x;
+    float vel_y;
+    float vel_z;
 };
 
 class CartesianPose

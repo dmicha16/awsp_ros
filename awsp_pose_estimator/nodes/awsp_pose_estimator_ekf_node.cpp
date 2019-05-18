@@ -50,6 +50,10 @@ void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
     imu_data.acceleration.x = floorf(imu_msg->si_accel_x * 100) / 100; // Put 10 for one decimal, 100 for 2, 1000 for 3, etc.
     imu_data.acceleration.y = -floorf(imu_msg->si_accel_y * 100) / 100;
     imu_data.accel_z = imu_msg->si_accel_z;
+    imu_data.vel_x = imu_msg->vel_x;
+    imu_data.vel_y = imu_msg->vel_y;
+    imu_data.vel_z = imu_msg->vel_z;
+
     imu_data.gyro.x = imu_msg->gyro_x;
     imu_data.gyro.y = imu_msg->gyro_y;
     imu_data.gyro.z = imu_msg->gyro_z;
@@ -65,7 +69,6 @@ void goal_coord_sub(const awsp_msgs::GoalCoordinates::ConstPtr& goal_msg)
     goal_gps_data.longitude = goal_msg->longitude;
     new_goal = true;
 }
-
 
 void filter_imu()
 {
@@ -160,6 +163,9 @@ void print_pose_estimator_status(cart_pose cartesian_pose)
     ROS_DEBUG_STREAM("[ALPHA WEIGHT           ] " << dynr_p::low_pass_filtering_config.alpha_weight);
     ROS_DEBUG_STREAM("[FILTER ACCELEROMETER   ] " << dynr_p::low_pass_filtering_config.imu_acc);
     ROS_DEBUG_STREAM("[FILTER GYRO            ] " << dynr_p::low_pass_filtering_config.imu_gyro);
+    ROS_DEBUG_STREAM("[ESTIMATED X VEL        ] " << imu_data.vel_x);
+    ROS_DEBUG_STREAM("[ESTIMATED Y VEL        ] " << imu_data.vel_y);
+    ROS_DEBUG_STREAM("[ESTIMATED Z VEL        ] " << imu_data.vel_z);
 
     ROS_DEBUG("================================================");
 }
