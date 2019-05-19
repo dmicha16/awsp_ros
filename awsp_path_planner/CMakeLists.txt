@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(awsp_path_planner)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+ add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   awsp_msgs
   std_msgs
+  awsp_pose_estimator
 )
 
 ## System dependencies are found with CMake's conventions
@@ -146,9 +147,10 @@ include_directories(
  add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+ target_link_libraries(${PROJECT_NAME}_node
+   ${catkin_LIBRARIES}
+    awsp_pose_estimator
+ )
 
 #############
 ## Install ##

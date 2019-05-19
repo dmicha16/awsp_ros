@@ -4,12 +4,18 @@
 #include "awsp_msgs/CartesianPose.h"
 #include "awsp_msgs/GoalCoordinates.h"
 #include "awsp_pose_estimator/awsp_pose_estimator.h"
+#include <sstream>
+#include <iomanip>
+#include <iostream>
+#include <fstream>
 
 struct ObstacleData
 {
     float front_obstacle_dist;
     bool front_obstacle;
 } obstacle_data;
+
+cart_pose cartesian_pose;
 
 /**
  * Callback function. Populates the obstacle_data struct.
@@ -39,10 +45,10 @@ void generate_right_waypoint()
 
 }
 
-std::vector<std::vector<float>> load_gps_waypoints()
+std::vector<std::vector<float> > load_gps_waypoints()
 {
     std::string file_name = "/home/ubuntu/awsp_stable_ws/src/awsp_controller/waypoints/waypoints.csv";
-    std::fstream gps_file(file_name);
+    std::fstream gps_file(file_name.c_str());
     std::string line = "";
     std::vector<std::vector<float> > data;
 
@@ -61,7 +67,7 @@ std::vector<std::vector<float>> load_gps_waypoints()
     return data;
 }
 
-int main()
+int main(int argc, char **argv)
 {
     ROS_DEBUG("===== INITIALIZING CONTROLLER NODE =====");
 
