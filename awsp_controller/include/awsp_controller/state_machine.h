@@ -532,9 +532,6 @@ int boat_testing()
         	if (dynr::boat_testing_config.ready_to_test)
 		        ready_to_test_out = 1;
             else
-<<<<<<< Updated upstream
-		        ready_to_test_out = "0";
-=======
 		        ready_to_test_out = 0;
 //
             if (ready_to_test_out == 0)
@@ -542,7 +539,6 @@ int boat_testing()
                 left_temp_force = 0;
                 right_temp_force = 0;
             }
->>>>>>> Stashed changes
 
             stream_out << std::fixed << std::setprecision(7)
 	                << gps_data.latitude
