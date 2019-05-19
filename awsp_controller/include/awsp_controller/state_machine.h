@@ -530,6 +530,12 @@ int boat_testing()
             else
 		        ready_to_test_out = "0";
 
+            if (ready_to_test_out == 0)
+            {
+                dynr::boat_testing_config.right_motor_force = 0;
+                dynr::boat_testing_config.left_motor_force = 0;
+            }
+
             stream_out << std::fixed << std::setprecision(7)
 	                << "," << gps_data.latitude
 	                << "," << gps_data.longitude
