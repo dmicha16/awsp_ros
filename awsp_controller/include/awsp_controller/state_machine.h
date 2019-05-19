@@ -523,33 +523,50 @@ int boat_testing()
 
         if (dynr::boat_testing_config.log_sensors_testing == true)
         {
-        	std::stringstream stream_out;
-        	std::string ready_to_test_out;
+            float left_temp_force;
+            left_temp_force = dynr::boat_testing_config.left_motor_force;
+            float right_temp_force;
+            right_temp_force = dynr::boat_testing_config.right_motor_force;
+            std::stringstream stream_out;
+        	int ready_to_test_out;
         	if (dynr::boat_testing_config.ready_to_test)
-		        ready_to_test_out = "1";
+		        ready_to_test_out = 1;
             else
+<<<<<<< Updated upstream
 		        ready_to_test_out = "0";
+=======
+		        ready_to_test_out = 0;
+//
+            if (ready_to_test_out == 0)
+            {
+                left_temp_force = 0;
+                right_temp_force = 0;
+            }
+>>>>>>> Stashed changes
 
             stream_out << std::fixed << std::setprecision(7)
-	                << "," << gps_data.latitude
+	                << gps_data.latitude
 	                << "," << gps_data.longitude
 	                << "," << imu_data.acceleration.x
 	                << "," << imu_data.acceleration.y
 	                << "," << imu_data.yaw_vel
 	                << "," << boat_testing_params.pwm_right
 		            << "," << boat_testing_params.pwm_left
-		            << "," << dynr::boat_testing_config.right_motor_force
-		            << "," << dynr::boat_testing_config.left_motor_force
+		            << "," << right_temp_force
+		            << "," << left_temp_force
 		            << "," << ready_to_test_out
                     << "," << gps_data.speed
-                    << "," << gps_data.true_course;
+                    << "," << gps_data.true_course
+                    << "," << obstacle_data.front_obstacle_dist
+                    << "," << obstacle_data.front_obstacle;
             logger.additional_logger(stream_out.str(), testing_file);
         }
 
         if (obstacle_data.front_obstacle && dynr::control_gains.use_obstacle_detector)
         {
-            left_esc.end();
-            right_esc.end();
+//            left_esc.end();
+//            right_esc.end();
+            boat_testing_params.force_right = -3;
             ROS_WARN("OBSTACLE DETECTED, STOPPING.");
 //            return state::SYSTEM_OFF;
         }
