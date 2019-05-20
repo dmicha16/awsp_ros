@@ -405,6 +405,8 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
     bool left_esc_alive = left_esc.setup();
     bool right_esc_alive = right_esc.setup();
 
+    bool esc_alive = true;
+
     if (!left_esc_alive || !right_esc_alive)
     {
         ROS_ERROR("ESC LIB FAILED.");
@@ -421,6 +423,7 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
         {
             left_esc.end();
             right_esc.end();
+            esc_alive = false;
             return state::SYSTEM_OFF;
         }
 
@@ -429,6 +432,7 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
         {
             left_esc.end();
             right_esc.end();
+            esc_alive = false;
             return state::POSE_ESTIMATION;
         }
 
@@ -593,31 +597,6 @@ int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publi
             boat_testing_params.force_left = -14;
         }
 
-// 	    if (dynr::boat_testing_config.max_force_right_motor == true
-// 	        && dynr::boat_testing_config.forward_force == true)
-// 	    {
-// 		    boat_testing_params.force_right = 15;
-// //                boat_testing_params.force_left = 0;
-// 	    }
-// 	    else if (dynr::boat_testing_config.max_force_left_motor == true
-// 	             && dynr::boat_testing_config.forward_force == true)
-// 	    {
-// //                boat_testing_params.force_right = 0;
-// 		    boat_testing_params.force_left = 15;
-// 	    }
-// 	    else if (dynr::boat_testing_config.max_force_right_motor == true
-// 	             && dynr::boat_testing_config.forward_force == false)
-// 	    {
-// 		    boat_testing_params.force_right = -15;
-// //                boat_testing_params.force_left = 0;
-// 	    }
-// 	    else if (dynr::boat_testing_config.max_force_left_motor == true
-// 	             && dynr::boat_testing_config.forward_force == false)
-// 	    {
-// //                boat_testing_params.force_right = 0;
-// 		    boat_testing_params.force_left = -15;
-// 	    }
-
 	    boat_testing_params.pwm_right = pwm_converter.getRightPWM(boat_testing_params.force_right);
 	    boat_testing_params.pwm_left = pwm_converter.getLeftPWM(boat_testing_params.force_left);
 
@@ -643,10 +622,18 @@ int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publi
         }
         else
         {
+            motor_status.left_motor_force = 0;
+            motor_status.right_motor_force = 0;
             motor_status.left_motor_pwm = 1500;
             motor_status.right_motor_pwm = 1500;
 	        right_esc.setSpeed(1500);
 	        left_esc.setSpeed(1500);
+        }
+
+        if (!esc_alive)
+        {
+            motor_status.left_motor_force = 0;
+            motor_status.right_motor_force = 0;
         }
 
         state::print_boat_testing_status(boat_testing_params);
@@ -655,6 +642,7 @@ int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publi
         motor_status.right_motor_force = boat_testing_params.force_right;
         motor_status.left_esc_alive = left_esc_alive;
         motor_status.right_esc_alive = right_esc_alive;
+        motor_status.esc_alive = esc_alive;
 
         motor_publisher.publish(motor_status);
 
