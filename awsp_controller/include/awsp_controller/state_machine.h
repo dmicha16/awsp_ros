@@ -521,6 +521,10 @@ int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publi
     {
         ROS_ERROR("ESC LIB FAILED.");
     }
+    bool esc_alive = true;
+    float left_temp_force;
+    float right_temp_force;
+
     ros::Duration(3).sleep();
     while(ros::ok())
     {
@@ -528,14 +532,14 @@ int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publi
         {
             left_esc.end();
             right_esc.end();
+            esc_alive = false;
             return state::SYSTEM_OFF;
         }
 
         if (dynr::boat_testing_config.log_sensors_testing == true)
         {
-            float left_temp_force;
+
             left_temp_force = dynr::boat_testing_config.left_motor_force;
-            float right_temp_force;
             right_temp_force = dynr::boat_testing_config.right_motor_force;
             std::stringstream stream_out;
         	int ready_to_test_out;
@@ -564,15 +568,18 @@ int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publi
                     << "," << gps_data.speed
                     << "," << gps_data.true_course
                     << "," << obstacle_data.front_obstacle_dist
-                    << "," << obstacle_data.front_obstacle;
+                    << "," << obstacle_data.front_obstacle
+                    << "," << esc_alive;
             logger.additional_logger(stream_out.str(), testing_file);
         }
 
         if (obstacle_data.front_obstacle && dynr::control_gains.use_obstacle_detector)
         {
-//            left_esc.end();
-//            right_esc.end();
-            boat_testing_params.force_right = -3;
+            left_esc.end();
+            right_esc.end();
+            left_temp_force = 0;
+            right_temp_force = 0;
+            esc_alive = false;
             ROS_WARN("OBSTACLE DETECTED, STOPPING.");
 //            return state::SYSTEM_OFF;
         }
