@@ -6,6 +6,7 @@ find_package(catkin REQUIRED COMPONENTS message_generation std_msgs)
 add_message_files(
         DIRECTORY msg
         FILES
+        MotorStatus.msg
         Gy88Data.msg
         GnssData.msg
         CartesianLog.msg

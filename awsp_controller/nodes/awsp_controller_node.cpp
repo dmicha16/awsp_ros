@@ -12,6 +12,7 @@
 #include "awsp_msgs/StateMachineStatus.h"
 #include "awsp_msgs/CartesianPose.h"
 #include "awsp_msgs/GoalCoordinates.h"
+#include "awsp_msgs/MotorStatus.h"
 
 #include "awsp_controller/state_machine.h"
 
@@ -150,6 +151,8 @@ int main(int argc, char **argv)
 
     ros::Publisher publisher = n.advertise<awsp_msgs::StateMachineStatus>("state_machine", 1000);
     ros::Publisher coord_publisher = n.advertise<awsp_msgs::GoalCoordinates>("goal_coord", 1000);
+    ros::Publisher motor_publisher = n.advertise<awsp_msgs::MotorStatus>("motor_status", 1000);
+    awsp_msgs::MotorStatus motor_status;
     awsp_msgs::StateMachineStatus state_machine;
     awsp_msgs::GoalCoordinates goal_coordinates;
 
@@ -186,12 +189,12 @@ int main(int argc, char **argv)
                 publisher.publish(state_machine);
                 break;
             case state::BOAT_CONTROLLER:
-                state::current_system_state = state::boat_controller();
+                state::current_system_state = state::boat_controller(motor_status, motor_publisher);
                 state_machine.current_state = state::current_system_state;
                 publisher.publish(state_machine);
                 break;
             case state::BOAT_TESTING:
-                state::current_system_state = state::boat_testing();
+                state::current_system_state = state::boat_testing(motor_status, motor_publisher);
                 state_machine.current_state = state::current_system_state;
                 publisher.publish(state_machine);
                 break;

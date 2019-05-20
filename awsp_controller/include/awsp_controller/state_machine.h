@@ -392,7 +392,7 @@ int goal_setting()
     }
 }
 
-int boat_controller()
+int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publisher)
 {
     int move_to_next = 0;
 
@@ -485,12 +485,22 @@ int boat_controller()
         right_esc.setSpeed(boat_control_params.pwm_right);
 
         state::print_boat_controller_status(boat_control_params);
+
+        motor_status.left_motor_force = boat_testing_params.force_left;
+        motor_status.right_motor_force = boat_testing_params.force_right;
+        motor_status.left_motor_pwm = boat_control_params.pwm_left;
+        motor_status.right_motor_pwm = boat_control_params.pwm_right;
+        motor_status.left_esc_alive = left_esc_alive;
+        motor_status.right_esc_alive = right_esc_alive;
+
+        motor_publisher.publish(motor_status);
+
         ros::spinOnce();
         loop_rate.sleep();
     }
 }
 
-int boat_testing()
+int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publisher)
 {
     ros::Rate loop_rate(10);
 
@@ -607,6 +617,9 @@ int boat_testing()
         if (dynr::boat_testing_config.ready_to_test == true &&
                 dynr::boat_testing_config.use_pwm == false)
         {
+            motor_status.left_motor_pwm = boat_testing_params.pwm_left;
+            motor_status.right_motor_pwm = boat_testing_params.pwm_right;
+
 	        right_esc.setSpeed(boat_testing_params.pwm_right);
 	        left_esc.setSpeed(boat_testing_params.pwm_left);
         }
@@ -615,16 +628,29 @@ int boat_testing()
         {
             boat_testing_params.pwm_right = dynr::boat_testing_config.right_motor_pwm;
             boat_testing_params.pwm_left = dynr::boat_testing_config.left_motor_pwm;
+            motor_status.left_motor_pwm = boat_testing_params.pwm_left;
+            motor_status.right_motor_pwm = boat_testing_params.pwm_right;
+
             right_esc.setSpeed(boat_testing_params.pwm_right);
             left_esc.setSpeed(boat_testing_params.pwm_left);
         }
         else
         {
+            motor_status.left_motor_pwm = 1500;
+            motor_status.right_motor_pwm = 1500;
 	        right_esc.setSpeed(1500);
 	        left_esc.setSpeed(1500);
         }
 
         state::print_boat_testing_status(boat_testing_params);
+
+        motor_status.left_motor_force = boat_testing_params.force_left;
+        motor_status.right_motor_force = boat_testing_params.force_right;
+        motor_status.left_esc_alive = left_esc_alive;
+        motor_status.right_esc_alive = right_esc_alive;
+
+        motor_publisher.publish(motor_status);
+
         ros::spinOnce();
         loop_rate.sleep();
     }

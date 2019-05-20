@@ -77,8 +77,8 @@ int main(int argc, char **argv)
     ros::Subscriber cart_pose_sub = n.subscribe("cartesian_pose", 1000, cart_pose_callback);
     ros::Subscriber obstacle_sub = n.subscribe("obstacle_data", 1000, obstacle_data_callback);
 
-    ros::Publisher coord_publisher = n.advertise<awsp_msgs::GoalCoordinates>("goal_coord", 1000);
-    awsp_msgs::GoalCoordinates goal_coordinates;
+//    ros::Publisher coord_publisher = n.advertise<awsp_msgs::GoalCoordinates>("goal_coord", 1000);
+//    awsp_msgs::GoalCoordinates goal_coordinates;
 
     ros::Rate loop_rate(10);
 
