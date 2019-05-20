@@ -4,6 +4,8 @@
 #include "awsp_msgs/CartesianPose.h"
 #include "awsp_msgs/GoalCoordinates.h"
 #include "awsp_pose_estimator/awsp_pose_estimator.h"
+#include "awsp_srvs/SetGoalThreshold.h"
+#include "awsp_srvs/SetGNSSGoal.h"
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -14,6 +16,16 @@ struct ObstacleData
     float front_obstacle_dist;
     bool front_obstacle;
 } obstacle_data;
+
+struct GoalGNSSData
+{
+    std::vector<std::vector<float> > waypoints;
+    float goal_lat;
+    float goal_long;
+    bool use_waypoints = false;
+    float distance_thresh;
+} goal_gnss_data;
+
 
 cart_pose cartesian_pose;
 
@@ -67,9 +79,35 @@ std::vector<std::vector<float> > load_gps_waypoints()
     return data;
 }
 
+bool set_gnss_goal(awsp_srvs::SetGNSSGoal::Request  &req,
+        awsp_srvs::SetGNSSGoal::Response &res)
+{
+    res.acknowledged = true;
+//    ROS_INFO_STREAM("request: lat: long:" << (float)req.goal_lat << " - " << (float)req.goal_long);
+//    ROS_INFO_STREAM("use waypoints? " << (bool)req.use_waypoints);
+//    ROS_INFO_STREAM("sending back response: " << (bool)res.acknowledged);
+
+    goal_gnss_data.goal_lat = (float)req.goal_lat;
+    goal_gnss_data.goal_long = (float)req.goal_long;
+    goal_gnss_data.use_waypoints = (bool)r  eq.use_waypoints;
+
+    return true;
+}
+
+bool set_goal_thresh(awsp_srvs::SetGoalThreshold::Request  &req,
+         awsp_srvs::SetGoalThreshold::Response &res)
+{
+    res.acknowledged = true;
+//    ROS_INFO_STREAM("current threshold: " << req.goal_thresh);
+//    ROS_INFO_STREAM("sending back response: " << (bool)res.acknowledged);
+
+    goal_gnss_data.distance_thresh = (float)req.goal_thresh;
+    return true;
+}
+
 int main(int argc, char **argv)
 {
-    ROS_DEBUG("===== INITIALIZING CONTROLLER NODE =====");
+    ROS_INFO("===== INITIALIZING PATH PLANNER NODE =====");
 
     ros::init(argc, argv, "awsp_path_planner_node");
     ros::NodeHandle n;
@@ -77,8 +115,8 @@ int main(int argc, char **argv)
     ros::Subscriber cart_pose_sub = n.subscribe("cartesian_pose", 1000, cart_pose_callback);
     ros::Subscriber obstacle_sub = n.subscribe("obstacle_data", 1000, obstacle_data_callback);
 
-//    ros::Publisher coord_publisher = n.advertise<awsp_msgs::GoalCoordinates>("goal_coord", 1000);
-//    awsp_msgs::GoalCoordinates goal_coordinates;
+    ros::ServiceServer set_goal_thresh_srv = n.advertiseService("set_goal_thresh", set_goal_thresh);
+    ros::ServiceServer set_gnss_goal_srv = n.advertiseService("set_gnss_goal", set_gnss_goal);
 
     ros::Rate loop_rate(10);
 

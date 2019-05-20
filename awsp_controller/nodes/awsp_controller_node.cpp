@@ -14,6 +14,9 @@
 #include "awsp_msgs/GoalCoordinates.h"
 #include "awsp_msgs/MotorStatus.h"
 
+#include "awsp_srvs/SetGoalThreshold.h"
+#include "awsp_srvs/SetGNSSGoal.h"
+
 #include "awsp_controller/state_machine.h"
 
 #include <dynamic_reconfigure/server.h>
@@ -55,13 +58,6 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
         case dynr::LEVEL::CROSS_GROUP_LOG:
 //            dynr::general_config.log_general_config = config.log_general_config;
 //            dynr::control_gains.log_control_system_config = config.log_control_system_config;
-            break;
-        case dynr::LEVEL::DEBUGGING:
-//            dynr::debugging.log_gps_raw = config.log_gps_raw;
-//            dynr::debugging.log_gps_kalman = config.log_gps_kalman;
-//            dynr::debugging.log_imu_raw = config.log_imu_raw;
-//            dynr::debugging.log_imu_kalman = config.log_imu_kalman;
-//            dynr::debugging.log_state_machine = config.log_state_machine;
             break;
 
         case dynr::LEVEL::BOAT_TESTING:
@@ -150,11 +146,14 @@ int main(int argc, char **argv)
     ros::Subscriber obstacle_sub = n.subscribe("obstacle_data", 1000, obstacle_data_callback);
 
     ros::Publisher publisher = n.advertise<awsp_msgs::StateMachineStatus>("state_machine", 1000);
-    ros::Publisher coord_publisher = n.advertise<awsp_msgs::GoalCoordinates>("goal_coord", 1000);
     ros::Publisher motor_publisher = n.advertise<awsp_msgs::MotorStatus>("motor_status", 1000);
     awsp_msgs::MotorStatus motor_status;
     awsp_msgs::StateMachineStatus state_machine;
-    awsp_msgs::GoalCoordinates goal_coordinates;
+
+    ros::ServiceClient set_gnss_goal_client = n.serviceClient<awsp_srvs::SetGNSSGoal>("set_gnss_goal");
+    ros::ServiceClient set_goal_thresh_client = n.serviceClient<awsp_srvs::SetGoalThreshold>("set_goal_thresh");
+    awsp_srvs::SetGNSSGoal set_gnss_goal_srv;
+    awsp_srvs::SetGoalThreshold set_goal_thresh_srv;
 
     state_machine.current_state = state::SYSTEM_OFF;
     publisher.publish(state_machine);
@@ -183,9 +182,17 @@ int main(int argc, char **argv)
             case state::GOAL_SETTING:
                 state::current_system_state = state::goal_setting();
                 state_machine.current_state = state::current_system_state;
-                goal_coordinates.latitude = gps_ref.latitude;
-                goal_coordinates.longitude = gps_ref.longitude;
-                coord_publisher.publish(goal_coordinates);
+                set_gnss_goal_srv.request.goal_lat = gps_ref.latitude;
+                set_gnss_goal_srv.request.goal_long = gps_ref.longitude;
+                if(dynr::current_vessel_task.use_gps_waypoints)
+                    set_gnss_goal_srv.request.use_waypoints = true;
+                else
+                    set_gnss_goal_srv.request.use_waypoints = false;
+
+                set_goal_thresh_srv.request.goal_thresh = dynr::current_vessel_task.distance_error_tol;
+
+                set_goal_thresh_client.call(set_goal_thresh_srv);
+                set_gnss_goal_client.call(set_gnss_goal_srv);
                 publisher.publish(state_machine);
                 break;
             case state::BOAT_CONTROLLER:

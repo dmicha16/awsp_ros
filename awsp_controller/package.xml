@@ -52,6 +52,7 @@
   <build_depend>dynamic_reconfigure</build_depend>
   <build_depend>roscpp</build_depend>
   <depend>awsp_msgs</depend>
+  <depend>awsp_srvs</depend>
   <build_depend>awsp_gnss_l86_interface</build_depend>
   <build_depend>awsp_gy_88_interface</build_depend>
   <build_depend>awsp_pose_estimator</build_depend>

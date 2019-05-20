@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   awsp_gy_88_interface
   awsp_logger
   awsp_msgs
+  awsp_srvs
   roscpp
   std_msgs
   message_generation
@@ -114,7 +115,7 @@ generate_dynamic_reconfigure_options(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES
-  CATKIN_DEPENDS roscpp message_runtime awsp_msgs
+  CATKIN_DEPENDS roscpp message_runtime awsp_msgs awsp_srvs
 #  DEPENDS system_lib
 )
 

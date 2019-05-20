@@ -369,17 +369,7 @@ int goal_setting()
         }
         else if (dynr::current_vessel_task.use_gps_waypoints == true)
         {
-            std::vector<std::vector<float>> gps_points = load_gps_waypoints();
-//            std::cout << gps_points.size() << std::endl;
-//            for (int i = 0; i < gps_points.size(); i++)
-//            {
-//                std::cout << gps_points[i][0] << " -- " << gps_points[i][1] << std::endl;
-////                for (int j = 0; j < gps_points[i].size(); j++)
-////                {
-////                    ROS_ERROR("PRINT SOMETHING YOU FUCK222");
-////
-////                }
-//            }
+
         	return state::BOAT_CONTROLLER;
         }
 
