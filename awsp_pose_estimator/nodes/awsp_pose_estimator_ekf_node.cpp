@@ -12,9 +12,11 @@
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
 #include "awsp_msgs/SensorKitData.h"
-#include "awsp_msgs/GoalCoordinates.h"
-#include "awsp_msgs/CartesianPose.h"
+#include "awsp_msgs/CurrentState.h"
 #include "awsp_pose_estimator/pose_parameters.h"
+
+#include "awsp_srvs/GoalToJ0.h"
+#include "awsp_srvs/GetConvergence.h"
 
 #include <dynamic_reconfigure/server.h>
 #include <awsp_pose_estimator/PoseParametersConfig.h>
@@ -61,13 +63,6 @@ void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
     imu_data.bearing = imu_msg->compass_angle;
     imu_data.timestamp = imu_msg->timestamp;
     new_imu = true;
-}
-
-void goal_coord_sub(const awsp_msgs::GoalCoordinates::ConstPtr& goal_msg)
-{
-    goal_gps_data.latitude = goal_msg->latitude;
-    goal_gps_data.longitude = goal_msg->longitude;
-    new_goal = true;
 }
 
 void filter_imu()
@@ -173,25 +168,55 @@ void print_pose_estimator_status(cart_pose cartesian_pose)
     ROS_DEBUG("================================================");
 }
 
+bool goal_to_j0(awsp_srvs::GoalToJ0::Request  &req,
+        awsp_srvs::GoalToJ0::Response &res)
+{
+    /* this GNSS has to be transformed into the J0 frame and returned as
+     * a goal of x and y in that J0 frame
+     */
+    res.j0_goal_x = 1 + (float)req.goal_lat;
+    res.j0_goal_y = 1 + (float)req.goal_long;
+    return true;
+}
+
+bool get_convergence(awsp_srvs::GetConvergence::Request  &req,
+                awsp_srvs::GetConvergence::Response &res)
+{
+    //Populate this once we have determined that we are indeed converging!
+//    if (kf.converged)
+//        res.kf_is_converged = true;
+//    else
+//        res.kf_is_converged = false;
+
+    return true;
+}
+
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "cartesian_pose_ekf_node");
     ros::NodeHandle n;
-    ros::Publisher publisher = n.advertise<awsp_msgs::CartesianPose>("cartesian_pose", 1000);
+    ros::Rate loop_rate(10);
+    // Setup publishers
+    ros::Publisher state_publisher = n.advertise<awsp_msgs::CurrentState>("current_state", 1000);
     ros::Publisher filter_publisher = n.advertise<awsp_msgs::SensorKitData>("sensor_kit_data", 1000);
+
+    awsp_msgs::CurrentState curr_state_msg;
+    awsp_msgs::SensorKitData sensor_kit_data_msg;
+
+    // Setup subscribers
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
-    ros::Subscriber goal_sub = n.subscribe("goal_coord", 100, goal_coord_sub);
-    ros::Rate loop_rate(10);
+
+    ros::ServiceServer goal_to_j0_srv = n.advertiseService("goal_to_j0", goal_to_j0);
+    ros::ServiceServer get_conv_srv = n.advertiseService("get_convergence", get_convergence);
+
 
     dynamic_reconfigure::Server<awsp_pose_estimator::PoseParametersConfig> server_pose;
     dynamic_reconfigure::Server<awsp_pose_estimator::PoseParametersConfig>::CallbackType d;
 
     d = boost::bind(&dynr_p_callback, _1, _2);
     server_pose.setCallback(d);
-
-    awsp_msgs::CartesianPose cart_pose_msg;
-    awsp_msgs::SensorKitData sensor_kit_data_msg;
 
     bool is_first_gps = true;
 
@@ -203,6 +228,7 @@ int main(int argc, char **argv)
     acc.x = 0.0;
     acc.y = 0.0;
 
+    // this class instance holds the J0 frame as of right now
     CartesianPose pose(gps_data, gps_data, vel, acc, 0);
     cart_pose cartesian_pose;
 
@@ -242,12 +268,16 @@ int main(int argc, char **argv)
         }
 
 
-        // Publish the states:
-        cart_pose_msg.x = cartesian_pose.position.x;
-        cart_pose_msg.y = cartesian_pose.position.y;
-        cart_pose_msg.goal_x = cartesian_ref.position.x;
-        cart_pose_msg.goal_y = cartesian_ref.position.y;
-        publisher.publish(cart_pose_msg);
+        // Publish the states, uncomment and fill up with all the good stuff :) :
+//        curr_state_msg.x = cartesian_pose.position.x;
+//        curr_state_msg.y = cartesian_pose.position.y;
+//        curr_state_msg.x
+//        curr_state_msg.y
+//        curr_state_msg.vel
+//        curr_state_msg.acceleration
+//        curr_state_msg.heading
+//        curr_state_msg.angular_vel
+        state_publisher.publish(curr_state_msg);
 
         publish_filtered_data(sensor_kit_data_msg, filter_publisher);
 

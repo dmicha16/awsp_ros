@@ -31,6 +31,7 @@ struct cart_pose
     coordinates_2d position;    // Distance [m]
     float bearing;              // Heading [radians]
     unsigned long long timestamp;            // Unix timestamp [ms]
+    float heading;
     float goal_x;
     float goal_y;
 };

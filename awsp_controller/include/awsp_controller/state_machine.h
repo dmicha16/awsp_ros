@@ -29,7 +29,12 @@ cart_pose current_pose;
 gps_position gps_ref;
 cart_pose cartesian_ref;
 
-// Errors
+struct CartesianError
+{
+    float cart_error_x;
+    float cart_error_y;
+    float bearing_error;
+} cartesian_error;
 
 struct BoatTestingParams
 {
@@ -434,11 +439,11 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
             return state::POSE_ESTIMATION;
         }
 
-        boat_control_params.cartesian_error.x = cartesian_pose.goal_x - cartesian_pose.position.x;
-        boat_control_params.cartesian_error.y = cartesian_pose.goal_y - cartesian_pose.position.y;
+        boat_control_params.cartesian_error.x = cartesian_error.cart_error_x;
+        boat_control_params.cartesian_error.y = cartesian_error.cart_error_y;
         boat_control_params.distance_error = sqrt(pow(boat_control_params.cartesian_error.x, 2) + pow(boat_control_params.cartesian_error.y, 2));
         boat_control_params.bearing_goal = atan2(boat_control_params.cartesian_error.y, boat_control_params.cartesian_error.x);
-        boat_control_params.bearing_error = boat_control_params.bearing_goal - imu_data.bearing;
+        boat_control_params.bearing_error = cartesian_error.bearing_error;
 
         if (boat_control_params.bearing_error > M_PI)
         {

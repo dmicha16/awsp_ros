@@ -9,8 +9,9 @@ find_package(catkin REQUIRED COMPONENTS message_generation std_msgs)
 add_service_files(
     DIRECTORY srv
     FILES
-#    GetCurrentGoal.srv
-#    GetCurrentState.srv
+    GoalToJ0.srv
+    GetConvergence.srv
+    UseObstacleAvoidance.srv
     SetGNSSGoal.srv
     SetGoalThreshold.srv
 )

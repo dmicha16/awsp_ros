@@ -13,6 +13,7 @@
 #include "awsp_msgs/CartesianPose.h"
 #include "awsp_msgs/GoalCoordinates.h"
 #include "awsp_msgs/MotorStatus.h"
+#include "awsp_msgs/CartesianError.h"
 
 #include "awsp_srvs/SetGoalThreshold.h"
 #include "awsp_srvs/SetGNSSGoal.h"
@@ -132,6 +133,13 @@ void cart_pose_callback(const awsp_msgs::CartesianPose::ConstPtr cart_pose_msg)
     cartesian_pose.goal_y = cart_pose_msg->goal_y;
 }
 
+void cartesian_error_callback(const awsp_msgs::CartesianError::ConstPtr cart_error_msg)
+{
+    cartesian_error.cart_error_x = cart_error_msg->cart_error_x;
+    cartesian_error.cart_error_y = cart_error_msg->cart_error_y;
+    cartesian_error.bearing_error = cart_error_msg->bearing_error;
+}
+
 int main(int argc, char **argv)
 {
     // ****************** Node Initialization ******************
@@ -140,16 +148,21 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "awsp_controller_node");
     ros::NodeHandle n;
+
+    // Setup subscribers
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
     ros::Subscriber cart_pose_sub = n.subscribe("cartesian_pose", 1000, cart_pose_callback);
     ros::Subscriber obstacle_sub = n.subscribe("obstacle_data", 1000, obstacle_data_callback);
+    ros::Subscriber cart_error_sub = n.subscribe("cart_error", 1000, cartesian_error_callback);
 
+    // Setup publishers
     ros::Publisher publisher = n.advertise<awsp_msgs::StateMachineStatus>("state_machine", 1000);
     ros::Publisher motor_publisher = n.advertise<awsp_msgs::MotorStatus>("motor_status", 1000);
     awsp_msgs::MotorStatus motor_status;
     awsp_msgs::StateMachineStatus state_machine;
 
+    // Setup service clients
     ros::ServiceClient set_gnss_goal_client = n.serviceClient<awsp_srvs::SetGNSSGoal>("set_gnss_goal");
     ros::ServiceClient set_goal_thresh_client = n.serviceClient<awsp_srvs::SetGoalThreshold>("set_goal_thresh");
     awsp_srvs::SetGNSSGoal set_gnss_goal_srv;

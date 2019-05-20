@@ -11,11 +11,12 @@ add_message_files(
         GnssData.msg
         CartesianLog.msg
         CartesianPose.msg
+        CartesianError.msg
         LogInstruction.msg
         SensorKitData.msg
         StateMachineStatus.msg
         ObstacleData.msg
-        GoalCoordinates.msg
+        CurrentState.msg
 )
 
 generate_messages(DEPENDENCIES std_msgs)
