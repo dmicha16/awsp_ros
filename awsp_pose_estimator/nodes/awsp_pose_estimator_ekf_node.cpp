@@ -5,7 +5,7 @@
 #include <string>
 #include <ros/console.h>
 #include "ros/ros.h"
-#include "awsp_pose_estimator/awsp_pose_estimator.h"
+#include "awsp_pose_estimator/awsp_pose_estimator_lib.h"
 #include "awsp_pose_estimator/kalman_filter_lib.h"
 #include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 #include "awsp_gy_88_interface/gy_88_lib.h"
@@ -14,6 +14,7 @@
 #include "awsp_msgs/Gy88Data.h"
 #include "awsp_msgs/SensorKitData.h"
 #include "awsp_msgs/CurrentState.h"
+#include "awsp_msgs/MotorStatus.h"
 #include "awsp_pose_estimator/pose_parameters.h"
 
 #include "awsp_srvs/GoalToJ0.h"
@@ -30,6 +31,12 @@ bool new_imu = false;
 bool new_gps = false;
 bool new_goal = false;
 FilterKit filter_kit(6);
+
+struct MotorStatus
+{
+    float left_motor_force;
+    float right_motor_force;
+} motor_status;
 
 void dynr_p_callback(awsp_pose_estimator::PoseParametersConfig &config, uint32_t level)
 {
@@ -49,6 +56,13 @@ void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
     gps_data.speed = gnss_msg->speed;
     new_gps = true;
 }
+
+void motor_status_callback(const awsp_msgs::MotorStatus::ConstPtr& motor_status_msg)
+{
+    motor_status.left_motor_force = motor_status_msg->left_motor_force;
+    motor_status.right_motor_force = motor_status_msg->right_motor_force;
+}
+
 
 void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
 {
@@ -210,6 +224,7 @@ int main(int argc, char **argv)
     // Setup subscribers
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
+    ros::Subscriber motor_sub = n.subscribe("motor_status", 1000, motor_status_callback);
 
     ros::ServiceServer goal_to_j0_srv = n.advertiseService("goal_to_j0", goal_to_j0);
     ros::ServiceServer get_conv_srv = n.advertiseService("get_convergence", get_convergence);
@@ -242,7 +257,7 @@ int main(int argc, char **argv)
     cart_pose cartesian_pose;
     float time_step = 0.1;
     coordinates_2d x_y_cartesian;
-    state_vector estimated_state; 
+    state_vector estimated_state;
     KalmanFilter kalman_filter(time_step);
 
     bool new_data = false;
@@ -251,27 +266,14 @@ int main(int argc, char **argv)
     {
         filter_imu();
         print_pose_estimator_status(cartesian_pose);
-        // if (new_goal)
-        // {
-        //     cartesian_ref = pose.cartesian_pose(goal_gps_data);
-        //     new_goal = false;
-        // }
-        // if (is_first_gps && new_imu)
-        // if (is_first_gps && new_imu && new_gps)
-        // {
-        //     pose = CartesianPose(gps_data, gps_data, vel, acc, imu_data.bearing);
-        //     cartesian_pose = pose.get_last_cartesian();
-        //     is_first_gps = false;
-        //     new_gps = false;
-        //     new_imu = false;
-        //     new_data = true;
-        // }
-        // else if (!is_first_gps)
+
         if (new_gps && !is_first_gps)
         {
             // cartesian_pose = pose.cartesian_pose(gps_data);
             x_y_cartesian = pose.gnss_to_cartesian(gps_data);
-            estimated_state = kalman_filter.estimate_state(float left_prop_force, float right_prop_force, x_y_cartesian.x, x_y_cartesian.y, gps_data.speed, sensor_kit_data.filtered_accel_x, gps_data.true_course, sensor_kit_data.filtered_gyro_z);
+            estimated_state = kalman_filter.estimate_state(motor_status.left_motor_force, motor_status.right_motor_force,
+                    x_y_cartesian.x, x_y_cartesian.y, gps_data.speed, filtered_imu.acceleration.x,
+                    gps_data.true_course, filtered_imu.gyro.z);
             new_gps = false;
             // Publish the states, uncomment and fill up with all the good stuff :) :
             curr_state_msg.x = estimated_state.x_pos;
@@ -281,7 +283,7 @@ int main(int argc, char **argv)
             curr_state_msg.heading = estimated_state.heading;
             curr_state_msg.angular_vel = estimated_state.ang_vel;
             state_publisher.publish(curr_state_msg);
-        } 
+        }
 
         publish_filtered_data(sensor_kit_data_msg, filter_publisher);
 

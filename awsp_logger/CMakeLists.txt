@@ -151,7 +151,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
 awsp_logger
-awsp_pose_estimator
+awsp_pose_estimator_lib
 force_to_pwm
 gnss_l86_lib
 gy_88_lib

@@ -167,7 +167,7 @@ add_dependencies(awsp_logger ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-  awsp_pose_estimator
+  awsp_pose_estimator_lib
   awsp_logger
   force_to_pwm
   gnss_l86_lib

@@ -116,7 +116,7 @@ generate_dynamic_reconfigure_options(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES awsp_pose_estimator
+ LIBRARIES awsp_pose_estimator_lib kalman_filter_lib
  CATKIN_DEPENDS roscpp message_runtime awsp_msgs awsp_srvs
 #  DEPENDS system_lib
 )
@@ -133,7 +133,8 @@ include_directories(
 )
 
 ## Declare a C++ library
-add_library(${PROJECT_NAME} src/awsp_pose_estimator.cpp)
+add_library(${PROJECT_NAME}_lib src/awsp_pose_estimator_lib.cpp)
+add_library(kalman_filter_lib src/kalman_filter_lib.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -156,20 +157,23 @@ add_executable(${PROJECT_NAME}_ekf_node nodes/${PROJECT_NAME}_ekf_node.cpp)
 ## same as for the library above
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_ekf_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(awsp_logger ${PROJECT_NAME}_ekf_gencfg)
+add_dependencies(awsp_pose_estimator_ekf_node ${PROJECT_NAME}_ekf_gencfg)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-  awsp_pose_estimator
+  awsp_pose_estimator_lib
   gnss_l86_lib
   gy_88_lib
+  kalman_filter_lib
   ${catkin_LIBRARIES}
 )
 
 target_link_libraries(${PROJECT_NAME}_ekf_node
-    awsp_pose_estimator
+    awsp_pose_estimator_lib
     gnss_l86_lib
     gy_88_lib
     awsp_sensor_filter_kit_lib
+    kalman_filter_lib
+    pthread
     ${catkin_LIBRARIES}
 )
 

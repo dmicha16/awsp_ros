@@ -3,7 +3,7 @@
 //
 #include "awsp_controller/dynamic_parameters.h"
 #include "awsp_controller/pd_controller.h"
-#include "awsp_pose_estimator/awsp_pose_estimator.h"
+#include "awsp_pose_estimator/awsp_pose_estimator_lib.h"
 #include "awsp_logger/awsp_logger.h"
 #include "awsp_srvs/GetConvergence.h"
 #include "awsp_msgs/MotorStatus.h"

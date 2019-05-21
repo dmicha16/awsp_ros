@@ -59,6 +59,7 @@
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
 
+  <build_depend>awsp_pose_estimator</build_depend>
   <build_depend>awsp_gnss_l86_interface</build_depend>
   <build_depend>awsp_gy_88_interface</build_depend>
 

@@ -3,7 +3,7 @@
 #include "awsp_msgs/ObstacleData.h"
 #include "awsp_msgs/CurrentState.h"
 #include "awsp_msgs/CartesianError.h"
-#include "awsp_pose_estimator/awsp_pose_estimator.h"
+#include "awsp_pose_estimator/awsp_pose_estimator_lib.h"
 
 #include "awsp_srvs/SetGoalThreshold.h"
 #include "awsp_srvs/SetGNSSGoal.h"

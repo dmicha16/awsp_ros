@@ -50,6 +50,7 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
   <depend>awsp_srvs</depend>
   <depend>awsp_msgs</depend>
+  <depend>awsp_pose_estimator</depend>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>std_msgs</build_depend>

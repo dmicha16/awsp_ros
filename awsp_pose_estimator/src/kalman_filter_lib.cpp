@@ -1,4 +1,6 @@
-"awsp_pose_estimator/kalman_filter_lib.h"
+#include "awsp_pose_estimator/kalman_filter_lib.h"
+
+//using Eigen::MatrixXd;
 
 KalmanFilter::KalmanFilter(float time_step)
 {
@@ -8,8 +10,8 @@ KalmanFilter::KalmanFilter(float time_step)
     z_prediction << 0, 0, 0, 0, 0, 0;
     z_measurement << 0, 0, 0, 0, 0, 0;
 
-    P_prior = MatrixXd::Identity(6, 6);
-    P_post = MatrixXd::Identity(6, 6);
+    P_prior << 1, 0, 0, 0, 1, 0, 0, 0, 1;
+    P_post << 1, 0, 0, 0, 1, 0, 0, 0, 1;
     Q.diagonal() << 0.01, 0.01, 0.002, 0.005, 0.0001, 0.0001;
     R.diagonal() << 0.3, 0.3, 4, 5, 10, 1;
     H.diagonal() << 1, 1, 3.6, 1, 180/pi, 180/pi;
@@ -32,15 +34,20 @@ KalmanFilter::KalmanFilter(float time_step)
 
 void KalmanFilter::set_damping_surge()
 {
-    if (z_measurement(2) < velocity_switch_surge) X_u = surge_damping_coeffs[0];
-    else X_u = surge_damping_coeffs[1];
+    if (z_measurement(2) < velocity_switch_surge)
+        X_u = surge_damping_coeffs[0];
+    else
+        X_u = surge_damping_coeffs[1];
 }
 
 void KalmanFilter::set_damping_yaw()
 {
-    if (z_measurement(5) < velocity_switch_yaw[0]) N_r = yaw_damping_coeffs[0];
-    else if (z_measurement(5) < velocity_switch_yaw[1]) N_r= yaw_damping_coeffs[1];
-    else N_r = yaw_damping_coeffs[2];
+    if (z_measurement(5) < velocity_switch_yaw[0])
+        N_r = yaw_damping_coeffs[0];
+    else if (z_measurement(5) < velocity_switch_yaw[1])
+        N_r= yaw_damping_coeffs[1];
+    else
+        N_r = yaw_damping_coeffs[2];
 }
 
 state_vector KalmanFilter::estimate_state(float left_prop_force, float right_prop_force, float x_pos, float y_pos, float vel, float acc, float heading, float ang_vel)
@@ -51,19 +58,20 @@ state_vector KalmanFilter::estimate_state(float left_prop_force, float right_pro
     z_measurement(1) = y_pos;
     z_measurement(2) = vel;
     z_measurement(3) = acc;
-    z_measurement(4) = ang_pos;
+    z_measurement(4) = heading;
     z_measurement(5) = ang_vel;
 
     set_damping_surge();
     set_damping_yaw();
 
     x_prior = Phi * x_post + Gamma * u;
-    z_prediction = H * x_prior;     
+    z_prediction = H * x_prior;
     P_prior = Phi * P_post * Phi.transpose() + Q;
+//    P_prior = Phi + Q;
     K = P_prior * H.transpose() * (H * P_prior * H.transpose() + R).inverse();
     x_post = x_prior + K * (z_measurement - z_prediction);
-    P_post = (I - K * H) * P_prior;
-    
+    P_post = (I  - K * H) * P_prior;
+
     P_prior = P_post;
     x_prior = x_post;
 
