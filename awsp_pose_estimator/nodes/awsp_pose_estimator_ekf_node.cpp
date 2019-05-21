@@ -208,6 +208,38 @@ bool get_convergence(awsp_srvs::GetConvergence::Request  &req,
     return true;
 }
 
+std::string global_log_file = "raw_estimate.csv";
+std::string directory = "/home/ubuntu/awsp_stable_ws/src/awsp_logger/log_estimate/";
+Logger estimate_logger(directory);
+
+void log_estimator(state_vector estimated_state)
+{
+    std::stringstream log_stream;
+    std::string ready_to_move_boat;
+
+    log_stream << std::fixed << std::setprecision(7)
+            << gps_data.latitude
+            << "," << gps_data.longitude
+            << "," << gps_data.speed
+            << "," << gps_data.true_course
+            << "," << imu_data.acceleration.x
+            << "," << imu_data.acceleration.y
+            << "," << imu_data.yaw_vel
+            << "," << filtered_imu.acceleration.x
+            << "," << filtered_imu.acceleration.y
+            << "," << filtered_imu.gyro.z
+            << "," << motor_status.left_motor_force
+            << "," << motor_status.right_motor_force
+            << "," << estimated_state.x_pos
+            << "," << estimated_state.y_pos
+            << "," << estimated_state.vel
+            << "," << estimated_state.acc
+            << "," << estimated_state.heading
+            << "," << estimated_state.ang_vel;
+
+    estimate_logger.additional_logger(log_stream.str(), global_log_file);
+}
+
 
 int main(int argc, char **argv)
 {
@@ -252,6 +284,7 @@ int main(int argc, char **argv)
         ROS_INFO("Waiting for GPS data...");
         ros::Duration(0.5).sleep(); // sleep for half a second
     }
+
     is_first_gps = false;
     CartesianPose pose(gps_data);
     cart_pose cartesian_pose;
@@ -259,6 +292,8 @@ int main(int argc, char **argv)
     coordinates_2d x_y_cartesian;
     state_vector estimated_state;
     KalmanFilter kalman_filter(time_step);
+
+    log_estimator(estimated_state);
 
     bool new_data = false;
 
