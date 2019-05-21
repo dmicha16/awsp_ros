@@ -16,6 +16,7 @@
 #include "awsp_msgs/CurrentState.h"
 #include "awsp_msgs/MotorStatus.h"
 #include "awsp_pose_estimator/pose_parameters.h"
+#include "awsp_logger/awsp_logger.h"
 
 #include "awsp_srvs/GoalToJ0.h"
 #include "awsp_srvs/GetConvergence.h"
@@ -279,11 +280,14 @@ int main(int argc, char **argv)
     acc.y = 0.0;
 
     // this class instance holds the J0 frame as of right now
-    while (new_gps == false)
-    {
-        ROS_INFO("Waiting for GPS data...");
-        ros::Duration(0.5).sleep(); // sleep for half a second
-    }
+//    while (new_gps == false)
+//    {
+//        ROS_INFO("Waiting for GPS data...");
+//        ros::Duration(0.5).sleep(); // sleep for half a second
+//    }
+
+    gps_data.latitude = 55;
+    gps_data.longitude = 9;
 
     is_first_gps = false;
     CartesianPose pose(gps_data);
@@ -299,6 +303,7 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
+        ROS_INFO_ONCE("Started estimating");
         filter_imu();
         print_pose_estimator_status(cartesian_pose);
 

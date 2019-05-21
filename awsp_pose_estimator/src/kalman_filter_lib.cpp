@@ -1,20 +1,59 @@
 #include "awsp_pose_estimator/kalman_filter_lib.h"
+#include <ros/console.h>
 
 //using Eigen::MatrixXd;
 
 KalmanFilter::KalmanFilter(float time_step)
 {
     t_s = time_step;
+    ROS_INFO("do we get her3.1");
+    x_prior.resize(6);
+    x_post.resize(6);
+    z_prediction.resize(6);
+    z_measurement.resize(6);
     x_prior << 0, 0, 0, 0, 0, 0;
     x_post << 0, 0, 0, 0, 0, 0;
     z_prediction << 0, 0, 0, 0, 0, 0;
     z_measurement << 0, 0, 0, 0, 0, 0;
+    ROS_INFO("do we get her3.2");
 
-    P_prior << 1, 0, 0, 0, 1, 0, 0, 0, 1;
-    P_post << 1, 0, 0, 0, 1, 0, 0, 0, 1;
+    P_prior.resize(6,6);
+    P_post.resize(6,6);
+    Q.resize(6,6);
+    R.resize(6,6);
+    H.resize(6,6);
+
+    I.resize(6,6);
+    I << 1, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0, 0,
+        0, 0, 1, 0, 0, 0,
+        0, 0, 0, 1, 0, 0,
+        0, 0, 0, 0, 1, 0,
+        0, 0, 0, 0, 0, 1;
+
+
+    K.resize(6,6);
+
+    P_prior << 1, 0, 0, 0, 0, 0,
+            0, 1, 0, 0, 0, 0,
+            0, 0, 1, 0, 0, 0,
+            0, 0, 0, 1, 0, 0,
+            0, 0, 0, 0, 1, 0,
+            0, 0, 0, 0, 0, 1;
+    P_post << 1, 0, 0, 0, 0, 0,
+            0, 1, 0, 0, 0, 0,
+            0, 0, 1, 0, 0, 0,
+            0, 0, 0, 1, 0, 0,
+            0, 0, 0, 0, 1, 0,
+            0, 0, 0, 0, 0, 1;
+
+
     Q.diagonal() << 0.01, 0.01, 0.002, 0.005, 0.0001, 0.0001;
     R.diagonal() << 0.3, 0.3, 4, 5, 10, 1;
     H.diagonal() << 1, 1, 3.6, 1, 180/pi, 180/pi;
+
+    Phi.resize(6,6);
+    Gamma.resize(6,2);
 
     Phi << 1, 0, t_s * cos(x_prior(4)), 0.5 * (pow(t_s, 2)) * cos(x_prior(4)), 0, 0,
            0, 1, t_s * sin(x_prior(4)), 0.5 * (pow(t_s, 2)) * sin(x_prior(4)), 0, 0,

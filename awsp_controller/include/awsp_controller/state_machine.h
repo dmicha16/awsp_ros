@@ -465,7 +465,7 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
     }
 }
 
-int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publisher)
+    int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publisher)
 {
     ros::Rate loop_rate(10);
 
