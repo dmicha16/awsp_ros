@@ -17,6 +17,7 @@
 
 #include "awsp_srvs/SetGoalThreshold.h"
 #include "awsp_srvs/SetGNSSGoal.h"
+#include "awsp_srvs/UseObstacleAvoidance.h"
 
 #include "awsp_controller/state_machine.h"
 
@@ -165,8 +166,10 @@ int main(int argc, char **argv)
     // Setup service clients
     ros::ServiceClient set_gnss_goal_client = n.serviceClient<awsp_srvs::SetGNSSGoal>("set_gnss_goal");
     ros::ServiceClient set_goal_thresh_client = n.serviceClient<awsp_srvs::SetGoalThreshold>("set_goal_thresh");
+    ros::ServiceClient use_obstacle_a_client = n.serviceClient<awsp_srvs::UseObstacleAvoidance>("use_obstacle_a");
     awsp_srvs::SetGNSSGoal set_gnss_goal_srv;
     awsp_srvs::SetGoalThreshold set_goal_thresh_srv;
+    awsp_srvs::UseObstacleAvoidance use_obstacle_a_srv;
 
     state_machine.current_state = state::SYSTEM_OFF;
     publisher.publish(state_machine);
@@ -203,7 +206,9 @@ int main(int argc, char **argv)
                     set_gnss_goal_srv.request.use_waypoints = false;
 
                 set_goal_thresh_srv.request.goal_thresh = dynr::current_vessel_task.distance_error_tol;
+                use_obstacle_a_srv.request.use_obstacle_avoidance = dynr::control_gains.use_obstacle_detector;
 
+                use_obstacle_a_client.call(use_obstacle_a_srv);
                 set_goal_thresh_client.call(set_goal_thresh_srv);
                 set_gnss_goal_client.call(set_gnss_goal_srv);
                 publisher.publish(state_machine);

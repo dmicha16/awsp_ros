@@ -8,6 +8,7 @@
 #include "awsp_srvs/SetGoalThreshold.h"
 #include "awsp_srvs/SetGNSSGoal.h"
 #include "awsp_srvs/GoalToJ0.h"
+#include "awsp_srvs/UseObstacleAvoidance.h"
 
 #include <sstream>
 #include <iomanip>
@@ -32,6 +33,7 @@ struct ObstacleData
 {
     float front_obstacle_dist;
     bool front_obstacle;
+    bool use_obstacle = true;
 } obstacle_data;
 
 struct GoalGNSSData
@@ -126,10 +128,13 @@ bool set_goal_thresh(awsp_srvs::SetGoalThreshold::Request  &req,
     return true;
 }
 
-//bool check_goal_reachability()
-//{
-//
-//}
+bool use_obstacle_a(awsp_srvs::UseObstacleAvoidance::Request  &req,
+        awsp_srvs::UseObstacleAvoidance::Response &res)
+{
+    res.acknowledged = true;
+    obstacle_data.use_obstacle = (bool)req.use_obstacle_avoidance;
+    return true;
+}
 
 void ObstacleWaypoint::set_start_coords()
 {
@@ -165,7 +170,7 @@ void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
 
     while (ros::ok())
     {
-        if(obstacle_data.front_obstacle)
+        if(obstacle_data.front_obstacle && obstacle_data.use_obstacle)
             obstacle_front = true;
 
         if (!is_transformed)
@@ -237,7 +242,7 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
 
     while (ros::ok())
     {
-        if(obstacle_data.front_obstacle)
+        if(obstacle_data.front_obstacle && obstacle_data.use_obstacle)
             obstacle_front = true;
 
         if (!is_transformed)
@@ -317,9 +322,11 @@ int main(int argc, char **argv)
 
     ros::ServiceServer set_goal_thresh_srv = n.advertiseService("set_goal_thresh", set_goal_thresh);
     ros::ServiceServer set_gnss_goal_srv = n.advertiseService("set_gnss_goal", set_gnss_goal);
+    ros::ServiceServer use_obstacle_a_srv = n.advertiseService("use_obstacle_a", use_obstacle_a);
 
     ros::ServiceClient goal_to_j0_client = n.serviceClient<awsp_srvs::GoalToJ0>("goal_to_j0");
     awsp_srvs::GoalToJ0 goal_to_j0_srv;
+
 
     ros::Rate loop_rate(10);
 

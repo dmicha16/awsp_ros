@@ -373,9 +373,9 @@ int goal_setting()
             gps_ref.longitude = dynr::current_vessel_task.goal_longitude;
             return state::BOAT_CONTROLLER;
         }
-        else if (dynr::current_vessel_task.use_gps_waypoints == true)
+        else if (dynr::current_vessel_task.use_gps_waypoints == true
+            && dynr::current_vessel_task.ready_to_move == true)
         {
-
         	return state::BOAT_CONTROLLER;
         }
 
