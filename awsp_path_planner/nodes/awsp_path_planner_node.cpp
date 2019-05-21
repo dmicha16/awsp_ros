@@ -14,6 +14,20 @@
 #include <iostream>
 #include <fstream>
 
+struct ObstacleWaypoint
+{
+    float start_x, start_y, heading_start;
+    float obstacle_radius = 0.5;
+    float obstacle_length = 1;
+    float theta;
+    float alpha_gain = 2, alpha;
+    float w_x, w_y;
+    float dist_to_waypoint;
+
+    void set_start_coords();
+
+} obstacle_waypoint;
+
 struct ObstacleData
 {
     float front_obstacle_dist;
@@ -48,14 +62,26 @@ void current_state_callback(const awsp_msgs::CurrentState::ConstPtr curr_state_m
     current_state.heading = curr_state_msg->heading;
 }
 
-void define_obstacle()
-{
 
+void transform_waypoint_to_j0(ros::ServiceClient goal_to_j0_client, awsp_srvs::GoalToJ0 goal_to_j0_srv)
+{
+    if (goal_to_j0_client.call(goal_to_j0_srv))
+    {
+        goal_pose.goal_x = goal_to_j0_srv.response.j0_goal_x;
+        goal_pose.goal_y = goal_to_j0_srv.response.j0_goal_y;
+    }
 }
 
-void generate_right_waypoint()
-{   
+void transform_goal_to_j0(ros::ServiceClient goal_to_j0_client, awsp_srvs::GoalToJ0 goal_to_j0_srv)
+{
+    goal_to_j0_srv.request.goal_lat = goal_gnss_data.goal_lat;
+    goal_to_j0_srv.request.goal_long = goal_gnss_data.goal_long;
 
+    if (goal_to_j0_client.call(goal_to_j0_srv))
+    {
+        goal_pose.goal_x = goal_to_j0_srv.response.j0_goal_x;
+        goal_pose.goal_y = goal_to_j0_srv.response.j0_goal_y;
+    }
 }
 
 std::vector<std::vector<float>> load_gps_waypoints()
@@ -100,6 +126,182 @@ bool set_goal_thresh(awsp_srvs::SetGoalThreshold::Request  &req,
     return true;
 }
 
+//bool check_goal_reachability()
+//{
+//
+//}
+
+void ObstacleWaypoint::set_start_coords()
+{
+    obstacle_waypoint.start_x = current_state.position.x;
+    obstacle_waypoint.start_y = current_state.position.y;
+    obstacle_waypoint.heading_start = current_state.heading;
+}
+
+void generate_obstacle_waypoint()
+{
+    obstacle_waypoint.theta = abs(atan2(obstacle_waypoint.obstacle_length, obstacle_data.front_obstacle_dist));
+    obstacle_waypoint.alpha = 2 * obstacle_waypoint.theta;
+
+    obstacle_waypoint.dist_to_waypoint = obstacle_data.front_obstacle_dist /
+            cos(obstacle_waypoint.alpha * obstacle_waypoint.alpha_gain);
+
+    obstacle_waypoint.w_x = obstacle_waypoint.start_x +
+            obstacle_waypoint.dist_to_waypoint * cos(obstacle_waypoint.heading_start + obstacle_waypoint.alpha * obstacle_waypoint.alpha_gain);
+    obstacle_waypoint.w_y = obstacle_waypoint.start_y +
+            obstacle_waypoint.dist_to_waypoint * sin(obstacle_waypoint.heading_start + obstacle_waypoint.alpha * obstacle_waypoint.alpha_gain);
+}
+
+void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
+                             ros::ServiceClient goal_to_j0_client, awsp_srvs::GoalToJ0 goal_to_j0_srv,
+                             ros::Publisher cart_error_pub)
+{
+    bool is_transformed = false;
+    bool start_coord_set = false;
+    bool obstacle_front = false;
+    bool goal_reached = false;
+    ros::Rate loop_rate(10);
+    float cart_error_x, cart_error_y, dist_error_obst_w, dist_error_goal;
+
+    while (ros::ok())
+    {
+        if(obstacle_data.front_obstacle)
+            obstacle_front = true;
+
+        if (!is_transformed)
+        {
+            transform_goal_to_j0(goal_to_j0_client, goal_to_j0_srv);
+            is_transformed = true;
+        }
+
+        if (!obstacle_front)
+        {
+            cart_error_x = goal_pose.goal_x - current_state.position.x;
+            cart_error_y = goal_pose.goal_y - current_state.position.y;
+            dist_error_goal = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
+        }
+        else
+        {
+            if(!start_coord_set)
+            {
+                obstacle_waypoint.set_start_coords();
+                start_coord_set = true;
+            }
+            generate_obstacle_waypoint();
+            cart_error_x = obstacle_waypoint.w_x - current_state.position.x;
+            cart_error_y = obstacle_waypoint.w_y - current_state.position.y;
+            dist_error_obst_w = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
+        }
+
+        cart_error_msg.bearing_error = atan2(cart_error_y, cart_error_x);
+        cart_error_msg.cart_error_x = cart_error_x;
+        cart_error_msg.cart_error_y = cart_error_y;
+
+        if (dist_error_obst_w < goal_gnss_data.distance_thresh && obstacle_front)
+        {
+            obstacle_front = false;
+            cart_error_msg.goal_reached = false;
+        }
+        else if (dist_error_goal < goal_gnss_data.distance_thresh && !obstacle_front)
+        {
+            cart_error_msg.goal_reached = true;
+            goal_reached = true;
+        }
+        else
+            cart_error_msg.goal_reached = false;
+
+
+        cart_error_pub.publish(cart_error_msg);
+
+        if (goal_reached)
+            break;
+
+        loop_rate.sleep();
+        ros::spinOnce();
+    }
+}
+
+void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
+                           ros::ServiceClient goal_to_j0_client, awsp_srvs::GoalToJ0 goal_to_j0_srv,
+                           ros::Publisher cart_error_pub)
+{
+    std::vector<std::vector<float>> waypoints = load_gps_waypoints();
+
+    int waypoint_counter = 0;
+    bool is_transformed = false;
+    bool start_coord_set = false;
+    bool obstacle_front = false;
+    bool goal_reached = false;
+    ros::Rate loop_rate(10);
+    float cart_error_x, cart_error_y, dist_error_obst_w, dist_error_goal;
+
+    while (ros::ok())
+    {
+        if(obstacle_data.front_obstacle)
+            obstacle_front = true;
+
+        if (!is_transformed)
+        {
+            goal_to_j0_srv.request.goal_lat = waypoints[waypoint_counter][0];
+            goal_to_j0_srv.request.goal_long = waypoints[waypoint_counter][1];
+            transform_waypoint_to_j0(goal_to_j0_client, goal_to_j0_srv);
+            is_transformed = true;
+        }
+
+        if (!obstacle_front)
+        {
+            cart_error_x = goal_pose.goal_x - current_state.position.x;
+            cart_error_y = goal_pose.goal_y - current_state.position.y;
+            dist_error_goal = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
+        }
+        else
+        {
+            if(!start_coord_set)
+            {
+                obstacle_waypoint.set_start_coords();
+                start_coord_set = true;
+            }
+            generate_obstacle_waypoint();
+            cart_error_x = obstacle_waypoint.w_x - current_state.position.x;
+            cart_error_y = obstacle_waypoint.w_y - current_state.position.y;
+            dist_error_obst_w = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
+        }
+
+        cart_error_msg.bearing_error = atan2(cart_error_y, cart_error_x);
+        cart_error_msg.cart_error_x = cart_error_x;
+        cart_error_msg.cart_error_y = cart_error_y;
+
+        if (dist_error_obst_w < goal_gnss_data.distance_thresh && obstacle_front)
+        {
+            obstacle_front = false;
+            cart_error_msg.goal_reached = false;
+        }
+        else if (dist_error_goal < goal_gnss_data.distance_thresh && !obstacle_front)
+        {
+            waypoint_counter++;
+            is_transformed = false;
+            if(waypoint_counter == waypoints.size())
+            {
+                cart_error_msg.goal_reached = true;
+                goal_reached = true;
+            }
+            else
+                cart_error_msg.goal_reached = false;
+        }
+        else
+            cart_error_msg.goal_reached = false;
+
+
+        cart_error_pub.publish(cart_error_msg);
+
+        if (goal_reached)
+            break;
+
+        loop_rate.sleep();
+        ros::spinOnce();
+    }
+}
+
 int main(int argc, char **argv)
 {
     ROS_INFO("===== INITIALIZING PATH PLANNER NODE =====");
@@ -123,37 +325,14 @@ int main(int argc, char **argv)
 
     while(ros::ok())
     {
-        /* 1) evalute if single GNSS or waypoints
-         * if single GNSS -> get pose and transform GNSS to j0 goal
-         * if waypoints -> store in an vector, get pose and transform first element to j0 and error
-         * publish dist/heading error
-         * evaluate obstacle
-         */
-
         if(!goal_gnss_data.use_waypoints)
         {
-            goal_to_j0_srv.request.goal_lat = goal_gnss_data.goal_lat;
-            goal_to_j0_srv.request.goal_long = goal_gnss_data.goal_long;
-
-            if(goal_to_j0_client.call(goal_to_j0_srv))
-            {
-                float cart_error_x, cart_error_y;
-                goal_pose.goal_x = goal_to_j0_srv.response.j0_goal_x;
-                goal_pose.goal_y = goal_to_j0_srv.response.j0_goal_y;
-                cart_error_x = goal_pose.goal_x - current_state.position.x;
-                cart_error_y = goal_pose.goal_y - current_state.position.y;
-                cart_error_msg.bearing_error = atan2(cart_error_y, cart_error_x);
-                cart_error_msg.cart_error_x = cart_error_x;
-                cart_error_msg.cart_error_y = cart_error_y;
-            }
-
-            cart_error_pub.publish(cart_error_msg);
+            navigate_to_single_goal(cart_error_msg, goal_to_j0_client, goal_to_j0_srv, cart_error_pub);
         }
         else if (goal_gnss_data.use_waypoints)
         {
-            std::vector<std::vector<float>> waypoints = load_gps_waypoints();
+            navigate_to_waypoints(cart_error_msg, goal_to_j0_client, goal_to_j0_srv, cart_error_pub);
         }
-
 
         loop_rate.sleep();
         ros::spinOnce();

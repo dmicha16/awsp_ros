@@ -34,6 +34,7 @@ struct CartesianError
     float cart_error_x;
     float cart_error_y;
     float bearing_error;
+    bool goal_reached;
 } cartesian_error;
 
 struct BoatTestingParams
@@ -431,13 +432,13 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
             return state::POSE_ESTIMATION;
         }
 
-        if (obstacle_data.front_obstacle && dynr::control_gains.use_obstacle_detector)
-        {
-            left_esc.end();
-            right_esc.end();
-            ROS_WARN("OBSTACLE DETECTED, STOPPING.");
-            return state::POSE_ESTIMATION;
-        }
+//        if (obstacle_data.front_obstacle && dynr::control_gains.use_obstacle_detector)
+//        {
+//            left_esc.end();
+//            right_esc.end();
+//            ROS_WARN("OBSTACLE DETECTED, STOPPING.");
+//            return state::POSE_ESTIMATION;
+//        }
 
         boat_control_params.cartesian_error.x = cartesian_error.cart_error_x;
         boat_control_params.cartesian_error.y = cartesian_error.cart_error_y;
@@ -454,12 +455,8 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
             boat_control_params.bearing_error += 2 * M_PI;
         }
 
-        if(!dynr::control_gains.use_imu_bearing)
-        {
-            boat_control_params.bearing_error = 0;
-        }
 
-        if (boat_control_params.distance_error < dynr::current_vessel_task.distance_error_tol)
+        if (cartesian_error.goal_reached)
         {
             return state::POSE_ESTIMATION;
         }
