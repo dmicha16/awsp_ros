@@ -79,7 +79,9 @@ class CartesianPose
         void set_last_yaw_vel_(float yaw_vel);
         void set_last_yaw_acc_(float yaw_acc);
     public:
+        coordinates_2d gnss_to_cartesian(gps_position gps);
         CartesianPose(gps_position magnetic_north, gps_position ref, coordinates_2d initial_vel, coordinates_2d initial_acc, float initial_bearing_mag);
+        CartesianPose(gps_position ref);
         ~CartesianPose();
         cart_pose cartesian_pose(gps_position gps);
         cart_pose cartesian_pose(imu_data imu);
