@@ -2,10 +2,13 @@
 #include <ros/console.h>
 #include <math.h>
 #include "ros/ros.h"
+
 #include "awsp_controller/force_to_pwm.h"
 #include "awsp_controller/esc_lib.h"
+#include "awsp_controller/state_machine.h"
 #include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 #include "awsp_gy_88_interface/gy_88_lib.h"
+
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
 #include "awsp_msgs/ObstacleData.h"
@@ -18,8 +21,7 @@
 #include "awsp_srvs/SetGoalThreshold.h"
 #include "awsp_srvs/SetGNSSGoal.h"
 #include "awsp_srvs/UseObstacleAvoidance.h"
-
-#include "awsp_controller/state_machine.h"
+#include "awsp_srvs/GetConvergence.h"
 
 #include <dynamic_reconfigure/server.h>
 #include <awsp_controller/ParametersConfig.h>
@@ -56,10 +58,6 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::current_vessel_task.ready_to_move = config.ready_to_move;
             dynr::current_vessel_task.distance_error_tol = config.distance_error_tol;
             dynr::current_vessel_task.use_gps_waypoints = config.use_gps_waypoints;
-            break;
-        case dynr::LEVEL::CROSS_GROUP_LOG:
-//            dynr::general_config.log_general_config = config.log_general_config;
-//            dynr::control_gains.log_control_system_config = config.log_control_system_config;
             break;
 
         case dynr::LEVEL::BOAT_TESTING:
@@ -167,9 +165,11 @@ int main(int argc, char **argv)
     ros::ServiceClient set_gnss_goal_client = n.serviceClient<awsp_srvs::SetGNSSGoal>("set_gnss_goal");
     ros::ServiceClient set_goal_thresh_client = n.serviceClient<awsp_srvs::SetGoalThreshold>("set_goal_thresh");
     ros::ServiceClient use_obstacle_a_client = n.serviceClient<awsp_srvs::UseObstacleAvoidance>("use_obstacle_a");
+    ros::ServiceClient get_convergence_client = n.serviceClient<awsp_srvs::GetConvergence>("get_convergence");
     awsp_srvs::SetGNSSGoal set_gnss_goal_srv;
     awsp_srvs::SetGoalThreshold set_goal_thresh_srv;
     awsp_srvs::UseObstacleAvoidance use_obstacle_a_srv;
+    awsp_srvs::GetConvergence get_convergence_srv;
 
     state_machine.current_state = state::SYSTEM_OFF;
     publisher.publish(state_machine);
@@ -191,7 +191,7 @@ int main(int argc, char **argv)
                 publisher.publish(state_machine);
                 break;
             case state::POSE_ESTIMATION:
-                state::current_system_state = state::pose_estimation();
+                state::current_system_state = state::pose_estimation(get_convergence_client, get_convergence_srv);
                 state_machine.current_state = state::current_system_state;
                 publisher.publish(state_machine);
                 break;

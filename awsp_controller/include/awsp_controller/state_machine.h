@@ -5,6 +5,8 @@
 #include "awsp_controller/pd_controller.h"
 #include "awsp_pose_estimator/awsp_pose_estimator.h"
 #include "awsp_logger/awsp_logger.h"
+#include "awsp_srvs/GetConvergence.h"
+#include "awsp_msgs/MotorStatus.h"
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -155,8 +157,7 @@ void print_system_off_status()
 	ROS_DEBUG_STREAM("[D LINEAR GAIN          ] " << dynr::control_gains.d_linear_gain);
     ROS_DEBUG_STREAM("[P ANGULAR GAIN         ] " << dynr::control_gains.p_angular_gain);
 	ROS_DEBUG_STREAM("[D ANGULAR GAIN         ] " << dynr::control_gains.d_angular_gain);
-    ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
-    ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
+//    ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
 //    ROS_DEBUG_STREAM();
     ROS_DEBUG("================================================");
 }
@@ -170,18 +171,17 @@ void print_pose_estimation_status(gps_position gps_data, cart_pose current_pose)
     ROS_DEBUG_STREAM("[GOAL LATITUDE          ] " << dynr::current_vessel_task.goal_latitude);
     ROS_DEBUG_STREAM("[GOAL LONGITUDE         ] " << dynr::current_vessel_task.goal_longitude);
 
-    ROS_DEBUG_STREAM("[CURRENT LATITUDE       ] " << gps_data.latitude);
-    ROS_DEBUG_STREAM("[CURRENT LONGITUDE      ] " << gps_data.longitude);
-    ROS_DEBUG_STREAM("[CURRENT CART X         ] " << current_pose.position.x);
-    ROS_DEBUG_STREAM("[CURRENT CART Y         ] " << current_pose.position.y);
-    ROS_DEBUG_STREAM("[CURRENT BEARING        ] " << current_pose.bearing);
+//    ROS_DEBUG_STREAM("[CURRENT LATITUDE       ] " << gps_data.latitude);
+//    ROS_DEBUG_STREAM("[CURRENT LONGITUDE      ] " << gps_data.longitude);
+//    ROS_DEBUG_STREAM("[CURRENT CART X         ] " << current_pose.position.x);
+//    ROS_DEBUG_STREAM("[CURRENT CART Y         ] " << current_pose.position.y);
+//    ROS_DEBUG_STREAM("[CURRENT BEARING        ] " << current_pose.bearing);
 
 	ROS_DEBUG_STREAM("[P LINEAR GAIN          ] " << dynr::control_gains.p_linear_gain);
 	ROS_DEBUG_STREAM("[D LINEAR GAIN          ] " << dynr::control_gains.d_linear_gain);
 	ROS_DEBUG_STREAM("[P ANGULAR GAIN         ] " << dynr::control_gains.p_angular_gain);
 	ROS_DEBUG_STREAM("[D ANGULAR GAIN         ] " << dynr::control_gains.d_angular_gain);
-    ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
-    ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
+//    ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
 
     ROS_DEBUG("================================================");
 }
@@ -195,20 +195,18 @@ void print_goal_setting_status(gps_position gps_data, cart_pose current_pose)
     ROS_DEBUG_STREAM("[GOAL LATITUDE          ] " << dynr::current_vessel_task.goal_latitude);
     ROS_DEBUG_STREAM("[GOAL LONGITUDE         ] " << dynr::current_vessel_task.goal_longitude);
     ROS_DEBUG_STREAM("[DISTANCE ERROR TOL     ] " << dynr::current_vessel_task.distance_error_tol);
-    ROS_DEBUG_STREAM("[USE IMU BEARING        ] " << dynr::control_gains.use_imu_bearing);
 
-    ROS_DEBUG_STREAM("[CURRENT LATITUDE       ] " << gps_data.latitude);
-    ROS_DEBUG_STREAM("[CURRENT LONGITUDE      ] " << gps_data.longitude);
-    ROS_DEBUG_STREAM("[CURRENT CART X         ] " << current_pose.position.x);
-    ROS_DEBUG_STREAM("[CURRENT CART Y         ] " << current_pose.position.y);
-    ROS_DEBUG_STREAM("[CURRENT BEARING        ] " << current_pose.bearing);
+//    ROS_DEBUG_STREAM("[CURRENT LATITUDE       ] " << gps_data.latitude);
+//    ROS_DEBUG_STREAM("[CURRENT LONGITUDE      ] " << gps_data.longitude);
+//    ROS_DEBUG_STREAM("[CURRENT CART X         ] " << current_pose.position.x);
+//    ROS_DEBUG_STREAM("[CURRENT CART Y         ] " << current_pose.position.y);
+//    ROS_DEBUG_STREAM("[CURRENT BEARING        ] " << current_pose.bearing);
 
 	ROS_DEBUG_STREAM("[P LINEAR GAIN          ] " << dynr::control_gains.p_linear_gain);
 	ROS_DEBUG_STREAM("[D LINEAR GAIN          ] " << dynr::control_gains.d_linear_gain);
 	ROS_DEBUG_STREAM("[P ANGULAR GAIN         ] " << dynr::control_gains.p_angular_gain);
 	ROS_DEBUG_STREAM("[D ANGULAR GAIN         ] " << dynr::control_gains.d_angular_gain);
-    ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
-    ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
+//    ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
 
     ROS_DEBUG("================================================");
 }
@@ -222,7 +220,7 @@ void print_boat_controller_status(BoatControlParams boat_control_params)
 
     ROS_DEBUG_STREAM("[DISTANCE ERROR         ] " << boat_control_params.distance_error);
     ROS_DEBUG_STREAM("[DISTANCE ERROR TOL     ] " << dynr::current_vessel_task.distance_error_tol);
-    ROS_DEBUG_STREAM("[USE IMU BEARING        ] " << dynr::control_gains.use_imu_bearing);
+//    ROS_DEBUG_STREAM("[USE IMU BEARING        ] " << dynr::control_gains.use_imu_bearing);
     ROS_DEBUG_STREAM("[BEARING GOAL           ] " << boat_control_params.bearing_goal);
     ROS_DEBUG_STREAM("[BEARING ERROR          ] " << boat_control_params.bearing_error);
     ROS_DEBUG_STREAM("[FORCE DRIVE            ] " << boat_control_params.force_drive);
@@ -238,8 +236,7 @@ void print_boat_controller_status(BoatControlParams boat_control_params)
 	ROS_DEBUG_STREAM("[D LINEAR GAIN          ] " << dynr::control_gains.d_linear_gain);
 	ROS_DEBUG_STREAM("[P ANGULAR GAIN         ] " << dynr::control_gains.p_angular_gain);
 	ROS_DEBUG_STREAM("[D ANGULAR GAIN         ] " << dynr::control_gains.d_angular_gain);
-    ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
-    ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
+//    ROS_DEBUG_STREAM("[USE FAULT DETECTION    ] " << dynr::control_gains.use_fault_detection);
 
     ROS_DEBUG("================================================");
 }
@@ -266,28 +263,6 @@ void print_boat_testing_status(BoatTestingParams boat_testing_params)
     ROS_DEBUG_STREAM("[LOG CONTROL SYSTEM     ] " << dynr::control_gains.log_control_system_config);
 
     ROS_DEBUG("================================================");
-}
-
-std::vector<std::vector<float>> load_gps_waypoints()
-{
-    std::string file_name = "/home/ubuntu/awsp_stable_ws/src/awsp_controller/waypoints/waypoints.csv";
-    std::fstream gps_file(file_name);
-    std::string line = "";
-    std::vector<std::vector<float> > data;
-
-    while (getline(gps_file, line))                   // read a whole line of the file
-    {
-        std::stringstream ss(line);                     // put it in a stringstream (internal stream)
-        std::vector<float> row;
-        std::string data_s;
-        while (getline(ss, data_s, ',' ))           // read (string) items up to a comma
-        {
-            row.push_back(stod(data_s));            // use stod() to convert to double; put in row vector
-        }
-        if (row.size() > 0)
-            data.push_back(row);    // add non-empty rows to matrix
-    }
-    return data;
 }
 
 int evaluate_system_mode_status()
@@ -327,7 +302,7 @@ int system_off()
     }
 }
 
-int pose_estimation()
+int pose_estimation(ros::ServiceClient get_convergence_client, awsp_srvs::GetConvergence get_convergence_srv)
 {
     int move_to_next = 0;
 
@@ -344,7 +319,9 @@ int pose_estimation()
         if (dynr::state_bypass.bypass_2_3 == true)
             return state::GOAL_SETTING;
 
-
+        get_convergence_client.call(get_convergence_srv);
+        if(get_convergence_srv.response.kf_is_converged)
+            return state::GOAL_SETTING;
 
         state::print_pose_estimation_status(gps_data, current_pose);
         ros::spinOnce();
