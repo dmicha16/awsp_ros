@@ -28,6 +28,31 @@ CartesianPose::CartesianPose(gps_position magnetic_north, gps_position ref, coor
     last_gps_cart_ = last_cartesian_.position;
 }
 
+CartesianPose::CartesianPose(gps_position ref)
+{
+    assert(check_gps_position_(ref));
+    magnetic_north_.latitude = radians_(86.5);
+    magnetic_north_.longitude = radians_(172.6);
+    ref_ = radians_(ref);
+    last_gps_ = radians_(ref);
+
+    set_acceleration_(0);
+    declination_ = magnetic_declination_(ref_, magnetic_north_);
+    set_last_bearing_(0);
+    set_last_yaw_vel_(0);
+    set_last_yaw_acc_(0);
+    last_velocity_.x = 0;
+    last_velocity_.y = 0;
+    last_acceleration_.x = 0;
+    last_acceleration_.y = 0;
+
+    last_cartesian_.position = cartesian_position_(ref);
+    last_cartesian_.bearing = last_bearing_;
+    last_cartesian_.timestamp = ref.timestamp;
+
+    last_gps_cart_ = last_cartesian_.position;
+}
+
 CartesianPose::~CartesianPose() { }
 
 // **************************************** PRIVATE ****************************************
@@ -136,6 +161,26 @@ void CartesianPose::set_last_yaw_acc_(float yaw_acc)
     last_yaw_acc_ = yaw_acc;
 }
 // **************************************** PUBLIC *****************************************
+
+coordinates_2d CartesianPose::gnss_to_cartesian(gps_position gps)
+{
+    assert(check_gps_position_(gps));
+    gps = radians_(gps);
+
+    float delta_phi = gps.latitude - ref_.latitude;
+    float delta_lamdda = gps.longitude - ref_.longitude;
+    float first = pow(sin(delta_phi / 2), 2);
+    float last = pow(sin(delta_lamdda / 2), 2);
+    float central_angle = 2 * asin(sqrt(first + cos(ref_.latitude) * cos(gps.latitude) * last));
+    float great_circle_dist = EARTH_R * central_angle;
+    float polar_angle = bearing_(ref_, gps);
+
+    coordinates_2d position;
+    position.x = great_circle_dist * cos(polar_angle);
+    position.y = great_circle_dist * sin(polar_angle);
+    return position;
+}
+
 cart_pose CartesianPose::cartesian_pose(gps_position gps)
 {
     set_last_gps(gps);

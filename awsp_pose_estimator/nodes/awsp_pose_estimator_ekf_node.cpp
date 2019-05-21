@@ -6,6 +6,7 @@
 #include <ros/console.h>
 #include "ros/ros.h"
 #include "awsp_pose_estimator/awsp_pose_estimator.h"
+#include "awsp_pose_estimator/kalman_filter_lib.h"
 #include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 #include "awsp_gy_88_interface/gy_88_lib.h"
 #include "awsp_sensor_filter_kit/awsp_sensor_filter_kit_lib.h"
@@ -44,6 +45,8 @@ void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
     gps_data.latitude = gnss_msg->latitude;
     gps_data.longitude = gnss_msg->longitude;
     gps_data.timestamp = gnss_msg->timestamp;
+    gps_data.true_course = gnss_msg->true_course;
+    gps_data.speed = gnss_msg->speed;
     new_gps = true;
 }
 
@@ -229,8 +232,18 @@ int main(int argc, char **argv)
     acc.y = 0.0;
 
     // this class instance holds the J0 frame as of right now
-    CartesianPose pose(gps_data, gps_data, vel, acc, 0);
+    while (new_gps == false)
+    {
+        ROS_INFO("Waiting for GPS data...");
+        ros::Duration(0.5).sleep(); // sleep for half a second
+    }
+    is_first_gps = false;
+    CartesianPose pose(gps_data);
     cart_pose cartesian_pose;
+    float time_step = 0.1;
+    coordinates_2d x_y_cartesian;
+    state_vector estimated_state; 
+    KalmanFilter kalman_filter(time_step);
 
     bool new_data = false;
 
@@ -238,46 +251,37 @@ int main(int argc, char **argv)
     {
         filter_imu();
         print_pose_estimator_status(cartesian_pose);
-        if (new_goal)
-        {
-            cartesian_ref = pose.cartesian_pose(goal_gps_data);
-            new_goal = false;
-        }
+        // if (new_goal)
+        // {
+        //     cartesian_ref = pose.cartesian_pose(goal_gps_data);
+        //     new_goal = false;
+        // }
         // if (is_first_gps && new_imu)
-        if (is_first_gps && new_imu && new_gps)
-        {
-            pose = CartesianPose(gps_data, gps_data, vel, acc, imu_data.bearing);
-            cartesian_pose = pose.get_last_cartesian();
-            is_first_gps = false;
-            new_gps = false;
-            new_imu = false;
-            new_data = true;
-        }
+        // if (is_first_gps && new_imu && new_gps)
+        // {
+        //     pose = CartesianPose(gps_data, gps_data, vel, acc, imu_data.bearing);
+        //     cartesian_pose = pose.get_last_cartesian();
+        //     is_first_gps = false;
+        //     new_gps = false;
+        //     new_imu = false;
+        //     new_data = true;
+        // }
         // else if (!is_first_gps)
-        else if (new_gps && !is_first_gps)
+        if (new_gps && !is_first_gps)
         {
-            cartesian_pose = pose.cartesian_pose(gps_data);
+            // cartesian_pose = pose.cartesian_pose(gps_data);
+            x_y_cartesian = pose.gnss_to_cartesian(gps_data);
+            estimated_state = kalman_filter.estimate_state(float left_prop_force, float right_prop_force, x_y_cartesian.x, x_y_cartesian.y, gps_data.speed, sensor_kit_data.filtered_accel_x, gps_data.true_course, sensor_kit_data.filtered_gyro_z);
             new_gps = false;
-            new_data = true;
-        }
-        else if (new_imu && !is_first_gps)
-        {
-            cartesian_pose = pose.cartesian_pose(filtered_imu);
-            new_imu = false;
-            new_data = true;
-        }
-
-
-        // Publish the states, uncomment and fill up with all the good stuff :) :
-//        curr_state_msg.x = cartesian_pose.position.x;
-//        curr_state_msg.y = cartesian_pose.position.y;
-//        curr_state_msg.x
-//        curr_state_msg.y
-//        curr_state_msg.vel
-//        curr_state_msg.acceleration
-//        curr_state_msg.heading
-//        curr_state_msg.angular_vel
-        state_publisher.publish(curr_state_msg);
+            // Publish the states, uncomment and fill up with all the good stuff :) :
+            curr_state_msg.x = estimated_state.x_pos;
+            curr_state_msg.y = estimated_state.y_pos;
+            curr_state_msg.vel = estimated_state.vel;
+            curr_state_msg.acceleration = estimated_state.acc;
+            curr_state_msg.heading = estimated_state.heading;
+            curr_state_msg.angular_vel = estimated_state.ang_vel;
+            state_publisher.publish(curr_state_msg);
+        } 
 
         publish_filtered_data(sensor_kit_data_msg, filter_publisher);
 
