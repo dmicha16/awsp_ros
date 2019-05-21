@@ -22,11 +22,6 @@ cart_pose cartesian_pose;
 bool new_imu = false;
 bool new_gps = false;
 
-coordinates_2d vel;
-coordinates_2d acc;
-CartesianPose pose_estimator(gps_data, gps_data, vel, acc, 0);
-cart_pose current_pose;
-
 // References
 gps_position gps_ref;
 cart_pose cartesian_ref;
@@ -126,9 +121,6 @@ void log_global()
             << "," << boat_control_params.force_right
             << "," << boat_control_params.force_left
             << "," << ready_to_move_boat
-            << "," << current_pose.position.x
-            << "," << current_pose.position.y
-            << "," << current_pose.bearing
             << "," << cartesian_ref.position.x
             << "," << cartesian_ref.position.y
             << "," << boat_control_params.cartesian_error.x
@@ -162,7 +154,7 @@ void print_system_off_status()
     ROS_DEBUG("================================================");
 }
 
-void print_pose_estimation_status(gps_position gps_data, cart_pose current_pose)
+void print_pose_estimation_status(gps_position gps_data)
 {
     ROS_WARN_STREAM( "[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
     ROS_WARN_STREAM( "[SYSTEM IS IN STATE     ] 2 - POSE_ESTIMATION");
@@ -186,7 +178,7 @@ void print_pose_estimation_status(gps_position gps_data, cart_pose current_pose)
     ROS_DEBUG("================================================");
 }
 
-void print_goal_setting_status(gps_position gps_data, cart_pose current_pose)
+void print_goal_setting_status(gps_position gps_data)
 {
     ROS_WARN_STREAM( "[SYSTEM IS CURRENTLY    ] " << dynr::system_mode.vessel);
     ROS_WARN_STREAM( "[SYSTEM IS IN STATE     ] 3 - GOAL_SETTING");
@@ -323,7 +315,7 @@ int pose_estimation(ros::ServiceClient get_convergence_client, awsp_srvs::GetCon
         if(get_convergence_srv.response.kf_is_converged)
             return state::GOAL_SETTING;
 
-        state::print_pose_estimation_status(gps_data, current_pose);
+        state::print_pose_estimation_status(gps_data);
         ros::spinOnce();
         loop_rate.sleep();
     }
@@ -358,7 +350,7 @@ int goal_setting()
 
         if (dynr::state_bypass.bypass_3_4 == true)
         	return state::BOAT_CONTROLLER;
-        state::print_goal_setting_status(gps_data, current_pose);
+        state::print_goal_setting_status(gps_data);
 
         ros::spinOnce();
         loop_rate.sleep();
