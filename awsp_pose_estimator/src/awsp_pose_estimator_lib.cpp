@@ -58,6 +58,8 @@ CartesianPose::CartesianPose(gps_position ref)
     last_gps_cart_ = last_cartesian_.position;
 }
 
+CartesianPose::CartesianPose() {}
+
 CartesianPose::~CartesianPose() { }
 
 // **************************************** PRIVATE ****************************************
@@ -184,6 +186,36 @@ coordinates_2d CartesianPose::gnss_to_cartesian(gps_position gps)
     position.x = great_circle_dist * cos(polar_angle);
     position.y = great_circle_dist * sin(polar_angle);
     return position;
+}
+
+bool CartesianPose::set_first_ref(gps_position ref)
+{
+    assert(check_gps_position_(ref));
+    magnetic_north_.latitude = radians_(86.5);
+    magnetic_north_.longitude = radians_(172.6);
+    ref_ = radians_(ref);
+    last_gps_ = radians_(ref);
+
+    coordinates_2d pos_local;
+
+    pos_local.x = 0;
+    pos_local.y = 0;
+
+    set_acceleration_(pos_local);
+    declination_ = magnetic_declination_(ref_, magnetic_north_);
+    set_last_bearing_(0);
+    set_last_yaw_vel_(0);
+    set_last_yaw_acc_(0);
+    last_velocity_.x = 0;
+    last_velocity_.y = 0;
+    last_acceleration_.x = 0;
+    last_acceleration_.y = 0;
+
+    last_cartesian_.position = cartesian_position_(ref);
+    last_cartesian_.bearing = last_bearing_;
+    last_cartesian_.timestamp = ref.timestamp;
+
+    last_gps_cart_ = last_cartesian_.position;
 }
 
 cart_pose CartesianPose::cartesian_pose(gps_position gps)

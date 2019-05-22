@@ -82,7 +82,11 @@ class CartesianPose
         coordinates_2d gnss_to_cartesian(gps_position gps);
         CartesianPose(gps_position magnetic_north, gps_position ref, coordinates_2d initial_vel, coordinates_2d initial_acc, float initial_bearing_mag);
         CartesianPose(gps_position ref);
+        CartesianPose();
         ~CartesianPose();
+
+        bool set_first_ref(gps_position ref);
+
         cart_pose cartesian_pose(gps_position gps);
         cart_pose cartesian_pose(imu_data imu);
         cart_pose get_last_cartesian();

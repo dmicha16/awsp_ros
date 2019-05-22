@@ -24,9 +24,16 @@
 #include <dynamic_reconfigure/server.h>
 #include <awsp_pose_estimator/PoseParametersConfig.h>
 
-gps_position gps_data;
-gps_position goal_gps_data;
+gps_position gps_data, goal_gps_data;
 imu_data imu_data, filtered_imu;
+
+CartesianPose pose;
+
+state_vector estimated_state;
+coordinates_2d x_y_cartesian;
+
+bool kf_converged = false;
+
 cart_pose cartesian_ref;
 bool new_imu = false;
 bool new_gps = false;
@@ -162,7 +169,7 @@ void publish_filtered_data(awsp_msgs::SensorKitData sensor_kit_data, ros::Publis
     filter_publisher.publish(sensor_kit_data);
 }
 
-void print_pose_estimator_status(cart_pose cartesian_pose)
+void print_pose_estimator_status()
 {
 //  ROS_DEBUG_STREAM("[GPS FIX STATUS         ] " << gps_data.fix);
     ROS_DEBUG_STREAM("[GOAL GPS LAT           ] " << goal_gps_data.latitude);
@@ -171,17 +178,18 @@ void print_pose_estimator_status(cart_pose cartesian_pose)
     ROS_DEBUG_STREAM("[GOAL X CART REF        ] " << cartesian_ref.position.x);
     ROS_DEBUG_STREAM("[GOAL Y CART REF        ] " << cartesian_ref.position.y);
 
-    ROS_DEBUG_STREAM("[CURR CART POSE X       ] " << cartesian_pose.position.x);
-    ROS_DEBUG_STREAM("[CURR CART POSE Y       ] " << cartesian_pose.position.y);
+    ROS_DEBUG_STREAM("[EST CART POSE X        ] " << estimated_state.x_pos);
+    ROS_DEBUG_STREAM("[EST CART POSE Y        ] " << estimated_state.y_pos);
+    ROS_DEBUG_STREAM("[EST VELOCITY           ] " << estimated_state.vel);
+    ROS_DEBUG_STREAM("[EST ACCELERATION       ] " << estimated_state.acc);
+    ROS_DEBUG_STREAM("[EST HEADING            ] " << estimated_state.heading);
+    ROS_DEBUG_STREAM("[EST ANGULAR VEL        ] " << estimated_state.ang_vel);
 
     ROS_DEBUG_STREAM("[IMU FILTER METHOD      ] " << dynr_p::low_pass_filtering_config.filtering_mode);
     ROS_DEBUG_STREAM("[FILTER WINDOW SIZE     ] " << dynr_p::low_pass_filtering_config.window_size);
     ROS_DEBUG_STREAM("[ALPHA WEIGHT           ] " << dynr_p::low_pass_filtering_config.alpha_weight);
     ROS_DEBUG_STREAM("[FILTER ACCELEROMETER   ] " << dynr_p::low_pass_filtering_config.imu_acc);
     ROS_DEBUG_STREAM("[FILTER GYRO            ] " << dynr_p::low_pass_filtering_config.imu_gyro);
-//    ROS_DEBUG_STREAM("[ESTIMATED X VEL        ] " << filtered_imu.vel_x);
-//    ROS_DEBUG_STREAM("[ESTIMATED Y VEL        ] " << imu_data.vel_y);
-//    ROS_DEBUG_STREAM("[ESTIMATED Z VEL        ] " << imu_data.vel_z);
 
     ROS_DEBUG("================================================");
 }
@@ -192,8 +200,11 @@ bool goal_to_j0(awsp_srvs::GoalToJ0::Request  &req,
     /* this GNSS has to be transformed into the J0 frame and returned as
      * a goal of x and y in that J0 frame
      */
-    res.j0_goal_x = 1 + (float)req.goal_lat;
-    res.j0_goal_y = 1 + (float)req.goal_long;
+    goal_gps_data.latitude = (float)req.goal_lat;
+    goal_gps_data.longitude = (float)req.goal_long;
+    coordinates_2d j0_goals = pose.gnss_to_cartesian(goal_gps_data);
+    res.j0_goal_x = j0_goals.x;
+    res.j0_goal_y = j0_goals.y;
     return true;
 }
 
@@ -201,10 +212,10 @@ bool get_convergence(awsp_srvs::GetConvergence::Request  &req,
                      awsp_srvs::GetConvergence::Response &res)
 {
     //Populate this once we have determined that we are indeed converging!
-//    if (kf.converged)
-//        res.kf_is_converged = true;
-//    else
-//        res.kf_is_converged = false;
+    if (kf_converged)
+        res.kf_is_converged = true;
+    else
+        res.kf_is_converged = false;
 
     return true;
 }
@@ -270,6 +281,13 @@ int main(int argc, char **argv)
     d = boost::bind(&dynr_p_callback, _1, _2);
     server_pose.setCallback(d);
 
+    int convergence_var = 0;
+
+    if (argv[1] != "")
+        convergence_var = atoi(argv[1]);
+    else
+        convergence_var = 100;
+
     bool is_first_gps = true;
 
     coordinates_2d vel;
@@ -288,26 +306,23 @@ int main(int argc, char **argv)
         ros::spinOnce();
     }
 
-    gps_data.latitude = 55;
-    gps_data.longitude = 9;
 
     is_first_gps = false;
-    CartesianPose pose(gps_data);
-    cart_pose cartesian_pose;
+//    CartesianPose pose(gps_data);
+    pose.set_first_ref(gps_data);
     float time_step = 0.1;
-    coordinates_2d x_y_cartesian;
-    state_vector estimated_state;
     KalmanFilter kalman_filter(time_step);
 
     log_estimator(estimated_state);
 
     bool new_data = false;
+    int counter = 0;
 
     while (ros::ok())
     {
         ROS_INFO_ONCE("Started estimating!");
         filter_imu();
-        print_pose_estimator_status(cartesian_pose);
+        print_pose_estimator_status();
 
         if (new_gps && !is_first_gps)
         {
@@ -332,6 +347,16 @@ int main(int argc, char **argv)
         }
 
         publish_filtered_data(sensor_kit_data_msg, filter_publisher);
+
+        if (counter == convergence_var)
+        {
+            kf_converged = true;
+            counter = 0;
+        }
+        else
+        {
+            counter++;
+        }
 
         ros::spinOnce();
         loop_rate.sleep();
