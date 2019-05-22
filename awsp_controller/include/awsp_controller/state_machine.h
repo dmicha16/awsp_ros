@@ -1,6 +1,6 @@
-//
-// Created by davidm on 4/27/19.
-//
+#ifndef PROJECT_STATE_MACHINE_H
+#define PROJECT_STATE_MACHINE_H
+
 #include "awsp_controller/dynamic_parameters.h"
 #include "awsp_controller/pd_controller.h"
 #include "awsp_pose_estimator/awsp_pose_estimator_lib.h"
@@ -11,9 +11,6 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
-
-#ifndef PROJECT_STATE_MACHINE_H
-#define PROJECT_STATE_MACHINE_H
 
 gps_position gps_data;
 imu_data imu_data;
@@ -465,7 +462,7 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
     }
 }
 
-    int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publisher)
+int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publisher)
 {
     ros::Rate loop_rate(10);
 
@@ -566,6 +563,8 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
         {
             motor_status.left_motor_pwm = boat_testing_params.pwm_left;
             motor_status.right_motor_pwm = boat_testing_params.pwm_right;
+            motor_status.left_motor_force = boat_testing_params.force_left;
+            motor_status.right_motor_force = boat_testing_params.force_right;
 
 	        right_esc.setSpeed(boat_testing_params.pwm_right);
 	        left_esc.setSpeed(boat_testing_params.pwm_left);
@@ -599,8 +598,6 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
 
         state::print_boat_testing_status(boat_testing_params);
 
-        motor_status.left_motor_force = boat_testing_params.force_left;
-        motor_status.right_motor_force = boat_testing_params.force_right;
         motor_status.left_esc_alive = left_esc_alive;
         motor_status.right_esc_alive = right_esc_alive;
         motor_status.esc_alive = esc_alive;
