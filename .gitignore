@@ -7,6 +7,7 @@ awsp_scripts/awsp_setup_pifi.sh
 awsp_logger/log/*
 awsp_logger/log_estimate/*
 awsp_logger/before_sunday_19/*
+awsp_logger/sunday_19/*
 awsp_gnss_l86_interface/log/*
 awsp_scripts/*
 

@@ -285,7 +285,7 @@ int main(int argc, char **argv)
     {
         ROS_INFO("Waiting for GPS data...");
         ros::Duration(0.5).sleep(); // sleep for half a second
-        ros::ros::spinOnce();
+        ros::spinOnce();
     }
 
     gps_data.latitude = 55;
