@@ -18,8 +18,6 @@
 #include "awsp_msgs/MotorStatus.h"
 #include "awsp_msgs/CartesianError.h"
 
-#include <eigen3/Eigen/Dense>
-
 #include "awsp_srvs/SetGoalThreshold.h"
 #include "awsp_srvs/SetGNSSGoal.h"
 #include "awsp_srvs/UseObstacleAvoidance.h"
@@ -149,14 +147,6 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "awsp_controller_node");
     ros::NodeHandle n;
-
-//    using Eigen::MatrixXd;
-    Eigen::MatrixXd m(2,2);
-    m(0,0) = 3;
-    m(1,0) = 2.5;
-    m(0,1) = -1;
-    m(1,1) = m(1,0) + m(0,1);
-    std::cout << m << std::endl;
 
     // Setup subscribers
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);

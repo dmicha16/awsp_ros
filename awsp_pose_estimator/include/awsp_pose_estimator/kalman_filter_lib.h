@@ -21,8 +21,8 @@ class KalmanFilter
     private:
     float t_s;                                          // time step
     float pi = 3.14159265359;                           // the number pi
-    float X_u;                                          // Damping in surge
-    float N_r;                                          // Damping in yaw
+    float X_u = 5;                                          // Damping in surge
+    float N_r = 17;                                          // Damping in yaw
     float surge_damping_coeffs[2] = {3.16, 14.62};         // damping coefficients around the velocity switching points
     float yaw_damping_coeffs[3] = {17.16, 32.17, 37.08};   // damping coefficients around the velocity switching points
     float velocity_switch_surge = 3.6;                  // velocity point at which the damping coefficient is switched

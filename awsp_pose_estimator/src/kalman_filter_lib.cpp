@@ -6,7 +6,7 @@
 KalmanFilter::KalmanFilter(float time_step)
 {
     t_s = time_step;
-    ROS_INFO("do we get her3.1");
+
     x_prior.resize(6);
     x_post.resize(6);
     z_prediction.resize(6);
@@ -15,7 +15,6 @@ KalmanFilter::KalmanFilter(float time_step)
     x_post << 0, 0, 0, 0, 0, 0;
     z_prediction << 0, 0, 0, 0, 0, 0;
     z_measurement << 0, 0, 0, 0, 0, 0;
-    ROS_INFO("do we get her3.2");
 
     P_prior.resize(6,6);
     P_post.resize(6,6);
@@ -30,7 +29,6 @@ KalmanFilter::KalmanFilter(float time_step)
         0, 0, 0, 1, 0, 0,
         0, 0, 0, 0, 1, 0,
         0, 0, 0, 0, 0, 1;
-
 
     K.resize(6,6);
 
@@ -100,13 +98,14 @@ state_vector KalmanFilter::estimate_state(float left_prop_force, float right_pro
     z_measurement(4) = heading;
     z_measurement(5) = ang_vel;
 
-    set_damping_surge();
-    set_damping_yaw();
+//    set_damping_surge();
+//    set_damping_yaw();
 
     x_prior = Phi * x_post + Gamma * u;
     z_prediction = H * x_prior;
+
     P_prior = Phi * P_post * Phi.transpose() + Q;
-//    P_prior = Phi + Q;
+
     K = P_prior * H.transpose() * (H * P_prior * H.transpose() + R).inverse();
     x_post = x_prior + K * (z_measurement - z_prediction);
     P_post = (I  - K * H) * P_prior;

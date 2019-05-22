@@ -187,7 +187,7 @@ void print_pose_estimator_status(cart_pose cartesian_pose)
 }
 
 bool goal_to_j0(awsp_srvs::GoalToJ0::Request  &req,
-        awsp_srvs::GoalToJ0::Response &res)
+                awsp_srvs::GoalToJ0::Response &res)
 {
     /* this GNSS has to be transformed into the J0 frame and returned as
      * a goal of x and y in that J0 frame
@@ -198,7 +198,7 @@ bool goal_to_j0(awsp_srvs::GoalToJ0::Request  &req,
 }
 
 bool get_convergence(awsp_srvs::GetConvergence::Request  &req,
-                awsp_srvs::GetConvergence::Response &res)
+                     awsp_srvs::GetConvergence::Response &res)
 {
     //Populate this once we have determined that we are indeed converging!
 //    if (kf.converged)
@@ -219,24 +219,24 @@ void log_estimator(state_vector estimated_state)
     std::string ready_to_move_boat;
 
     log_stream << std::fixed << std::setprecision(7)
-            << gps_data.latitude
-            << "," << gps_data.longitude
-            << "," << gps_data.speed
-            << "," << gps_data.true_course
-            << "," << imu_data.acceleration.x
-            << "," << imu_data.acceleration.y
-            << "," << imu_data.yaw_vel
-            << "," << filtered_imu.acceleration.x
-            << "," << filtered_imu.acceleration.y
-            << "," << filtered_imu.gyro.z
-            << "," << motor_status.left_motor_force
-            << "," << motor_status.right_motor_force
-            << "," << estimated_state.x_pos
-            << "," << estimated_state.y_pos
-            << "," << estimated_state.vel
-            << "," << estimated_state.acc
-            << "," << estimated_state.heading
-            << "," << estimated_state.ang_vel;
+               << gps_data.latitude
+               << "," << gps_data.longitude
+               << "," << gps_data.speed
+               << "," << gps_data.true_course
+               << "," << imu_data.acceleration.x
+               << "," << imu_data.acceleration.y
+               << "," << imu_data.yaw_vel
+               << "," << filtered_imu.acceleration.x
+               << "," << filtered_imu.acceleration.y
+               << "," << filtered_imu.gyro.z
+               << "," << motor_status.left_motor_force
+               << "," << motor_status.right_motor_force
+               << "," << estimated_state.x_pos
+               << "," << estimated_state.y_pos
+               << "," << estimated_state.vel
+               << "," << estimated_state.acc
+               << "," << estimated_state.heading
+               << "," << estimated_state.ang_vel;
 
     estimate_logger.additional_logger(log_stream.str(), global_log_file);
 }
@@ -244,6 +244,8 @@ void log_estimator(state_vector estimated_state)
 
 int main(int argc, char **argv)
 {
+    ROS_DEBUG("===== INITIALIZING POSE ESTIMATOR NODE =====");
+
     ros::init(argc, argv, "cartesian_pose_ekf_node");
     ros::NodeHandle n;
     ros::Rate loop_rate(10);
@@ -262,7 +264,6 @@ int main(int argc, char **argv)
     ros::ServiceServer goal_to_j0_srv = n.advertiseService("goal_to_j0", goal_to_j0);
     ros::ServiceServer get_conv_srv = n.advertiseService("get_convergence", get_convergence);
 
-
     dynamic_reconfigure::Server<awsp_pose_estimator::PoseParametersConfig> server_pose;
     dynamic_reconfigure::Server<awsp_pose_estimator::PoseParametersConfig>::CallbackType d;
 
@@ -280,11 +281,12 @@ int main(int argc, char **argv)
     acc.y = 0.0;
 
     // this class instance holds the J0 frame as of right now
-//    while (new_gps == false)
-//    {
-//        ROS_INFO("Waiting for GPS data...");
-//        ros::Duration(0.5).sleep(); // sleep for half a second
-//    }
+    while (new_gps == false)
+    {
+        ROS_INFO("Waiting for GPS data...");
+        ros::Duration(0.5).sleep(); // sleep for half a second
+        ros::ros::spinOnce();
+    }
 
     gps_data.latitude = 55;
     gps_data.longitude = 9;
@@ -303,18 +305,22 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-        ROS_INFO_ONCE("Started estimating");
+        ROS_INFO_ONCE("Started estimating!");
         filter_imu();
         print_pose_estimator_status(cartesian_pose);
 
         if (new_gps && !is_first_gps)
         {
+            new_gps = false;
             // cartesian_pose = pose.cartesian_pose(gps_data);
             x_y_cartesian = pose.gnss_to_cartesian(gps_data);
-            estimated_state = kalman_filter.estimate_state(motor_status.left_motor_force, motor_status.right_motor_force,
-                    x_y_cartesian.x, x_y_cartesian.y, gps_data.speed, filtered_imu.acceleration.x,
+            estimated_state = kalman_filter.estimate_state(motor_status.left_motor_force,
+                    motor_status.right_motor_force,
+                    x_y_cartesian.x, x_y_cartesian.y,
+                    gps_data.speed, filtered_imu.acceleration.x,
                     gps_data.true_course, filtered_imu.gyro.z);
-            new_gps = false;
+
+
             // Publish the states, uncomment and fill up with all the good stuff :) :
             curr_state_msg.x = estimated_state.x_pos;
             curr_state_msg.y = estimated_state.y_pos;
