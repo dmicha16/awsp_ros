@@ -115,8 +115,8 @@ state_vector KalmanFilter::estimate_state(float left_prop_force, float right_pro
     z_measurement(4) = heading;
     z_measurement(5) = ang_vel;
 
-//    set_damping_surge();
-//    set_damping_yaw();
+    set_damping_surge();
+    set_damping_yaw();
 
     x_prior = Phi * x_post + Gamma * u;
     z_prediction = H * x_prior;
