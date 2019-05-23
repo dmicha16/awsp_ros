@@ -58,6 +58,7 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::current_vessel_task.ready_to_move = config.ready_to_move;
             dynr::current_vessel_task.distance_error_tol = config.distance_error_tol;
             dynr::current_vessel_task.use_gps_waypoints = config.use_gps_waypoints;
+            
             break;
 
         case dynr::LEVEL::BOAT_TESTING:

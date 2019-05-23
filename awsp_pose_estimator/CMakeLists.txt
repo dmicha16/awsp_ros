@@ -10,7 +10,7 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   awsp_msgs
-  awsp_gnss_l86_interface
+awsp_gnss_l86_interface
   awsp_gy_88_interface
   awsp_logger
   roscpp

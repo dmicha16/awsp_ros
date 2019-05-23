@@ -4,6 +4,7 @@
 #include "awsp_msgs/CurrentState.h"
 #include "awsp_msgs/CartesianError.h"
 #include "awsp_pose_estimator/awsp_pose_estimator_lib.h"
+#include "awsp_logger/awsp_logger.h"
 
 #include "awsp_srvs/SetGoalThreshold.h"
 #include "awsp_srvs/SetGNSSGoal.h"
@@ -159,6 +160,60 @@ void generate_obstacle_waypoint()
             obstacle_waypoint.dist_to_waypoint * sin(obstacle_waypoint.heading_start + obstacle_waypoint.alpha * obstacle_waypoint.alpha_gain);
 }
 
+std::string global_log_file = "pp_log.csv";
+std::string directory = "/home/ubuntu/awsp_stable_ws/src/awsp_logger/log_pp/";
+Logger pp_logger(directory);
+
+void log_pp(bool obstacle_front, bool is_there_w, bool goal_reached, float cart_error_x,
+        float cart_error_y, float bearing_goal, float dist_error_obst_w, float dist_error_goal, float bearing_error)
+{
+    std::stringstream log_stream;
+    log_stream << std::fixed << std::setprecision(7)
+                << obstacle_data.front_obstacle
+                << "," << obstacle_data.front_obstacle_dist
+            << "," << obstacle_data.use_obstacle
+            << "," << current_state.position.x
+            << "," << current_state.position.y
+            << "," << goal_pose.goal_x
+            << "," << goal_pose.goal_y
+            << "," << obstacle_waypoint.heading_start
+            << "," << obstacle_waypoint.start_x
+            << "," << obstacle_waypoint.start_y
+            << "," << obstacle_waypoint.w_x
+            << "," << obstacle_waypoint.w_y
+            << "," << obstacle_waypoint.theta
+            << "," << obstacle_waypoint.dist_to_waypoint
+            << "," << obstacle_front
+            << "," << is_there_w
+            << "," << goal_reached
+            << "," << cart_error_x
+            << "," << cart_error_y
+            << "," << bearing_goal
+            << "," << bearing_error
+            << "," << dist_error_obst_w
+            << "," << dist_error_goal;
+
+    pp_logger.additional_logger(log_stream.str(), global_log_file);
+}
+
+void print_pp(bool obstacle_front, bool is_there_w, bool goal_reached, float bearing_error, float dist_error_obst_w, float dist_error_goal)
+{
+//  ROS_INFO_STREAM("[GOAL GPS LAT           ] " << goal_gps_data.latitude);
+    ROS_INFO_STREAM("[OBSTACLE FRONT         ] " << obstacle_data.front_obstacle);
+    ROS_INFO_STREAM("[OBSTACLE FRONT DIST    ] " << obstacle_data.front_obstacle_dist);
+
+    ROS_INFO_STREAM("[W X                    ] " << obstacle_waypoint.w_x);
+    ROS_INFO_STREAM("[W Y                    ] " << obstacle_waypoint.w_y);
+    ROS_INFO_STREAM("[BEARING ERROR          ] " << bearing_error);
+    ROS_INFO_STREAM("[DIST ERROR W           ] " << dist_error_obst_w);
+    ROS_INFO_STREAM("[DIST ERROR GOAL        ] " << dist_error_goal);
+    ROS_INFO_STREAM("[OBSTACLE FRONT 2       ] " << obstacle_front);
+    ROS_INFO_STREAM("[IS THERE W             ] " << is_there_w);
+    ROS_INFO_STREAM("[GOAL REACHED           ] " << goal_reached);
+
+    ROS_INFO("================================================");
+}
+
 void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
                              ros::ServiceClient goal_to_j0_client, awsp_srvs::GoalToJ0 goal_to_j0_srv,
                              ros::Publisher cart_error_pub)
@@ -169,7 +224,7 @@ void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
     bool is_there_w = false;
     bool goal_reached = false;
     ros::Rate loop_rate(10);
-    float bearing_goal;
+    float bearing_goal, bearing_error;
     float cart_error_x, cart_error_y, dist_error_obst_w, dist_error_goal;
 
     while (ros::ok())
@@ -220,6 +275,7 @@ void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
         }
 
         bearing_goal = atan2(cart_error_y, cart_error_x);
+        bearing_error = bearing_goal - current_state.heading;
         cart_error_msg.bearing_error = bearing_goal - current_state.heading;
         cart_error_msg.cart_error_x = cart_error_x;
         cart_error_msg.cart_error_y = cart_error_y;
@@ -237,11 +293,14 @@ void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
         else
             cart_error_msg.goal_reached = false;
 
-
         cart_error_pub.publish(cart_error_msg);
 
         if (goal_reached)
             break;
+
+        print_pp(obstacle_front, is_there_w, goal_reached, bearing_error, dist_error_obst_w, dist_error_goal);
+        log_pp(obstacle_front, is_there_w, goal_reached, cart_error_x, cart_error_y, bearing_goal,
+                dist_error_obst_w, dist_error_goal, bearing_error);
 
         loop_rate.sleep();
         ros::spinOnce();
@@ -260,7 +319,7 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
     bool obstacle_front = false;
     bool goal_reached = false;
     bool is_there_w = false;
-    float bearing_goal;
+    float bearing_goal, bearing_error;
     ros::Rate loop_rate(10);
     float cart_error_x, cart_error_y, dist_error_obst_w, dist_error_goal;
 
@@ -314,6 +373,7 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
         }
 
         bearing_goal = atan2(cart_error_y, cart_error_x);
+        bearing_error = bearing_goal - current_state.heading;
         cart_error_msg.bearing_error = bearing_goal - current_state.heading;
         cart_error_msg.cart_error_x = cart_error_x;
         cart_error_msg.cart_error_y = cart_error_y;
@@ -342,6 +402,10 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
 
         if (goal_reached)
             break;
+
+        print_pp(obstacle_front, is_there_w, goal_reached, bearing_error, dist_error_obst_w, dist_error_goal);
+        log_pp(obstacle_front, is_there_w, goal_reached, cart_error_x, cart_error_y, bearing_goal,
+               dist_error_obst_w, dist_error_goal, bearing_error);
 
         loop_rate.sleep();
         ros::spinOnce();

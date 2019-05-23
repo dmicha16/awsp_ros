@@ -185,6 +185,9 @@ void print_pose_estimator_status()
     ROS_DEBUG_STREAM("[EST HEADING            ] " << estimated_state.heading);
     ROS_DEBUG_STREAM("[EST ANGULAR VEL        ] " << estimated_state.ang_vel);
 
+    ROS_DEBUG_STREAM("[MOTOR STATUS LEFT      ] " << motor_status.left_motor_force);
+    ROS_DEBUG_STREAM("[MOTOR STATUS RIGHT     ] " << motor_status.right_motor_force);
+
     ROS_DEBUG_STREAM("[IMU FILTER METHOD      ] " << dynr_p::low_pass_filtering_config.filtering_mode);
     ROS_DEBUG_STREAM("[FILTER WINDOW SIZE     ] " << dynr_p::low_pass_filtering_config.window_size);
     ROS_DEBUG_STREAM("[ALPHA WEIGHT           ] " << dynr_p::low_pass_filtering_config.alpha_weight);
@@ -203,6 +206,8 @@ bool goal_to_j0(awsp_srvs::GoalToJ0::Request  &req,
     goal_gps_data.latitude = (float)req.goal_lat;
     goal_gps_data.longitude = (float)req.goal_long;
     coordinates_2d j0_goals = pose.gnss_to_cartesian(goal_gps_data);
+    cartesian_ref.position.x = j0_goals.x;
+    cartesian_ref.position.y = j0_goals.y;
     res.j0_goal_x = j0_goals.x;
     res.j0_goal_y = j0_goals.y;
     return true;
@@ -227,7 +232,6 @@ Logger estimate_logger(directory);
 void log_estimator(state_vector estimated_state)
 {
     std::stringstream log_stream;
-    std::string ready_to_move_boat;
 
     log_stream << std::fixed << std::setprecision(7)
                << gps_data.latitude
@@ -317,13 +321,13 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-        log_estimator(estimated_state);
+
         ROS_INFO_ONCE("Started estimating!");
         filter_imu();
-        print_pose_estimator_status();
-
-        if (new_gps && !is_first_gps)
-        {
+//        if (new_gps && !is_first_gps)
+//        {
+            log_estimator(estimated_state);
+            print_pose_estimator_status();
             new_gps = false;
             // cartesian_pose = pose.cartesian_pose(gps_data);
             x_y_cartesian = pose.gnss_to_cartesian(gps_data);
@@ -342,7 +346,7 @@ int main(int argc, char **argv)
             curr_state_msg.heading = estimated_state.heading;
             curr_state_msg.angular_vel = estimated_state.ang_vel;
             state_publisher.publish(curr_state_msg);
-        }
+//        }
 
         publish_filtered_data(sensor_kit_data_msg, filter_publisher);
 

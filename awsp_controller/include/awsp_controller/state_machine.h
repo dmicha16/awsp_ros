@@ -589,11 +589,11 @@ int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publi
 	        left_esc.setSpeed(1500);
         }
 
-        if (!esc_alive)
-        {
-            motor_status.left_motor_force = 0;
-            motor_status.right_motor_force = 0;
-        }
+//        if (!esc_alive)
+//        {
+//            motor_status.left_motor_force = 0;
+//            motor_status.right_motor_force = 0;
+//        }
 
         state::print_boat_testing_status(boat_testing_params);
 
