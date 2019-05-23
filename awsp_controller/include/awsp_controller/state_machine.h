@@ -49,8 +49,8 @@ struct BoatControlParams
 {
     coordinates_2d cartesian_error;
     float distance_error;
-    float bearing_goal;
     float bearing_error;
+    float bearing_goal;
 
 // Forces and torques
     float force_drive;
@@ -409,7 +409,6 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
         boat_control_params.cartesian_error.x = cartesian_error.cart_error_x;
         boat_control_params.cartesian_error.y = cartesian_error.cart_error_y;
         boat_control_params.distance_error = sqrt(pow(boat_control_params.cartesian_error.x, 2) + pow(boat_control_params.cartesian_error.y, 2));
-        boat_control_params.bearing_goal = atan2(boat_control_params.cartesian_error.y, boat_control_params.cartesian_error.x);
         boat_control_params.bearing_error = cartesian_error.bearing_error;
 
         if (boat_control_params.bearing_error > M_PI)

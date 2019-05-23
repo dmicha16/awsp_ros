@@ -1,4 +1,5 @@
 float64 cart_error_x
 float64 cart_error_y
 float64 bearing_error
+float64 bearing_goal
 bool goal_reached

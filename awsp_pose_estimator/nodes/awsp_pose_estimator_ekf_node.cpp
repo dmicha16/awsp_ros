@@ -306,20 +306,18 @@ int main(int argc, char **argv)
         ros::spinOnce();
     }
 
-
     is_first_gps = false;
 //    CartesianPose pose(gps_data);
     pose.set_first_ref(gps_data);
     float time_step = 0.1;
     KalmanFilter kalman_filter(time_step);
 
-    log_estimator(estimated_state);
-
     bool new_data = false;
     int counter = 0;
 
     while (ros::ok())
     {
+        log_estimator(estimated_state);
         ROS_INFO_ONCE("Started estimating!");
         filter_imu();
         print_pose_estimator_status();

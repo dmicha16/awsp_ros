@@ -85,9 +85,9 @@ coordinates_2d CartesianPose::cartesian_position_(gps_position gps)
     gps = radians_(gps);
 
     float delta_phi = gps.latitude - ref_.latitude;
-    float delta_lamdda = gps.longitude - ref_.longitude;
+    float delta_lambda = gps.longitude - ref_.longitude;
     float first = pow(sin(delta_phi / 2), 2);
-    float last = pow(sin(delta_lamdda / 2), 2);
+    float last = pow(sin(delta_lambda / 2), 2);
     float central_angle = 2 * asin(sqrt(first + cos(ref_.latitude) * cos(gps.latitude) * last));
     float great_circle_dist = EARTH_R * central_angle;
     float polar_angle = bearing_(ref_, gps);
@@ -175,9 +175,9 @@ coordinates_2d CartesianPose::gnss_to_cartesian(gps_position gps)
     gps = radians_(gps);
 
     float delta_phi = gps.latitude - ref_.latitude;
-    float delta_lamdda = gps.longitude - ref_.longitude;
+    float delta_lambda = gps.longitude - ref_.longitude;
     float first = pow(sin(delta_phi / 2), 2);
-    float last = pow(sin(delta_lamdda / 2), 2);
+    float last = pow(sin(delta_lambda / 2), 2);
     float central_angle = 2 * asin(sqrt(first + cos(ref_.latitude) * cos(gps.latitude) * last));
     float great_circle_dist = EARTH_R * central_angle;
     float polar_angle = bearing_(ref_, gps);

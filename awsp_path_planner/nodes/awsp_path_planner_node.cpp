@@ -18,8 +18,8 @@
 struct ObstacleWaypoint
 {
     float start_x, start_y, heading_start;
-    float obstacle_radius = 0.5;
-    float obstacle_length = 1;
+    float boat_radius = 0.5;
+    float obstacle_length = boat_radius;
     float theta;
     float alpha_gain = 2, alpha;
     float w_x, w_y;
@@ -43,6 +43,7 @@ struct GoalGNSSData
     float goal_long;
     bool use_waypoints = false;
     float distance_thresh;
+    bool evaluate_task = false;
 } goal_gnss_data;
 
 cart_pose current_state, goal_pose;
@@ -116,6 +117,7 @@ bool set_gnss_goal(awsp_srvs::SetGNSSGoal::Request  &req,
     goal_gnss_data.goal_lat = (float)req.goal_lat;
     goal_gnss_data.goal_long = (float)req.goal_long;
     goal_gnss_data.use_waypoints = (bool)req.use_waypoints;
+    goal_gnss_data.evaluate_task = true;
 
     return true;
 }
@@ -146,7 +148,7 @@ void ObstacleWaypoint::set_start_coords()
 void generate_obstacle_waypoint()
 {
     obstacle_waypoint.theta = abs(atan2(obstacle_waypoint.obstacle_length, obstacle_data.front_obstacle_dist));
-    obstacle_waypoint.alpha = 2 * obstacle_waypoint.theta;
+    obstacle_waypoint.alpha = obstacle_waypoint.theta;
 
     obstacle_waypoint.dist_to_waypoint = obstacle_data.front_obstacle_dist /
             cos(obstacle_waypoint.alpha * obstacle_waypoint.alpha_gain);
@@ -164,8 +166,10 @@ void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
     bool is_transformed = false;
     bool start_coord_set = false;
     bool obstacle_front = false;
+    bool is_there_w = false;
     bool goal_reached = false;
     ros::Rate loop_rate(10);
+    float bearing_goal;
     float cart_error_x, cart_error_y, dist_error_obst_w, dist_error_goal;
 
     while (ros::ok())
@@ -179,35 +183,53 @@ void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
             is_transformed = true;
         }
 
-        if (!obstacle_front)
+        if (!obstacle_front && !is_there_w)
         {
             cart_error_x = goal_pose.goal_x - current_state.position.x;
             cart_error_y = goal_pose.goal_y - current_state.position.y;
             dist_error_goal = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
         }
-        else
+        else if (obstacle_front && !is_there_w)
         {
-            if(!start_coord_set)
-            {
-                obstacle_waypoint.set_start_coords();
-                start_coord_set = true;
-            }
+            obstacle_waypoint.set_start_coords();
             generate_obstacle_waypoint();
+            is_there_w = true;
+
+            cart_error_x = obstacle_waypoint.w_x - current_state.position.x;
+            cart_error_y = obstacle_waypoint.w_y - current_state.position.y;
+            dist_error_obst_w = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
+            if (!obstacle_data.front_obstacle)
+                obstacle_front = false;
+        }
+        else if (obstacle_front && is_there_w)
+        {
+            obstacle_waypoint.set_start_coords();
+            generate_obstacle_waypoint();
+
+            cart_error_x = obstacle_waypoint.w_x - current_state.position.x;
+            cart_error_y = obstacle_waypoint.w_y - current_state.position.y;
+            dist_error_obst_w = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
+            if (!obstacle_data.front_obstacle)
+                obstacle_front = false;
+        }
+        else if (!obstacle_front && is_there_w)
+        {
             cart_error_x = obstacle_waypoint.w_x - current_state.position.x;
             cart_error_y = obstacle_waypoint.w_y - current_state.position.y;
             dist_error_obst_w = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
         }
 
-        cart_error_msg.bearing_error = atan2(cart_error_y, cart_error_x);
+        bearing_goal = atan2(cart_error_y, cart_error_x);
+        cart_error_msg.bearing_error = bearing_goal - current_state.heading;
         cart_error_msg.cart_error_x = cart_error_x;
         cart_error_msg.cart_error_y = cart_error_y;
 
-        if (dist_error_obst_w < goal_gnss_data.distance_thresh && obstacle_front)
+        if (dist_error_obst_w < goal_gnss_data.distance_thresh && is_there_w)
         {
-            obstacle_front = false;
+            is_there_w = false;
             cart_error_msg.goal_reached = false;
         }
-        else if (dist_error_goal < goal_gnss_data.distance_thresh && !obstacle_front)
+        else if (dist_error_goal < goal_gnss_data.distance_thresh && !is_there_w)
         {
             cart_error_msg.goal_reached = true;
             goal_reached = true;
@@ -237,6 +259,8 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
     bool start_coord_set = false;
     bool obstacle_front = false;
     bool goal_reached = false;
+    bool is_there_w = false;
+    float bearing_goal;
     ros::Rate loop_rate(10);
     float cart_error_x, cart_error_y, dist_error_obst_w, dist_error_goal;
 
@@ -253,35 +277,53 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
             is_transformed = true;
         }
 
-        if (!obstacle_front)
+        if (!obstacle_front && !is_there_w)
         {
             cart_error_x = goal_pose.goal_x - current_state.position.x;
             cart_error_y = goal_pose.goal_y - current_state.position.y;
             dist_error_goal = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
         }
-        else
+        else if (obstacle_front && !is_there_w)
         {
-            if(!start_coord_set)
-            {
-                obstacle_waypoint.set_start_coords();
-                start_coord_set = true;
-            }
+            obstacle_waypoint.set_start_coords();
             generate_obstacle_waypoint();
+            is_there_w = true;
+
+            cart_error_x = obstacle_waypoint.w_x - current_state.position.x;
+            cart_error_y = obstacle_waypoint.w_y - current_state.position.y;
+            dist_error_obst_w = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
+            if (!obstacle_data.front_obstacle)
+                obstacle_front = false;
+        }
+        else if (obstacle_front && is_there_w)
+        {
+            obstacle_waypoint.set_start_coords();
+            generate_obstacle_waypoint();
+
+            cart_error_x = obstacle_waypoint.w_x - current_state.position.x;
+            cart_error_y = obstacle_waypoint.w_y - current_state.position.y;
+            dist_error_obst_w = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
+            if (!obstacle_data.front_obstacle)
+                obstacle_front = false;
+        }
+        else if (!obstacle_front && is_there_w)
+        {
             cart_error_x = obstacle_waypoint.w_x - current_state.position.x;
             cart_error_y = obstacle_waypoint.w_y - current_state.position.y;
             dist_error_obst_w = sqrt(pow(cart_error_x, 2) + pow(cart_error_y, 2));
         }
 
-        cart_error_msg.bearing_error = atan2(cart_error_y, cart_error_x);
+        bearing_goal = atan2(cart_error_y, cart_error_x);
+        cart_error_msg.bearing_error = bearing_goal - current_state.heading;
         cart_error_msg.cart_error_x = cart_error_x;
         cart_error_msg.cart_error_y = cart_error_y;
 
-        if (dist_error_obst_w < goal_gnss_data.distance_thresh && obstacle_front)
+        if (dist_error_obst_w < goal_gnss_data.distance_thresh && is_there_w)
         {
-            obstacle_front = false;
+            is_there_w = false;
             cart_error_msg.goal_reached = false;
         }
-        else if (dist_error_goal < goal_gnss_data.distance_thresh && !obstacle_front)
+        else if (dist_error_goal < goal_gnss_data.distance_thresh && !is_there_w)
         {
             waypoint_counter++;
             is_transformed = false;
@@ -295,7 +337,6 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
         }
         else
             cart_error_msg.goal_reached = false;
-
 
         cart_error_pub.publish(cart_error_msg);
 
@@ -332,13 +373,16 @@ int main(int argc, char **argv)
 
     while(ros::ok())
     {
-        if(!goal_gnss_data.use_waypoints)
+        if (goal_gnss_data.evaluate_task)
         {
-            navigate_to_single_goal(cart_error_msg, goal_to_j0_client, goal_to_j0_srv, cart_error_pub);
-        }
-        else if (goal_gnss_data.use_waypoints)
-        {
-            navigate_to_waypoints(cart_error_msg, goal_to_j0_client, goal_to_j0_srv, cart_error_pub);
+            goal_gnss_data.evaluate_task = false;
+            if (!goal_gnss_data.use_waypoints)
+            {
+                navigate_to_single_goal(cart_error_msg, goal_to_j0_client, goal_to_j0_srv, cart_error_pub);
+            } else if (goal_gnss_data.use_waypoints)
+            {
+                navigate_to_waypoints(cart_error_msg, goal_to_j0_client, goal_to_j0_srv, cart_error_pub);
+            }
         }
 
         loop_rate.sleep();
