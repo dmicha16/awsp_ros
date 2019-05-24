@@ -58,7 +58,7 @@ struct CurrentVesselTask
     float goal_latitude;
     float goal_longitude;
     bool ready_to_move;
-    int distance_error_tol;
+    float distance_error_tol;
     bool log_goal_points = true;
     bool use_gps_waypoints = false;
 

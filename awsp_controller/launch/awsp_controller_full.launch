@@ -1,4 +1,4 @@
-<launch>
+    <launch>
     <env name="ROSCONSOLE_CONFIG_FILE" value="$(find awsp_controller)/config/rosconsole.conf"/>
     <!--<env name="ROSCONSOLE_CONFIG_FILE" value="$(find awsp_pose_estimator)/config/rosconsole.conf"/>-->
 
@@ -22,7 +22,7 @@
             pkg = "awsp_obstacle_detector"
             name = "awsp_obstacle_detector_node"
             type = "awsp_obstacle_detector_node"
-            args = "23 24 300 30000"
+            args = "23 24 400 30000"
             required = "true"
     />
 

@@ -6,6 +6,7 @@
             pkg = "awsp_pose_estimator"
             name = "awsp_pose_estimator_ekf_node"
             type = "awsp_pose_estimator_ekf_node"
+            args = "100"
             output="screen"
             required = "true"
     />

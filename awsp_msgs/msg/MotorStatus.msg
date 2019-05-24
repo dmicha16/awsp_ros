@@ -1,0 +1,7 @@
+int64 left_motor_force
+int64 right_motor_force
+int64 left_motor_pwm
+int64 right_motor_pwm
+bool left_esc_alive
+bool right_esc_alive
+bool esc_alive

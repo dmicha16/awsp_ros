@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   awsp_gy_88_interface
   awsp_logger
   awsp_msgs
+  awsp_srvs
   roscpp
   std_msgs
   message_generation
@@ -114,7 +115,7 @@ generate_dynamic_reconfigure_options(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES
-  CATKIN_DEPENDS roscpp message_runtime awsp_msgs
+  CATKIN_DEPENDS roscpp message_runtime awsp_msgs awsp_srvs
 #  DEPENDS system_lib
 )
 
@@ -166,7 +167,7 @@ add_dependencies(awsp_logger ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-  awsp_pose_estimator
+  awsp_pose_estimator_lib
   awsp_logger
   force_to_pwm
   gnss_l86_lib

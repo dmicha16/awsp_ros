@@ -1,0 +1,3 @@
+bool use_obstacle_avoidance
+---
+bool acknowledged

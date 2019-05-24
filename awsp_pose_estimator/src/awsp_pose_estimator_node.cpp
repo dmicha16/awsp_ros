@@ -5,7 +5,7 @@
 #include <string>
 #include <ros/console.h>
 #include "ros/ros.h"
-#include "awsp_pose_estimator/awsp_pose_estimator.h"
+#include "awsp_pose_estimator/awsp_pose_estimator_lib.h"
 #include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 #include "awsp_gy_88_interface/gy_88_lib.h"
 #include "awsp_msgs/GnssData.h"

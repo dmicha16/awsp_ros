@@ -5,28 +5,46 @@
 #include <string>
 #include <ros/console.h>
 #include "ros/ros.h"
-#include "awsp_pose_estimator/awsp_pose_estimator.h"
+#include "awsp_pose_estimator/awsp_pose_estimator_lib.h"
+#include "awsp_pose_estimator/kalman_filter_lib.h"
 #include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 #include "awsp_gy_88_interface/gy_88_lib.h"
 #include "awsp_sensor_filter_kit/awsp_sensor_filter_kit_lib.h"
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
 #include "awsp_msgs/SensorKitData.h"
-#include "awsp_msgs/GoalCoordinates.h"
-#include "awsp_msgs/CartesianPose.h"
+#include "awsp_msgs/CurrentState.h"
+#include "awsp_msgs/MotorStatus.h"
 #include "awsp_pose_estimator/pose_parameters.h"
+#include "awsp_logger/awsp_logger.h"
+
+#include "awsp_srvs/GoalToJ0.h"
+#include "awsp_srvs/GetConvergence.h"
 
 #include <dynamic_reconfigure/server.h>
 #include <awsp_pose_estimator/PoseParametersConfig.h>
 
-gps_position gps_data;
-gps_position goal_gps_data;
+gps_position gps_data, goal_gps_data;
 imu_data imu_data, filtered_imu;
+
+CartesianPose pose;
+
+state_vector estimated_state;
+coordinates_2d x_y_cartesian;
+
+bool kf_converged = false;
+
 cart_pose cartesian_ref;
 bool new_imu = false;
 bool new_gps = false;
 bool new_goal = false;
 FilterKit filter_kit(6);
+
+struct MotorStatus
+{
+    float left_motor_force;
+    float right_motor_force;
+} motor_status;
 
 void dynr_p_callback(awsp_pose_estimator::PoseParametersConfig &config, uint32_t level)
 {
@@ -42,8 +60,17 @@ void gnss_data_callback(const awsp_msgs::GnssData::ConstPtr& gnss_msg)
     gps_data.latitude = gnss_msg->latitude;
     gps_data.longitude = gnss_msg->longitude;
     gps_data.timestamp = gnss_msg->timestamp;
+    gps_data.true_course = gnss_msg->true_course;
+    gps_data.speed = gnss_msg->speed;
     new_gps = true;
 }
+
+void motor_status_callback(const awsp_msgs::MotorStatus::ConstPtr& motor_status_msg)
+{
+    motor_status.left_motor_force = motor_status_msg->left_motor_force;
+    motor_status.right_motor_force = motor_status_msg->right_motor_force;
+}
+
 
 void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
 {
@@ -61,13 +88,6 @@ void imu_data_callback(const awsp_msgs::Gy88Data::ConstPtr& imu_msg)
     imu_data.bearing = imu_msg->compass_angle;
     imu_data.timestamp = imu_msg->timestamp;
     new_imu = true;
-}
-
-void goal_coord_sub(const awsp_msgs::GoalCoordinates::ConstPtr& goal_msg)
-{
-    goal_gps_data.latitude = goal_msg->latitude;
-    goal_gps_data.longitude = goal_msg->longitude;
-    new_goal = true;
 }
 
 void filter_imu()
@@ -149,7 +169,7 @@ void publish_filtered_data(awsp_msgs::SensorKitData sensor_kit_data, ros::Publis
     filter_publisher.publish(sensor_kit_data);
 }
 
-void print_pose_estimator_status(cart_pose cartesian_pose)
+void print_pose_estimator_status()
 {
 //  ROS_DEBUG_STREAM("[GPS FIX STATUS         ] " << gps_data.fix);
     ROS_DEBUG_STREAM("[GOAL GPS LAT           ] " << goal_gps_data.latitude);
@@ -158,31 +178,106 @@ void print_pose_estimator_status(cart_pose cartesian_pose)
     ROS_DEBUG_STREAM("[GOAL X CART REF        ] " << cartesian_ref.position.x);
     ROS_DEBUG_STREAM("[GOAL Y CART REF        ] " << cartesian_ref.position.y);
 
-    ROS_DEBUG_STREAM("[CURR CART POSE X       ] " << cartesian_pose.position.x);
-    ROS_DEBUG_STREAM("[CURR CART POSE Y       ] " << cartesian_pose.position.y);
+    ROS_DEBUG_STREAM("[EST CART POSE X        ] " << estimated_state.x_pos);
+    ROS_DEBUG_STREAM("[EST CART POSE Y        ] " << estimated_state.y_pos);
+    ROS_DEBUG_STREAM("[EST VELOCITY           ] " << estimated_state.vel);
+    ROS_DEBUG_STREAM("[EST ACCELERATION       ] " << estimated_state.acc);
+    ROS_DEBUG_STREAM("[EST HEADING            ] " << estimated_state.heading);
+    ROS_DEBUG_STREAM("[EST ANGULAR VEL        ] " << estimated_state.ang_vel);
+
+    ROS_DEBUG_STREAM("[MOTOR STATUS LEFT      ] " << motor_status.left_motor_force);
+    ROS_DEBUG_STREAM("[MOTOR STATUS RIGHT     ] " << motor_status.right_motor_force);
 
     ROS_DEBUG_STREAM("[IMU FILTER METHOD      ] " << dynr_p::low_pass_filtering_config.filtering_mode);
     ROS_DEBUG_STREAM("[FILTER WINDOW SIZE     ] " << dynr_p::low_pass_filtering_config.window_size);
     ROS_DEBUG_STREAM("[ALPHA WEIGHT           ] " << dynr_p::low_pass_filtering_config.alpha_weight);
     ROS_DEBUG_STREAM("[FILTER ACCELEROMETER   ] " << dynr_p::low_pass_filtering_config.imu_acc);
     ROS_DEBUG_STREAM("[FILTER GYRO            ] " << dynr_p::low_pass_filtering_config.imu_gyro);
-//    ROS_DEBUG_STREAM("[ESTIMATED X VEL        ] " << filtered_imu.vel_x);
-//    ROS_DEBUG_STREAM("[ESTIMATED Y VEL        ] " << imu_data.vel_y);
-//    ROS_DEBUG_STREAM("[ESTIMATED Z VEL        ] " << imu_data.vel_z);
 
     ROS_DEBUG("================================================");
 }
 
+bool goal_to_j0(awsp_srvs::GoalToJ0::Request  &req,
+                awsp_srvs::GoalToJ0::Response &res)
+{
+    /* this GNSS has to be transformed into the J0 frame and returned as
+     * a goal of x and y in that J0 frame
+     */
+    goal_gps_data.latitude = (float)req.goal_lat;
+    goal_gps_data.longitude = (float)req.goal_long;
+    coordinates_2d j0_goals = pose.gnss_to_cartesian(goal_gps_data);
+    cartesian_ref.position.x = j0_goals.x;
+    cartesian_ref.position.y = j0_goals.y;
+    res.j0_goal_x = j0_goals.x;
+    res.j0_goal_y = j0_goals.y;
+    return true;
+}
+
+bool get_convergence(awsp_srvs::GetConvergence::Request  &req,
+                     awsp_srvs::GetConvergence::Response &res)
+{
+    //Populate this once we have determined that we are indeed converging!
+    if (kf_converged)
+        res.kf_is_converged = true;
+    else
+        res.kf_is_converged = false;
+
+    return true;
+}
+
+std::string global_log_file = "raw_estimate.csv";
+std::string directory = "/home/ubuntu/awsp_stable_ws/src/awsp_logger/log_estimate/";
+Logger estimate_logger(directory);
+
+void log_estimator(state_vector estimated_state)
+{
+    std::stringstream log_stream;
+
+    log_stream << std::fixed << std::setprecision(7)
+               << gps_data.latitude
+               << "," << gps_data.longitude
+               << "," << gps_data.speed
+               << "," << gps_data.true_course
+               << "," << imu_data.acceleration.x
+               << "," << imu_data.acceleration.y
+               << "," << imu_data.yaw_vel
+               << "," << filtered_imu.acceleration.x
+               << "," << filtered_imu.acceleration.y
+               << "," << filtered_imu.gyro.z
+               << "," << motor_status.left_motor_force
+               << "," << motor_status.right_motor_force
+               << "," << estimated_state.x_pos
+               << "," << estimated_state.y_pos
+               << "," << estimated_state.vel
+               << "," << estimated_state.acc
+               << "," << estimated_state.heading
+               << "," << estimated_state.ang_vel;
+
+    estimate_logger.additional_logger(log_stream.str(), global_log_file);
+}
+
+
 int main(int argc, char **argv)
 {
+    ROS_DEBUG("===== INITIALIZING POSE ESTIMATOR NODE =====");
+
     ros::init(argc, argv, "cartesian_pose_ekf_node");
     ros::NodeHandle n;
-    ros::Publisher publisher = n.advertise<awsp_msgs::CartesianPose>("cartesian_pose", 1000);
+    ros::Rate loop_rate(10);
+    // Setup publishers
+    ros::Publisher state_publisher = n.advertise<awsp_msgs::CurrentState>("current_state", 1000);
     ros::Publisher filter_publisher = n.advertise<awsp_msgs::SensorKitData>("sensor_kit_data", 1000);
+
+    awsp_msgs::CurrentState curr_state_msg;
+    awsp_msgs::SensorKitData sensor_kit_data_msg;
+
+    // Setup subscribers
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
-    ros::Subscriber goal_sub = n.subscribe("goal_coord", 100, goal_coord_sub);
-    ros::Rate loop_rate(10);
+    ros::Subscriber motor_sub = n.subscribe("motor_status", 1000, motor_status_callback);
+
+    ros::ServiceServer goal_to_j0_srv = n.advertiseService("goal_to_j0", goal_to_j0);
+    ros::ServiceServer get_conv_srv = n.advertiseService("get_convergence", get_convergence);
 
     dynamic_reconfigure::Server<awsp_pose_estimator::PoseParametersConfig> server_pose;
     dynamic_reconfigure::Server<awsp_pose_estimator::PoseParametersConfig>::CallbackType d;
@@ -190,8 +285,12 @@ int main(int argc, char **argv)
     d = boost::bind(&dynr_p_callback, _1, _2);
     server_pose.setCallback(d);
 
-    awsp_msgs::CartesianPose cart_pose_msg;
-    awsp_msgs::SensorKitData sensor_kit_data_msg;
+    int convergence_var = 0;
+
+    if (argv[1] != "")
+        convergence_var = atoi(argv[1]);
+    else
+        convergence_var = 100;
 
     bool is_first_gps = true;
 
@@ -203,53 +302,63 @@ int main(int argc, char **argv)
     acc.x = 0.0;
     acc.y = 0.0;
 
-    CartesianPose pose(gps_data, gps_data, vel, acc, 0);
-    cart_pose cartesian_pose;
+    // this class instance holds the J0 frame as of right now
+    while (new_gps == false)
+    {
+        ROS_INFO("Waiting for GPS data...");
+        ros::Duration(0.5).sleep(); // sleep for half a second
+        ros::spinOnce();
+    }
+
+    is_first_gps = false;
+//    CartesianPose pose(gps_data);
+    pose.set_first_ref(gps_data);
+    float time_step = 0.1;
+    KalmanFilter kalman_filter(time_step);
 
     bool new_data = false;
+    int counter = 0;
 
     while (ros::ok())
     {
+
+        ROS_INFO_ONCE("Started estimating!");
         filter_imu();
-        print_pose_estimator_status(cartesian_pose);
-        if (new_goal)
-        {
-            cartesian_ref = pose.cartesian_pose(goal_gps_data);
-            new_goal = false;
-        }
-        // if (is_first_gps && new_imu)
-        if (is_first_gps && new_imu && new_gps)
-        {
-            pose = CartesianPose(gps_data, gps_data, vel, acc, imu_data.bearing);
-            cartesian_pose = pose.get_last_cartesian();
-            is_first_gps = false;
+//        if (new_gps && !is_first_gps)
+//        {
+            log_estimator(estimated_state);
+            print_pose_estimator_status();
             new_gps = false;
-            new_imu = false;
-            new_data = true;
-        }
-        // else if (!is_first_gps)
-        else if (new_gps && !is_first_gps)
-        {
-            cartesian_pose = pose.cartesian_pose(gps_data);
-            new_gps = false;
-            new_data = true;
-        }
-        else if (new_imu && !is_first_gps)
-        {
-            cartesian_pose = pose.cartesian_pose(filtered_imu);
-            new_imu = false;
-            new_data = true;
-        }
+            // cartesian_pose = pose.cartesian_pose(gps_data);
+            x_y_cartesian = pose.gnss_to_cartesian(gps_data);
+            estimated_state = kalman_filter.estimate_state(motor_status.left_motor_force,
+                    motor_status.right_motor_force,
+                    x_y_cartesian.x, x_y_cartesian.y,
+                    gps_data.speed, filtered_imu.acceleration.x,
+                    gps_data.true_course, filtered_imu.gyro.z);
 
 
-        // Publish the states:
-        cart_pose_msg.x = cartesian_pose.position.x;
-        cart_pose_msg.y = cartesian_pose.position.y;
-        cart_pose_msg.goal_x = cartesian_ref.position.x;
-        cart_pose_msg.goal_y = cartesian_ref.position.y;
-        publisher.publish(cart_pose_msg);
+            // Publish the states, uncomment and fill up with all the good stuff :) :
+            curr_state_msg.x = estimated_state.x_pos;
+            curr_state_msg.y = estimated_state.y_pos;
+            curr_state_msg.vel = estimated_state.vel;
+            curr_state_msg.acceleration = estimated_state.acc;
+            curr_state_msg.heading = estimated_state.heading;
+            curr_state_msg.angular_vel = estimated_state.ang_vel;
+            state_publisher.publish(curr_state_msg);
+//        }
 
         publish_filtered_data(sensor_kit_data_msg, filter_publisher);
+
+        if (counter == convergence_var)
+        {
+            kf_converged = true;
+            counter = 0;
+        }
+        else
+        {
+            counter++;
+        }
 
         ros::spinOnce();
         loop_rate.sleep();

@@ -2,18 +2,26 @@
 #include <ros/console.h>
 #include <math.h>
 #include "ros/ros.h"
+
 #include "awsp_controller/force_to_pwm.h"
 #include "awsp_controller/esc_lib.h"
+#include "awsp_controller/state_machine.h"
 #include "awsp_gnss_l86_interface/gnss_l86_lib.h"
 #include "awsp_gy_88_interface/gy_88_lib.h"
+
 #include "awsp_msgs/GnssData.h"
 #include "awsp_msgs/Gy88Data.h"
 #include "awsp_msgs/ObstacleData.h"
 #include "awsp_msgs/StateMachineStatus.h"
 #include "awsp_msgs/CartesianPose.h"
 #include "awsp_msgs/GoalCoordinates.h"
+#include "awsp_msgs/MotorStatus.h"
+#include "awsp_msgs/CartesianError.h"
 
-#include "awsp_controller/state_machine.h"
+#include "awsp_srvs/SetGoalThreshold.h"
+#include "awsp_srvs/SetGNSSGoal.h"
+#include "awsp_srvs/UseObstacleAvoidance.h"
+#include "awsp_srvs/GetConvergence.h"
 
 #include <dynamic_reconfigure/server.h>
 #include <awsp_controller/ParametersConfig.h>
@@ -50,17 +58,7 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::current_vessel_task.ready_to_move = config.ready_to_move;
             dynr::current_vessel_task.distance_error_tol = config.distance_error_tol;
             dynr::current_vessel_task.use_gps_waypoints = config.use_gps_waypoints;
-            break;
-        case dynr::LEVEL::CROSS_GROUP_LOG:
-//            dynr::general_config.log_general_config = config.log_general_config;
-//            dynr::control_gains.log_control_system_config = config.log_control_system_config;
-            break;
-        case dynr::LEVEL::DEBUGGING:
-//            dynr::debugging.log_gps_raw = config.log_gps_raw;
-//            dynr::debugging.log_gps_kalman = config.log_gps_kalman;
-//            dynr::debugging.log_imu_raw = config.log_imu_raw;
-//            dynr::debugging.log_imu_kalman = config.log_imu_kalman;
-//            dynr::debugging.log_state_machine = config.log_state_machine;
+            
             break;
 
         case dynr::LEVEL::BOAT_TESTING:
@@ -135,6 +133,13 @@ void cart_pose_callback(const awsp_msgs::CartesianPose::ConstPtr cart_pose_msg)
     cartesian_pose.goal_y = cart_pose_msg->goal_y;
 }
 
+void cartesian_error_callback(const awsp_msgs::CartesianError::ConstPtr cart_error_msg)
+{
+    cartesian_error.cart_error_x = cart_error_msg->cart_error_x;
+    cartesian_error.cart_error_y = cart_error_msg->cart_error_y;
+    cartesian_error.bearing_error = cart_error_msg->bearing_error;
+}
+
 int main(int argc, char **argv)
 {
     // ****************** Node Initialization ******************
@@ -143,15 +148,29 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "awsp_controller_node");
     ros::NodeHandle n;
+
+    // Setup subscribers
     ros::Subscriber gnss_sub = n.subscribe("gnss_data", 1000, gnss_data_callback);
     ros::Subscriber imu_sub = n.subscribe("gy_88_data", 1000, imu_data_callback);
     ros::Subscriber cart_pose_sub = n.subscribe("cartesian_pose", 1000, cart_pose_callback);
     ros::Subscriber obstacle_sub = n.subscribe("obstacle_data", 1000, obstacle_data_callback);
+    ros::Subscriber cart_error_sub = n.subscribe("cart_error", 1000, cartesian_error_callback);
 
+    // Setup publishers
     ros::Publisher publisher = n.advertise<awsp_msgs::StateMachineStatus>("state_machine", 1000);
-    ros::Publisher coord_publisher = n.advertise<awsp_msgs::GoalCoordinates>("goal_coord", 1000);
+    ros::Publisher motor_publisher = n.advertise<awsp_msgs::MotorStatus>("motor_status", 1000);
+    awsp_msgs::MotorStatus motor_status;
     awsp_msgs::StateMachineStatus state_machine;
-    awsp_msgs::GoalCoordinates goal_coordinates;
+
+    // Setup service clients
+    ros::ServiceClient set_gnss_goal_client = n.serviceClient<awsp_srvs::SetGNSSGoal>("set_gnss_goal");
+    ros::ServiceClient set_goal_thresh_client = n.serviceClient<awsp_srvs::SetGoalThreshold>("set_goal_thresh");
+    ros::ServiceClient use_obstacle_a_client = n.serviceClient<awsp_srvs::UseObstacleAvoidance>("use_obstacle_a");
+    ros::ServiceClient get_convergence_client = n.serviceClient<awsp_srvs::GetConvergence>("get_convergence");
+    awsp_srvs::SetGNSSGoal set_gnss_goal_srv;
+    awsp_srvs::SetGoalThreshold set_goal_thresh_srv;
+    awsp_srvs::UseObstacleAvoidance use_obstacle_a_srv;
+    awsp_srvs::GetConvergence get_convergence_srv;
 
     state_machine.current_state = state::SYSTEM_OFF;
     publisher.publish(state_machine);
@@ -173,25 +192,35 @@ int main(int argc, char **argv)
                 publisher.publish(state_machine);
                 break;
             case state::POSE_ESTIMATION:
-                state::current_system_state = state::pose_estimation();
+                state::current_system_state = state::pose_estimation(get_convergence_client, get_convergence_srv);
                 state_machine.current_state = state::current_system_state;
                 publisher.publish(state_machine);
                 break;
             case state::GOAL_SETTING:
                 state::current_system_state = state::goal_setting();
                 state_machine.current_state = state::current_system_state;
-                goal_coordinates.latitude = gps_ref.latitude;
-                goal_coordinates.longitude = gps_ref.longitude;
-                coord_publisher.publish(goal_coordinates);
+                set_gnss_goal_srv.request.goal_lat = gps_ref.latitude;
+                set_gnss_goal_srv.request.goal_long = gps_ref.longitude;
+                if(dynr::current_vessel_task.use_gps_waypoints)
+                    set_gnss_goal_srv.request.use_waypoints = true;
+                else
+                    set_gnss_goal_srv.request.use_waypoints = false;
+
+                set_goal_thresh_srv.request.goal_thresh = dynr::current_vessel_task.distance_error_tol;
+                use_obstacle_a_srv.request.use_obstacle_avoidance = dynr::control_gains.use_obstacle_detector;
+
+                use_obstacle_a_client.call(use_obstacle_a_srv);
+                set_goal_thresh_client.call(set_goal_thresh_srv);
+                set_gnss_goal_client.call(set_gnss_goal_srv);
                 publisher.publish(state_machine);
                 break;
             case state::BOAT_CONTROLLER:
-                state::current_system_state = state::boat_controller();
+                state::current_system_state = state::boat_controller(motor_status, motor_publisher);
                 state_machine.current_state = state::current_system_state;
                 publisher.publish(state_machine);
                 break;
             case state::BOAT_TESTING:
-                state::current_system_state = state::boat_testing();
+                state::current_system_state = state::boat_testing(motor_status, motor_publisher);
                 state_machine.current_state = state::current_system_state;
                 publisher.publish(state_machine);
                 break;
