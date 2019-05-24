@@ -196,7 +196,8 @@ void log_pp(bool obstacle_front, bool is_there_w, bool goal_reached, float cart_
     pp_logger.additional_logger(log_stream.str(), global_log_file);
 }
 
-void print_pp(bool obstacle_front, bool is_there_w, bool goal_reached, float bearing_error, float dist_error_obst_w, float dist_error_goal)
+void print_pp(bool obstacle_front, bool is_there_w, bool goal_reached,
+        float bearing_error, float dist_error_obst_w, float dist_error_goal, int waypoint_counter)
 {
 //  ROS_INFO_STREAM("[GOAL GPS LAT           ] " << goal_gps_data.latitude);
     ROS_INFO_STREAM("[OBSTACLE FRONT         ] " << obstacle_data.front_obstacle);
@@ -208,6 +209,7 @@ void print_pp(bool obstacle_front, bool is_there_w, bool goal_reached, float bea
     ROS_INFO_STREAM("[DIST ERROR W           ] " << dist_error_obst_w);
     ROS_INFO_STREAM("[DIST ERROR GOAL        ] " << dist_error_goal);
     ROS_INFO_STREAM("[OBSTACLE FRONT 2       ] " << obstacle_front);
+    ROS_INFO_STREAM("[CURR WAYPOINT          ] " << waypoint_counter);
     ROS_INFO_STREAM("[IS THERE W             ] " << is_there_w);
     ROS_INFO_STREAM("[GOAL REACHED           ] " << goal_reached);
 
@@ -280,12 +282,12 @@ void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
         cart_error_msg.cart_error_x = cart_error_x;
         cart_error_msg.cart_error_y = cart_error_y;
 
-        if (dist_error_obst_w < goal_gnss_data.distance_thresh && is_there_w)
+        if (dist_error_obst_w < 1.5 && is_there_w)
         {
             is_there_w = false;
             cart_error_msg.goal_reached = false;
         }
-        else if (dist_error_goal < goal_gnss_data.distance_thresh && !is_there_w)
+        else if (dist_error_goal < 1.5 && !is_there_w)
         {
             cart_error_msg.goal_reached = true;
             goal_reached = true;
@@ -296,9 +298,12 @@ void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
         cart_error_pub.publish(cart_error_msg);
 
         if (goal_reached)
+        {
+            ROS_ERROR("GOAL REACHED");
             break;
+        }
 
-        print_pp(obstacle_front, is_there_w, goal_reached, bearing_error, dist_error_obst_w, dist_error_goal);
+        print_pp(obstacle_front, is_there_w, goal_reached, bearing_error, dist_error_obst_w, dist_error_goal, 999);
         log_pp(obstacle_front, is_there_w, goal_reached, cart_error_x, cart_error_y, bearing_goal,
                 dist_error_obst_w, dist_error_goal, bearing_error);
 
@@ -378,15 +383,14 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
         cart_error_msg.cart_error_x = cart_error_x;
         cart_error_msg.cart_error_y = cart_error_y;
 
-        if (dist_error_obst_w < goal_gnss_data.distance_thresh && is_there_w)
+        if (dist_error_obst_w < 1.5 && is_there_w)
         {
             is_there_w = false;
             cart_error_msg.goal_reached = false;
         }
-        else if (dist_error_goal < goal_gnss_data.distance_thresh && !is_there_w)
+        else if (dist_error_goal < 1.5 && !is_there_w)
         {
-            waypoint_counter++;
-            is_transformed = false;
+
             if(waypoint_counter == waypoints.size())
             {
                 cart_error_msg.goal_reached = true;
@@ -394,6 +398,10 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
             }
             else
                 cart_error_msg.goal_reached = false;
+
+            waypoint_counter++;
+            is_transformed = false;
+            ROS_WARN("WAYPOINT %i REACHED, NAVIGATING TO NEXT", waypoint_counter);
         }
         else
             cart_error_msg.goal_reached = false;
@@ -401,9 +409,12 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
         cart_error_pub.publish(cart_error_msg);
 
         if (goal_reached)
+        {
+            ROS_ERROR("GOAL REACHED");
             break;
+        }
 
-        print_pp(obstacle_front, is_there_w, goal_reached, bearing_error, dist_error_obst_w, dist_error_goal);
+        print_pp(obstacle_front, is_there_w, goal_reached, bearing_error, dist_error_obst_w, dist_error_goal, waypoint_counter);
         log_pp(obstacle_front, is_there_w, goal_reached, cart_error_x, cart_error_y, bearing_goal,
                dist_error_obst_w, dist_error_goal, bearing_error);
 
@@ -437,6 +448,7 @@ int main(int argc, char **argv)
 
     while(ros::ok())
     {
+        ROS_WARN_STREAM("WAITING FOR PATH PLANNING TASK");
         if (goal_gnss_data.evaluate_task)
         {
             goal_gnss_data.evaluate_task = false;
