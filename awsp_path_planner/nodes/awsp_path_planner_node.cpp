@@ -3,6 +3,7 @@
 #include "awsp_msgs/ObstacleData.h"
 #include "awsp_msgs/CurrentState.h"
 #include "awsp_msgs/CartesianError.h"
+#include "awsp_msgs/StateMachineStatus.h"
 #include "awsp_pose_estimator/awsp_pose_estimator_lib.h"
 #include "awsp_logger/awsp_logger.h"
 
@@ -48,6 +49,7 @@ struct GoalGNSSData
 } goal_gnss_data;
 
 cart_pose current_state, goal_pose;
+int state_machine_status;
 
 /**
  * Callback function. Populates the obstacle_data struct.
@@ -64,6 +66,11 @@ void current_state_callback(const awsp_msgs::CurrentState::ConstPtr curr_state_m
     current_state.position.x = curr_state_msg->x;
     current_state.position.y = curr_state_msg->y;
     current_state.heading = curr_state_msg->heading;
+}
+
+void state_machine_callback(const awsp_msgs::StateMachineStatus::ConstPtr state_machine)
+{
+    state_machine_status = state_machine->current_state;
 }
 
 
@@ -282,12 +289,12 @@ void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
         cart_error_msg.cart_error_x = cart_error_x;
         cart_error_msg.cart_error_y = cart_error_y;
 
-        if (dist_error_obst_w < 1.5 && is_there_w)
+        if (dist_error_obst_w < goal_gnss_data.distance_thresh && is_there_w)
         {
             is_there_w = false;
             cart_error_msg.goal_reached = false;
         }
-        else if (dist_error_goal < 1.5 && !is_there_w)
+        else if (dist_error_goal < goal_gnss_data.distance_thresh && !is_there_w)
         {
             cart_error_msg.goal_reached = true;
             goal_reached = true;
@@ -295,13 +302,24 @@ void navigate_to_single_goal(awsp_msgs::CartesianError cart_error_msg,
         else
             cart_error_msg.goal_reached = false;
 
-        cart_error_pub.publish(cart_error_msg);
-
         if (goal_reached)
         {
             ROS_ERROR("GOAL REACHED");
+            ros::Duration(3).sleep();
+            cart_error_pub.publish(cart_error_msg);
+            ros::spinOnce();
             break;
         }
+        else if (state_machine_status == 1)
+        {
+            ROS_ERROR("STATE MACHINE IS TURNED OFF.");
+            cart_error_pub.publish(cart_error_msg);
+            ros::spinOnce();
+            ros::Duration(3).sleep();
+            break;
+        }
+
+        cart_error_pub.publish(cart_error_msg);
 
         print_pp(obstacle_front, is_there_w, goal_reached, bearing_error, dist_error_obst_w, dist_error_goal, 999);
         log_pp(obstacle_front, is_there_w, goal_reached, cart_error_x, cart_error_y, bearing_goal,
@@ -383,12 +401,12 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
         cart_error_msg.cart_error_x = cart_error_x;
         cart_error_msg.cart_error_y = cart_error_y;
 
-        if (dist_error_obst_w < 1.5 && is_there_w)
+        if (dist_error_obst_w < goal_gnss_data.distance_thresh && is_there_w)
         {
             is_there_w = false;
             cart_error_msg.goal_reached = false;
         }
-        else if (dist_error_goal < 1.5 && !is_there_w)
+        else if (dist_error_goal < goal_gnss_data.distance_thresh && !is_there_w)
         {
 
             if(waypoint_counter == waypoints.size())
@@ -406,13 +424,25 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
         else
             cart_error_msg.goal_reached = false;
 
-        cart_error_pub.publish(cart_error_msg);
-
         if (goal_reached)
         {
             ROS_ERROR("GOAL REACHED");
+
+            ros::Duration(3).sleep();
+            cart_error_pub.publish(cart_error_msg);
+            ros::spinOnce();
             break;
         }
+        else if (state_machine_status == 1)
+        {
+            ROS_ERROR("STATE MACHINE IS TURNED OFF.");
+            cart_error_pub.publish(cart_error_msg);
+            ros::Duration(3).sleep();
+            ros::spinOnce();
+            break;
+        }
+
+        cart_error_pub.publish(cart_error_msg);
 
         print_pp(obstacle_front, is_there_w, goal_reached, bearing_error, dist_error_obst_w, dist_error_goal, waypoint_counter);
         log_pp(obstacle_front, is_there_w, goal_reached, cart_error_x, cart_error_y, bearing_goal,
@@ -432,6 +462,8 @@ int main(int argc, char **argv)
 
     ros::Subscriber curr_state_sub = n.subscribe("current_state", 1000, current_state_callback);
     ros::Subscriber obstacle_sub = n.subscribe("obstacle_data", 1000, obstacle_data_callback);
+    ros::Subscriber state_machine_sub = n.subscribe("state_machine", 1000, state_machine_callback);
+
 
     ros::Publisher cart_error_pub = n.advertise<awsp_msgs::CartesianError>("cart_error", 1000);
     awsp_msgs::CartesianError cart_error_msg;
@@ -444,22 +476,29 @@ int main(int argc, char **argv)
     awsp_srvs::GoalToJ0 goal_to_j0_srv;
 
 
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(3);
 
     while(ros::ok())
     {
-        ROS_WARN_STREAM("WAITING FOR PATH PLANNING TASK");
-        if (goal_gnss_data.evaluate_task)
+        ROS_WARN_ONCE("WAITING FOR PATH PLANNING TASK");
+
+        if (goal_gnss_data.evaluate_task && state_machine_status == 4)
         {
             goal_gnss_data.evaluate_task = false;
             if (!goal_gnss_data.use_waypoints)
             {
+                ROS_INFO("GENERATING PATH TO SINGLE GOAL");
                 navigate_to_single_goal(cart_error_msg, goal_to_j0_client, goal_to_j0_srv, cart_error_pub);
-            } else if (goal_gnss_data.use_waypoints)
+
+            }
+            else if (goal_gnss_data.use_waypoints)
             {
+                ROS_INFO("GENERATING PATH TO MULTIPLE GOALS");
                 navigate_to_waypoints(cart_error_msg, goal_to_j0_client, goal_to_j0_srv, cart_error_pub);
             }
         }
+        cart_error_msg.goal_reached = true;
+        cart_error_pub.publish(cart_error_msg);
 
         loop_rate.sleep();
         ros::spinOnce();

@@ -44,8 +44,8 @@ struct ControlGains
 	float right_motor_force_gain = 1;
     bool log_control_system_config = false;
     bool use_fault_detection = true;
-    bool use_imu_bearing = true;
-    bool use_obstacle_detector = true;
+//    bool use_imu_bearing = true;
+    bool use_obstacle_detector = false;
 } control_gains;
 
 struct SystemMode
@@ -58,7 +58,7 @@ struct CurrentVesselTask
     float goal_latitude;
     float goal_longitude;
     bool ready_to_move;
-    float distance_error_tol;
+    float distance_error_tol = 5;
     bool log_goal_points = true;
     bool use_gps_waypoints = false;
 
@@ -66,9 +66,7 @@ struct CurrentVesselTask
 
 struct GeneralConfig
 {
-    float damping_surge;
-    float damping_yaw;
-    float propeller_distance;
+    float propeller_distance = 0.5;
     bool log_general_config = false;
 } general_config;
 

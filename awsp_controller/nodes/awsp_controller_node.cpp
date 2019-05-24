@@ -41,12 +41,11 @@ void callback(awsp_controller::ParametersConfig &config, uint32_t level) {
             dynr::control_gains.p_angular_gain = config.p_angular_gain;
             dynr::control_gains.d_angular_gain = config.d_angular_gain;
             dynr::control_gains.use_fault_detection = config.use_fault_detection;
-            dynr::control_gains.use_imu_bearing = config.use_imu_bearing;
             dynr::control_gains.use_obstacle_detector = config.use_obstacle_detector;
             break;
         case dynr::LEVEL::DYNAMIC_MODEL:
-            dynr::general_config.damping_surge = config.damping_surge;
-            dynr::general_config.damping_yaw = config.damping_yaw;
+//            dynr::general_config.damping_surge = config.damping_surge;
+//            dynr::general_config.damping_yaw = config.damping_yaw;
             dynr::general_config.propeller_distance = config.propeller_distance;
             break;
         case dynr::LEVEL::SYSTEM_MODE:
@@ -138,6 +137,7 @@ void cartesian_error_callback(const awsp_msgs::CartesianError::ConstPtr cart_err
     cartesian_error.cart_error_x = cart_error_msg->cart_error_x;
     cartesian_error.cart_error_y = cart_error_msg->cart_error_y;
     cartesian_error.bearing_error = cart_error_msg->bearing_error;
+    cartesian_error.goal_reached = cart_error_msg->goal_reached;
 }
 
 int main(int argc, char **argv)
@@ -197,21 +197,14 @@ int main(int argc, char **argv)
                 publisher.publish(state_machine);
                 break;
             case state::GOAL_SETTING:
-                state::current_system_state = state::goal_setting();
+                state::current_system_state = state::goal_setting(set_gnss_goal_srv, set_gnss_goal_client);
                 state_machine.current_state = state::current_system_state;
-                set_gnss_goal_srv.request.goal_lat = gps_ref.latitude;
-                set_gnss_goal_srv.request.goal_long = gps_ref.longitude;
-                if(dynr::current_vessel_task.use_gps_waypoints)
-                    set_gnss_goal_srv.request.use_waypoints = true;
-                else
-                    set_gnss_goal_srv.request.use_waypoints = false;
 
                 set_goal_thresh_srv.request.goal_thresh = dynr::current_vessel_task.distance_error_tol;
                 use_obstacle_a_srv.request.use_obstacle_avoidance = dynr::control_gains.use_obstacle_detector;
 
                 use_obstacle_a_client.call(use_obstacle_a_srv);
                 set_goal_thresh_client.call(set_goal_thresh_srv);
-                set_gnss_goal_client.call(set_gnss_goal_srv);
                 publisher.publish(state_machine);
                 break;
             case state::BOAT_CONTROLLER:

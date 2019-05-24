@@ -7,6 +7,7 @@
 #include "awsp_logger/awsp_logger.h"
 #include "awsp_srvs/GetConvergence.h"
 #include "awsp_msgs/MotorStatus.h"
+#include "awsp_srvs/SetGNSSGoal.h"
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -111,15 +112,12 @@ void log_global()
             << "," << imu_data.acceleration.x
             << "," << imu_data.acceleration.y
             << "," << imu_data.yaw_vel
-            << "," << dynr::control_gains.use_imu_bearing
             << "," << boat_control_params.pwm_right
             << "," << boat_control_params.pwm_left
             << "," << boat_control_params.torque_drive
             << "," << boat_control_params.force_right
             << "," << boat_control_params.force_left
             << "," << ready_to_move_boat
-            << "," << cartesian_ref.position.x
-            << "," << cartesian_ref.position.y
             << "," << boat_control_params.cartesian_error.x
             << "," << boat_control_params.cartesian_error.y
             << "," << boat_control_params.distance_error
@@ -209,7 +207,7 @@ void print_boat_controller_status(BoatControlParams boat_control_params)
 
     ROS_DEBUG_STREAM("[DISTANCE ERROR         ] " << boat_control_params.distance_error);
     ROS_DEBUG_STREAM("[DISTANCE ERROR TOL     ] " << dynr::current_vessel_task.distance_error_tol);
-//    ROS_DEBUG_STREAM("[USE IMU BEARING        ] " << dynr::control_gains.use_imu_bearing);
+
     ROS_DEBUG_STREAM("[BEARING GOAL           ] " << boat_control_params.bearing_goal);
     ROS_DEBUG_STREAM("[BEARING ERROR          ] " << boat_control_params.bearing_error);
     ROS_DEBUG_STREAM("[FORCE DRIVE            ] " << boat_control_params.force_drive);
@@ -275,7 +273,7 @@ int system_off()
 
         while (ros::ok()) {
             // print status while we are waiting for the initial startup
-            log_global();
+//            log_global();
             state::print_system_off_status();
 
             if (dynr::system_mode.vessel == ON) {
@@ -318,7 +316,7 @@ int pose_estimation(ros::ServiceClient get_convergence_client, awsp_srvs::GetCon
     }
 }
 
-int goal_setting()
+int goal_setting(awsp_srvs::SetGNSSGoal set_gnss_goal_srv, ros::ServiceClient set_gnss_goal_client)
 {
     int move_to_next = 0;
 
@@ -330,11 +328,21 @@ int goal_setting()
         if (state::evaluate_system_mode_status() == state::SYSTEM_OFF)
             return state::SYSTEM_OFF;
 
+        set_gnss_goal_srv.request.goal_lat = gps_ref.latitude;
+        set_gnss_goal_srv.request.goal_long = gps_ref.longitude;
+        if(dynr::current_vessel_task.use_gps_waypoints)
+            set_gnss_goal_srv.request.use_waypoints = true;
+        else
+            set_gnss_goal_srv.request.use_waypoints = false;
+
+        set_gnss_goal_client.call(set_gnss_goal_srv);
+
         if (dynr::current_vessel_task.goal_latitude != 0
             && dynr::current_vessel_task.goal_longitude != 0
                 && dynr::current_vessel_task.ready_to_move == true
                     && !dynr::current_vessel_task.use_gps_waypoints)
         {
+            set_gnss_goal_client.call(set_gnss_goal_srv);
             gps_ref.latitude = dynr::current_vessel_task.goal_latitude;
             gps_ref.longitude = dynr::current_vessel_task.goal_longitude;
             return state::BOAT_CONTROLLER;
@@ -342,6 +350,7 @@ int goal_setting()
         else if (dynr::current_vessel_task.use_gps_waypoints == true
             && dynr::current_vessel_task.ready_to_move == true)
         {
+            set_gnss_goal_client.call(set_gnss_goal_srv);
         	return state::BOAT_CONTROLLER;
         }
 
@@ -373,7 +382,7 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
     {
         ROS_ERROR("ESC LIB FAILED.");
     }
-    ros::Duration(3).sleep();
+    ros::Duration(1).sleep();
 
     PDController surge_pd_ctrl(0.1, 15, -15);
     PDController yaw_pd_ctrl(0.1, 15, -15);
@@ -389,6 +398,13 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
             return state::SYSTEM_OFF;
         }
 
+        ROS_ERROR_STREAM("GOAL REACHED VAL: " << cartesian_error.goal_reached);
+        if (cartesian_error.goal_reached)
+        {
+            ROS_WARN("===== GOAL REACHED =====");
+            return state::POSE_ESTIMATION;
+        }
+
         // bypass to next state
         if (dynr::state_bypass.bypass_4_2 == true)
         {
@@ -397,14 +413,6 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
             esc_alive = false;
             return state::POSE_ESTIMATION;
         }
-
-//        if (obstacle_data.front_obstacle && dynr::control_gains.use_obstacle_detector)
-//        {
-//            left_esc.end();
-//            right_esc.end();
-//            ROS_WARN("OBSTACLE DETECTED, STOPPING.");
-//            return state::POSE_ESTIMATION;
-//        }
 
         boat_control_params.cartesian_error.x = cartesian_error.cart_error_x;
         boat_control_params.cartesian_error.y = cartesian_error.cart_error_y;
@@ -418,12 +426,6 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
         else if (boat_control_params.bearing_error < -M_PI)
         {
             boat_control_params.bearing_error += 2 * M_PI;
-        }
-
-
-        if (cartesian_error.goal_reached)
-        {
-            return state::POSE_ESTIMATION;
         }
 
         // Calculate forces
@@ -447,8 +449,8 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
 
         state::print_boat_controller_status(boat_control_params);
 
-        motor_status.left_motor_force = boat_testing_params.force_left;
-        motor_status.right_motor_force = boat_testing_params.force_right;
+        motor_status.left_motor_force = boat_control_params.force_left;
+        motor_status.right_motor_force = boat_control_params.force_right;
         motor_status.left_motor_pwm = boat_control_params.pwm_left;
         motor_status.right_motor_pwm = boat_control_params.pwm_right;
         motor_status.left_esc_alive = left_esc_alive;
@@ -486,7 +488,7 @@ int boat_testing(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_publi
     float left_temp_force;
     float right_temp_force;
 
-    ros::Duration(3).sleep();
+    ros::Duration(1).sleep();
     while(ros::ok())
     {
         if (state::evaluate_system_mode_status() == state::SYSTEM_OFF)
