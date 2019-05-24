@@ -112,7 +112,7 @@ state_vector KalmanFilter::estimate_state(float left_prop_force, float right_pro
     z_measurement(1) = y_pos;
     z_measurement(2) = vel;
     z_measurement(3) = acc;
-    z_measurement(4) = heading;
+    z_measurement(4) = 90 - heading;
     z_measurement(5) = ang_vel;
 
     set_damping_surge();
@@ -134,7 +134,7 @@ state_vector KalmanFilter::estimate_state(float left_prop_force, float right_pro
     estimated_state.y_pos = x_post(1);
     estimated_state.vel = x_post(2);
     estimated_state.acc = x_post(3);
-    estimated_state.heading = x_post(4);
+    estimated_state.heading = (90 - x_post(4));
     estimated_state.ang_vel = x_post(5);
 
     return estimated_state;
