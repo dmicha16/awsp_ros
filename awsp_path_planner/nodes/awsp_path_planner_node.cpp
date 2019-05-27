@@ -148,7 +148,7 @@ void ObstacleWaypoint::set_start_coords()
 
 void generate_obstacle_waypoint()
 {
-    obstacle_waypoint.theta = abs(asin(obstacle_waypoint.boat_radius / obstacle_data.front_obstacle_dist));
+    obstacle_waypoint.theta = abs(asin(obstacle_waypoint.boat_radius / (obstacle_data.front_obstacle_dist/100)));
     obstacle_waypoint.alpha = obstacle_waypoint.theta;
 
     obstacle_waypoint.dist_to_waypoint = obstacle_data.front_obstacle_dist /
