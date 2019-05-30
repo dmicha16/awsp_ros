@@ -6,7 +6,7 @@ This repository is a collection of interdependent packages purposefully built fo
 
 The current state of the workspace implements the control structure as different subsystems. The image below shows this structure.
 
-![Vessel](figures/awsp_control_system.png)
+![Vessel](figures/awsp_control_system.png =496x385)
 
 
 # Getting started
