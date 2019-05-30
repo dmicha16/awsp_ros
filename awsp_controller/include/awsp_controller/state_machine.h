@@ -431,8 +431,10 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
         // Calculate forces
         boat_control_params.force_drive = surge_pd_ctrl.get_force(boat_control_params.distance_error,
                 dynr::control_gains.p_linear_gain, dynr::control_gains.d_linear_gain);
+
         boat_control_params.torque_drive = yaw_pd_ctrl.get_force(boat_control_params.bearing_error,
                 dynr::control_gains.p_angular_gain, dynr::control_gains.d_angular_gain);
+
         boat_control_params.force_right = (dynr::general_config.propeller_distance * boat_control_params.force_drive
                 - boat_control_params.torque_drive) / (2 * dynr::general_config.propeller_distance);
         boat_control_params.force_left = boat_control_params.force_drive - boat_control_params.force_right;

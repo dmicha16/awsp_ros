@@ -67,10 +67,11 @@ float CartesianPose::bearing_(gps_position origin, gps_position destination)
 {
     float delta = destination.longitude - origin.longitude;
     float s = cos(destination.latitude) * sin(delta);
-    float c = cos(origin.latitude) * sin(destination.latitude) - sin(origin.latitude) * cos(destination.latitude) * cos(delta);
+    float c = cos(origin.latitude) * sin(destination.latitude) - sin(origin.latitude)
+            * cos(destination.latitude) * cos(delta);
     float bearing = atan2(s, c);
     if (bearing < 0)
-        bearing += 360;
+        bearing += 2*M_PI;
     return bearing;
 }
 

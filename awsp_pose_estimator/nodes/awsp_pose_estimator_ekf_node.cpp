@@ -303,12 +303,12 @@ int main(int argc, char **argv)
     acc.y = 0.0;
 
     // this class instance holds the J0 frame as of right now
-//    while (new_gps == false)
-//    {
-//        ROS_INFO("Waiting for GPS data...");
-//        ros::Duration(0.5).sleep(); // sleep for half a second
-//        ros::spinOnce();
-//    }
+    while (new_gps == false)
+    {
+        ROS_INFO("Waiting for GPS data...");
+        ros::Duration(0.5).sleep(); // sleep for half a second
+        ros::spinOnce();
+    }
 
     is_first_gps = false;
 //    CartesianPose pose(gps_data);
