@@ -6,7 +6,7 @@ This repository is a collection of interdependent packages purposefully built fo
 
 The current state of the workspace implements the control structure as different subsystems. The image below shows this structure.
 
-![Vessel](figures/awsp_control_system.jpg)
+![Vessel](figures/awsp_control_system.png)
 
 
 # Getting started
@@ -55,7 +55,7 @@ And to run the obstacle avoidance node, use `rosrun awsp_obstacle_detector awsp_
 
 ## Complementary software requirements
 
-![Vessel](figures/awsp_software_architecture.jpg)
+![Vessel](figures/awsp_software_architecture.png)
 
 
 [PIGPIO Daemon](http://abyz.me.uk/rpi/pigpio/pigpiod.html) - Time was not devoted to develop a PWM conversion library for the ESCs which run the motor, therefore, this library is used to replace that functionality. To be sure you can run the motors with the firmware, you have to run this daemon before by typing `sudo pigpiod` into one of your open terminals.
