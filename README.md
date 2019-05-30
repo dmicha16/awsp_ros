@@ -1,6 +1,6 @@
 # awsp_ros
 
-![Vessel](figures/awsp_vessel.jpg)
+![Vessel](figures/awsp_vessel.png)
 
 This repository is a collection of interdependent packages purposefully built for the 5th and 6th semester robotics semester project. All the packages are meant to be used as a singular ROS workspace. The bulk of the work was done during the 6th semester.
 
