@@ -402,6 +402,9 @@ int boat_controller(awsp_msgs::MotorStatus motor_status, ros::Publisher motor_pu
         if (cartesian_error.goal_reached)
         {
             ROS_WARN("===== GOAL REACHED =====");
+	    left_esc.end();
+            right_esc.end();
+            esc_alive = false;
             return state::POSE_ESTIMATION;
         }
 
