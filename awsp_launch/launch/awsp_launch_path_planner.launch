@@ -1,0 +1,9 @@
+<launch>
+    <node
+            pkg = "awsp_path_planner"
+            name = "awsp_path_planner_node"
+            type = "awsp_path_planner_node"
+            output="screen"
+            required = "true"
+    />
+</launch>

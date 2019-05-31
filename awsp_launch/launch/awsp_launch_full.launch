@@ -1,0 +1,46 @@
+    <launch>
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find awsp_controller)/config/rosconsole.conf"/>
+    <!--<env name="ROSCONSOLE_CONFIG_FILE" value="$(find awsp_pose_estimator)/config/rosconsole.conf"/>-->
+
+    <node
+            pkg = "awsp_gnss_l86_interface"
+            name = "awsp_gnss_l86_interface_node"
+            type = "awsp_gnss_l86_interface_node"
+            args = "/dev/serial0 115200 10"
+            required = "false"
+    />
+
+    <node
+            pkg = "awsp_gy_88_interface"
+            name = "awsp_gy_88_interface_node"
+            type = "awsp_gy_88_interface_node"
+            args = "100"
+            required = "true"
+    />
+
+    <node
+            pkg = "awsp_obstacle_detector"
+            name = "awsp_obstacle_detector_node"
+            type = "awsp_obstacle_detector_node"
+            args = "23 24 400 30000"
+            required = "true"
+    />
+
+    <!--<node-->
+            <!--pkg = "awsp_pose_estimator"-->
+            <!--name = "awsp_pose_estimator_ekf_node"-->
+            <!--type = "awsp_pose_estimator_ekf_node"-->
+            <!--output="screen"-->
+            <!--required = "true"-->
+    <!--/>-->
+
+    <node
+            pkg = "awsp_controller"
+            name = "awsp_controller_node"
+            type = "awsp_controller_node"
+            output="screen"
+            required = "true"
+    />
+
+
+</launch>
