@@ -22,7 +22,7 @@
             pkg = "awsp_obstacle_detector"
             name = "awsp_obstacle_detector_node"
             type = "awsp_obstacle_detector_node"
-            args = "23 24 400 30000"
+            args = "23 24 3 30000"
             required = "true"
     />
 

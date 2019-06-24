@@ -103,6 +103,9 @@ int main(int argc, char **argv)
                 fix_acquired = false;
             }
 
+            if (last_position.true_course > M_PI)
+                last_position.true_course = last_position.true_course - 2 * M_PI;
+
             last_timestamp = last_position.timestamp;
             gnss_data.latitude = last_position.latitude;
             gnss_data.longitude = last_position.longitude;

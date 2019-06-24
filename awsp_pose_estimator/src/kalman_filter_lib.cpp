@@ -70,12 +70,20 @@ KalmanFilter::KalmanFilter(float time_step)
     Phi.resize(6,6);
     Gamma.resize(6,2);
 
-    Phi << 1, 0, t_s * cos(x_prior(4)), 0.5 * (pow(t_s, 2)) * cos(x_prior(4)), -(t_s * x_prior(2) + 0.5 * pow(t_s, 2)  * x_prior(3)) * sin(x_prior(4)), 0,
-           0, 1, t_s * sin(x_prior(4)), 0.5 * (pow(t_s, 2)) * sin(x_prior(4)), (t_s * x_prior(2) + 0.5 * pow(t_s, 2)  * x_prior(3)) * cos(x_prior(4)), 0,
-           0, 0, 1, 0.5 * t_s, 0, 0,
-           0, 0, -X_u / mass, 0, 0, 0,
-           0, 0, 0, 0, 1, t_s - (N_r * (pow(t_s, 2)) / (2 * I_z)),
-           0, 0, 0, 0, 0, 1 - t_s * N_r / I_z;
+//    Phi << 1, 0, t_s * cos(x_prior(4)), 0.5 * (pow(t_s, 2)) * cos(x_prior(4)), -(t_s * x_prior(2) + 0.5 * pow(t_s, 2)  * x_prior(3)) * sin(x_prior(4)), 0,
+//           0, 1, t_s * sin(x_prior(4)), 0.5 * (pow(t_s, 2)) * sin(x_prior(4)), (t_s * x_prior(2) + 0.5 * pow(t_s, 2)  * x_prior(3)) * cos(x_prior(4)), 0,
+//           0, 0, 1, 0.5 * t_s, 0, 0,
+//           0, 0, -X_u / mass, 0, 0, 0,
+//           0, 0, 0, 0, 1, t_s - (N_r * (pow(t_s, 2)) / (2 * I_z)),
+//           0, 0, 0, 0, 0, 1 - t_s * N_r /
+
+
+    Phi << 1, 0, t_s * cos(x_prior(4)), 0.5 * (pow(t_s, 2)) * cos(x_prior(4)), 0, 0,
+            0, 1, t_s * sin(x_prior(4)), 0.5 * (pow(t_s, 2)) * sin(x_prior(4)), 0, 0,
+            0, 0, 1, 0.5 * t_s, 0, 0,
+            0, 0, -X_u / mass, 0, 0, 0,
+            0, 0, 0, 0, 1, t_s - (N_r * (pow(t_s, 2)) / (2 * I_z)),
+            0, 0, 0, 0, 0, 1 - t_s * N_r / I_z;
 
     Gamma << 0, 0,
              0, 0,
@@ -129,13 +137,22 @@ state_vector KalmanFilter::estimate_state(float left_prop_force, float right_pro
 
     P_prior = P_post;
     x_prior = x_post;
-    
-    Phi << 1, 0, t_s * cos(x_prior(4)), 0.5 * (pow(t_s, 2)) * cos(x_prior(4)), -(t_s * x_prior(2) + 0.5 * pow(t_s, 2)  * x_prior(3)) * sin(x_prior(4)), 0,
-           0, 1, t_s * sin(x_prior(4)), 0.5 * (pow(t_s, 2)) * sin(x_prior(4)), (t_s * x_prior(2) + 0.5 * pow(t_s, 2)  * x_prior(3)) * cos(x_prior(4)), 0,
-           0, 0, 1, 0.5 * t_s, 0, 0,
-           0, 0, -X_u / mass, 0, 0, 0,
-           0, 0, 0, 0, 1, t_s - (N_r * (pow(t_s, 2)) / (2 * I_z)),
-           0, 0, 0, 0, 0, 1 - t_s * N_r / I_z;
+
+    // Phi (1,5) and (2, 5) used to be: -(t_s * x_prior(2) + 0.5 * pow(t_s, 2)  * x_prior(3)) * sin(x_prior(4)) and (t_s * x_prior(2) + 0.5 * pow(t_s, 2)  * x_prior(3)) * cos(x_prior(4))
+
+//    Phi << 1, 0, t_s * cos(x_prior(4)), 0.5 * (pow(t_s, 2)) * cos(x_prior(4)), -(t_s * x_prior(2) + 0.5 * pow(t_s, 2)  * x_prior(3)) * sin(x_prior(4)), 0,
+//           0, 1, t_s * sin(x_prior(4)), 0.5 * (pow(t_s, 2)) * sin(x_prior(4)), (t_s * x_prior(2) + 0.5 * pow(t_s, 2)  * x_prior(3)) * cos(x_prior(4)), 0,
+//           0, 0, 1, 0.5 * t_s, 0, 0,
+//           0, 0, -X_u / mass, 0, 0, 0,
+//           0, 0, 0, 0, 1, t_s - (N_r * (pow(t_s, 2)) / (2 * I_z)),
+//           0, 0, 0, 0, 0, 1 - t_s * N_r / I_z;
+
+    Phi << 1, 0, t_s * cos(x_prior(4)), 0.5 * (pow(t_s, 2)) * cos(x_prior(4)), 0, 0,
+            0, 1, t_s * sin(x_prior(4)), 0.5 * (pow(t_s, 2)) * sin(x_prior(4)), 0, 0,
+            0, 0, 1, 0.5 * t_s, 0, 0,
+            0, 0, -X_u / mass, 0, 0, 0,
+            0, 0, 0, 0, 1, t_s - (N_r * (pow(t_s, 2)) / (2 * I_z)),
+            0, 0, 0, 0, 0, 1 - t_s * N_r / I_z;
 
     estimated_state.x_pos = x_post(0);
     estimated_state.y_pos = x_post(1);

@@ -22,8 +22,8 @@ struct ObstacleWaypoint
     float start_x, start_y, heading_start;
     float boat_radius = 0.5;
     float obstacle_length = boat_radius;
-    float theta;
-    float alpha_gain = 2, alpha;
+    float alpha_gain = 2;
+    float alpha;
     float w_x, w_y;
     float dist_to_waypoint;
 
@@ -155,11 +155,14 @@ void ObstacleWaypoint::set_start_coords()
 
 void generate_obstacle_waypoint()
 {
-    obstacle_waypoint.theta = abs(asin(obstacle_waypoint.boat_radius / obstacle_data.front_obstacle_dist));
-    obstacle_waypoint.alpha = obstacle_waypoint.theta;
+    obstacle_waypoint.alpha = atan(1.23 / obstacle_data.front_obstacle_dist);
+
+    if (obstacle_waypoint.alpha * 4 >= M_PI / 2.1 )
+        obstacle_waypoint.alpha = 1.4 / 4;
 
     obstacle_waypoint.dist_to_waypoint = obstacle_data.front_obstacle_dist /
-            cos(obstacle_waypoint.alpha * obstacle_waypoint.alpha_gain);
+            cos(obstacle_waypoint.alpha * 4);
+
 
     obstacle_waypoint.w_x = obstacle_waypoint.start_x +
             obstacle_waypoint.dist_to_waypoint * cos(obstacle_waypoint.heading_start + obstacle_waypoint.alpha * obstacle_waypoint.alpha_gain);
@@ -188,7 +191,7 @@ void log_pp(bool obstacle_front, bool is_there_w, bool goal_reached, float cart_
             << "," << obstacle_waypoint.start_y
             << "," << obstacle_waypoint.w_x
             << "," << obstacle_waypoint.w_y
-            << "," << obstacle_waypoint.theta
+            << "," << obstacle_waypoint.alpha
             << "," << obstacle_waypoint.dist_to_waypoint
             << "," << obstacle_front
             << "," << is_there_w
@@ -214,6 +217,8 @@ void print_pp(bool obstacle_front, bool is_there_w, bool goal_reached,
     ROS_INFO_STREAM("[W Y                    ] " << obstacle_waypoint.w_y);
     ROS_INFO_STREAM("[BEARING ERROR          ] " << bearing_error);
     ROS_INFO_STREAM("[DIST ERROR W           ] " << dist_error_obst_w);
+    ROS_INFO_STREAM("[ALPHA                  ] " << obstacle_waypoint.alpha);
+    ROS_INFO_STREAM("DIST TO W               ] " << obstacle_waypoint.dist_to_waypoint);
     ROS_INFO_STREAM("[DIST ERROR GOAL        ] " << dist_error_goal);
     ROS_INFO_STREAM("[OBSTACLE FRONT 2       ] " << obstacle_front);
     ROS_INFO_STREAM("[CURR WAYPOINT          ] " << waypoint_counter);
@@ -408,8 +413,8 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
         }
         else if (dist_error_goal < goal_gnss_data.distance_thresh && !is_there_w)
         {
-
-            if(waypoint_counter == waypoints.size())
+            waypoint_counter++;
+            if(waypoint_counter == waypoints.size() + 1)
             {
                 cart_error_msg.goal_reached = true;
                 goal_reached = true;
@@ -417,7 +422,6 @@ void navigate_to_waypoints(awsp_msgs::CartesianError cart_error_msg,
             else
                 cart_error_msg.goal_reached = false;
 
-            waypoint_counter++;
             is_transformed = false;
             ROS_WARN("WAYPOINT %i REACHED, NAVIGATING TO NEXT", waypoint_counter);
         }

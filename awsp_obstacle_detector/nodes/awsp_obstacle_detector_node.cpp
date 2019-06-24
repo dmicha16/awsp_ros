@@ -82,7 +82,7 @@ int main(int argc, char **argv)
         end_time_micro = micros();
 
         travel_time_micro = end_time_micro - start_time_micro;
-        front_obstacle_dist = 100*((travel_time_micro/1000000.0)*340.29)/2;
+        front_obstacle_dist = ((travel_time_micro/1000000.0)*340.29)/2;
 
         obstacle_data.front_obstacle_dist = front_obstacle_dist;
         obstacle_data.front_obstacle = evaluate_obstacle(front_obstacle_dist, distance_thresh);

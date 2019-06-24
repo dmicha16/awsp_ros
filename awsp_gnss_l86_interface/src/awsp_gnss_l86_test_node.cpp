@@ -92,7 +92,7 @@ int main(int argc, char **argv)
         if (new_gnss)
         {
             file.open(file_name, std::ios_base::app);
-            file << std::setprecision(10)
+            file << std::fixed << std::setprecision(14)
                  << gnss_data.latitude << ";"
                  << gnss_data.longitude << ";"
                  << gnss_data.speed << ";"
