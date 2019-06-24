@@ -155,10 +155,15 @@ void ObstacleWaypoint::set_start_coords()
 
 void generate_obstacle_waypoint()
 {
+<<<<<<< HEAD
     obstacle_waypoint.alpha = atan(1.23 / obstacle_data.front_obstacle_dist);
 
     if (obstacle_waypoint.alpha * 4 >= M_PI / 2.1 )
         obstacle_waypoint.alpha = 1.4 / 4;
+=======
+    obstacle_waypoint.theta = abs(asin(obstacle_waypoint.boat_radius / (obstacle_data.front_obstacle_dist/100)));
+    obstacle_waypoint.alpha = obstacle_waypoint.theta;
+>>>>>>> 5e3dc9ee030be5a5c60f730381a8ca9cbc0d3afd
 
     obstacle_waypoint.dist_to_waypoint = obstacle_data.front_obstacle_dist /
             cos(obstacle_waypoint.alpha * 4);
